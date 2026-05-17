@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-design-patterns"
+version = "0.1.0"
+description = "Companion code for the Agent Design Patterns column and book by Jia Huang"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Jia Huang", email = "tohuangjia@gmail.com" }]
+keywords = ["agent", "llm", "design-patterns", "ai-engineering"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Software Development :: Libraries",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+]
+
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+testpaths = ["perception", "memory", "collaboration", "composition"]
+python_files = "test_*.py"
+python_functions = "test_*"
+# importlib mode lets sibling folders each have their own test_pattern.py
+# without module-name collisions during collection.
+addopts = "--import-mode=importlib"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
