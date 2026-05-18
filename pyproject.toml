@@ -29,7 +29,7 @@ dev = [
 packages = []
 
 [tool.pytest.ini_options]
-testpaths = ["perception", "memory", "collaboration", "composition"]
+testpaths = ["perception", "memory", "reasoning", "action", "reflection", "collaboration", "governance", "composition"]
 python_files = "test_*.py"
 python_functions = "test_*"
 # importlib mode lets sibling folders each have their own test_pattern.py

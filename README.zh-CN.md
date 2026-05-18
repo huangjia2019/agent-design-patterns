@@ -48,7 +48,7 @@
 |---|---|---|---|---|---|---|
 | **感知** | [语义压缩 ✅](./perception/b-semantic-compaction/) | [多模态融合 ✅](./perception/d-multimodal-fusion/) | [上下文分诊 ✅](./perception/a-context-triage/) | — | [渐进发现 ✅](./perception/c-progressive-discovery/) | — |
 | **记忆** | [RAG ✅](./memory/b-rag/) | — | [分层保留 ✅](./memory/a-hierarchical-retention/) | [失败日记 ✅](./memory/d-failure-journals/) | [进度追踪 ✅](./memory/c-progress-tracking/) | — |
-| **推理** | [思维链 🟡](./reasoning/a-chain-of-thought/) | [并行探索 🟡](./reasoning/c-parallel-exploration/) | [复杂度路由 🟡](./reasoning/b-complexity-routing/) | [迭代假设 🟡](./reasoning/d-iterative-hypothesis/) | — | — |
+| **推理** | [思维链 ✅](./reasoning/a-chain-of-thought/) | [并行探索 ✅](./reasoning/c-parallel-exploration/) | [复杂度路由 ✅](./reasoning/b-complexity-routing/) | [迭代假设 ✅](./reasoning/d-iterative-hypothesis/) | — | — |
 | **行动** | [提示链 🟡](./action/c-prompt-chaining/) | — | [工具调度 🟡](./action/a-tool-dispatch/) | — | [规划执行 🟡](./action/b-plan-and-execute/) | [守卫三明治 🟡](./action/d-guardrail-sandwich/) |
 | **反思** | [生成-批评 🟡](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
 | **协作** | [交接链 🟡](./collaboration/d-handoff-chain/) | [扇出聚合 🟡](./collaboration/b-fan-out-gather/) | — | [对抗评审 🟡](./collaboration/c-adversarial-review/) | — | [层级委派 🟡](./collaboration/a-hierarchical-delegation/) |
@@ -77,6 +77,10 @@
 | RAG | [Anthropic Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval)、[RRF (Cormack 2009)](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf)、agentic search vs RAG 分解 |
 | 进度追踪 | Claude Code `TodoWrite` 三字段、[DeepAgents `TodoListMiddleware`](https://github.com/langchain-ai/deepagents)、DeerFlow 上下文丢失检测、Anthropic effective-context-engineering(U 形注意力) |
 | 失败日记 | [Hermes Agent error_classifier 13 种 FailoverReason](https://github.com/openhermes/agent)、[Aider 自愈循环](https://github.com/Aider-AI/aider/blob/main/aider/coders/base_coder.py)、[Manus *Context Engineering*](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus)、[arxiv:2509.25370 *Where LLM Agents Fail*](https://arxiv.org/abs/2509.25370) |
+| 思维链 | Claude Code thinking 三大铁律(`query.ts:151-163`)、Hermes `_strip_reasoning_tags`、Anthropic Think-as-Tool(Tau-bench +20pp)、[OpenAI 2026 CoT 可控性 + 可监控性](https://openai.com/index/evaluating-chain-of-thought-monitorability/) |
+| 复杂度路由 | Claude Code `FallbackTriggeredError`、[Hermes 6 档 `ReasoningEffort`](https://github.com/openhermes/agent)、Aider `--model` + `--weak-model`、[Anthropic *Building Effective Agents*](https://www.anthropic.com/research/building-effective-agents) |
+| 并行探索 | [Wang 2022 Self-Consistency](https://arxiv.org/abs/2203.11171)、[Yao 2023 Tree of Thoughts](https://arxiv.org/abs/2305.10601)、[CoT-PoT N=2 已经拿到 N=10 90% lift](https://arxiv.org/abs/2406.14833)、DeerFlow isolated event-loop |
+| 迭代假设 | [Anthropic 2026 三 Agent Harness(Planner/Generator/Evaluator)](https://www.anthropic.com/research/multi-agent-research)、[ReAct (Yao 2022)](https://arxiv.org/abs/2210.03629)、[ReWOO (Xu 2023)](https://arxiv.org/abs/2305.18323)、[Self-Refine (Madaan 2023)](https://arxiv.org/abs/2303.17651)、Karl Popper 证伪主义 |
 
 框架追踪的 8 个生产 harness：**Claude Code、Codex CLI、Aider、OpenCode、OpenClaw、Hermes Agent、DeepAgents、DeerFlow、OpenHands**。每个模式的 README 都从其中至少一个抽出真实生产形态，而不是 toy 代码。
 

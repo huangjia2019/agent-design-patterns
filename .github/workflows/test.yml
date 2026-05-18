@@ -32,5 +32,9 @@ jobs:
           python memory/b-rag/example.py
           python memory/c-progress-tracking/example.py
           python memory/d-failure-journals/example.py
+          python reasoning/a-chain-of-thought/example.py
+          python reasoning/b-complexity-routing/example.py
+          python reasoning/c-parallel-exploration/example.py
+          python reasoning/d-iterative-hypothesis/example.py
       - name: Run tests
         run: pytest -v
