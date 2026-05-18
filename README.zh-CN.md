@@ -4,7 +4,7 @@
 
 *模型负责花，Harness 负责管账。这个仓库是你明天就能用进项目里的设计语言。*
 
-[English README](README.md) · [Manning · *Designing AI Agents*](#书--专栏--newsletter) · [极客时间专栏](#书--专栏--newsletter) · [Substack Newsletter](https://agentpatterns.substack.com) · [作者主页](https://kage-ai.com)
+[English README](README.md) · [Manning · *Designing AI Agents*](#书--专栏--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Substack Newsletter](https://agentpatterns.substack.com) · [作者主页](https://kage-ai.com)
 
 > **想看完整 Argus running example 作为一个一章一章长出来的代码库？**
 > 配套仓库在 [**huangjia2019/designing-ai-agents**](https://github.com/huangjia2019/designing-ai-agents)
@@ -49,7 +49,7 @@
 | **感知** | [语义压缩 ✅](./perception/b-semantic-compaction/) | [多模态融合 ✅](./perception/d-multimodal-fusion/) | [上下文分诊 ✅](./perception/a-context-triage/) | — | [渐进发现 ✅](./perception/c-progressive-discovery/) | — |
 | **记忆** | [RAG ✅](./memory/b-rag/) | — | [分层保留 ✅](./memory/a-hierarchical-retention/) | [失败日记 ✅](./memory/d-failure-journals/) | [进度追踪 ✅](./memory/c-progress-tracking/) | — |
 | **推理** | [思维链 ✅](./reasoning/a-chain-of-thought/) | [并行探索 ✅](./reasoning/c-parallel-exploration/) | [复杂度路由 ✅](./reasoning/b-complexity-routing/) | [迭代假设 ✅](./reasoning/d-iterative-hypothesis/) | — | — |
-| **行动** | [提示链 🟡](./action/c-prompt-chaining/) | — | [工具调度 🟡](./action/a-tool-dispatch/) | — | [规划执行 🟡](./action/b-plan-and-execute/) | [守卫三明治 🟡](./action/d-guardrail-sandwich/) |
+| **行动** | [提示链 ✅](./action/c-prompt-chaining/) | — | [工具调度 ✅](./action/a-tool-dispatch/) | — | [规划执行 ✅](./action/b-plan-and-execute/) | [守卫三明治 ✅](./action/d-guardrail-sandwich/) |
 | **反思** | [生成-批评 🟡](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
 | **协作** | [交接链 🟡](./collaboration/d-handoff-chain/) | [扇出聚合 🟡](./collaboration/b-fan-out-gather/) | — | [对抗评审 🟡](./collaboration/c-adversarial-review/) | — | [层级委派 🟡](./collaboration/a-hierarchical-delegation/) |
 | **治理** | — | [渐进承诺 🟡](./governance/c-progressive-commitment/) | [审批门 🟡](./governance/a-approval-gate/) | — | [可观测性 🟡](./governance/d-observability-harness/) | [爆炸半径 🟡](./governance/b-blast-radius/) |
@@ -81,6 +81,10 @@
 | 复杂度路由 | Claude Code `FallbackTriggeredError`、[Hermes 6 档 `ReasoningEffort`](https://github.com/openhermes/agent)、Aider `--model` + `--weak-model`、[Anthropic *Building Effective Agents*](https://www.anthropic.com/research/building-effective-agents) |
 | 并行探索 | [Wang 2022 Self-Consistency](https://arxiv.org/abs/2203.11171)、[Yao 2023 Tree of Thoughts](https://arxiv.org/abs/2305.10601)、[CoT-PoT N=2 已经拿到 N=10 90% lift](https://arxiv.org/abs/2406.14833)、DeerFlow isolated event-loop |
 | 迭代假设 | [Anthropic 2026 三 Agent Harness(Planner/Generator/Evaluator)](https://www.anthropic.com/research/multi-agent-research)、[ReAct (Yao 2022)](https://arxiv.org/abs/2210.03629)、[ReWOO (Xu 2023)](https://arxiv.org/abs/2305.18323)、[Self-Refine (Madaan 2023)](https://arxiv.org/abs/2303.17651)、Karl Popper 证伪主义 |
+| 工具调度 | Claude Code `Tool.ts` 14 字段 schema、[Anthropic Programmatic Tool Calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling)、Codex CLI `execpolicy` crate、[arxiv:2602.14878 *MCP Tool Descriptions Are Smelly*](https://arxiv.org/html/2602.14878v1)、[OWASP Top 10 for Agentic Apps 2026 A2](https://genai.owasp.org/)、Manus 32 工具上限 |
+| 规划执行 | [Aider `architect_coder.py` 9 行核心](https://github.com/Aider-AI/aider/blob/main/aider/coders/architect_coder.py)、Claude Code ExitPlanMode(plan 写文件)、[LangGraph 1.0 BSP/Pregel](https://blog.langchain.com/building-langgraph/)、Manus `todo.md`、[Anthropic Adaptive Replanning](https://www.anthropic.com/research/multi-agent-research) |
+| 提示链 | [Aider `history.py` 49 行递归 chain](https://github.com/Aider-AI/aider/blob/main/aider/history.py)、Claude Code PRA loop + Skills + slash commands、[Anthropic *Building Effective Agents*](https://www.anthropic.com/research/building-effective-agents)、[Anthropic prompt best practices(XML 结构)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)、Doug McIlroy Unix 哲学 |
+| 守卫三明治 | Claude Code Hooks Pipeline(12 lifecycle event; PreToolUse 可 block)、[OWASP Top 10 for Agentic Apps 2026 A1/A2/A3](https://genai.owasp.org/)、NVIDIA NeMo Guardrails(Colang 4-rail)、GuardrailsAI(RAIL spec)、Microsoft Guidance(grammar 级)、[arxiv:2509.23994 *Policy-as-Prompt Synthesis*](https://arxiv.org/abs/2509.23994) |
 
 框架追踪的 8 个生产 harness：**Claude Code、Codex CLI、Aider、OpenCode、OpenClaw、Hermes Agent、DeepAgents、DeerFlow、OpenHands**。每个模式的 README 都从其中至少一个抽出真实生产形态，而不是 toy 代码。
 
@@ -146,9 +150,9 @@ pytest
 | | |
 |---|---|
 | **Manning** · *Designing AI Agents* | 英文技术书。28 个模式 × 7 认知功能 × 6 拓扑。ISBN 9781633433632，MEAP 2026 年 5 月。 |
-| **极客时间** · 《Agent 设计模式之美》 | 中文视频专栏。模式逐讲讲透，配真实生产 harness 工程切片。 |
+| **极客时间** · *[《Agent 设计模式之美》](https://time.geekbang.org/)* | 中文视频专栏。模式逐讲讲透，配真实生产 harness 工程切片。 |
 | **Substack** · *[Agent Design Patterns](https://agentpatterns.substack.com)* | 免费英文 newsletter，1-2 周一篇。结构性观察，不写 hype。 |
-| **极客时间** · *Claude Code 工程化实战* | 已上线的中文视频专栏，讲 Claude Code 上做 agent 工程化。 |
+| **极客时间** · *[Claude Code 工程化实战](https://time.geekbang.org/)* | 已上线的中文视频专栏，讲 Claude Code 上做 agent 工程化。 |
 
 这个 GitHub 仓库是**第三条腿**。书给你理论。专栏给你讲解。这里给你 90 秒能读完、5 分钟能跑通的代码。
 

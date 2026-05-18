@@ -4,7 +4,7 @@
 
 *The model spends. The harness budgets. This repo is the vocabulary you can put in your project tomorrow.*
 
-[简体中文 README](README.zh-CN.md) · [Manning · *Designing AI Agents*](#book--column--newsletter) · [极客时间专栏](#book--column--newsletter) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
+[简体中文 README](README.zh-CN.md) · [Manning · *Designing AI Agents*](#book--column--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
 
 > **Looking for the full Argus running example as one evolving
 > codebase, organized by book chapter?** See the companion repo
@@ -68,7 +68,7 @@ scaffolding waiting for the lecture release.
 | **Perceive** | [Semantic Compaction ✅](./perception/b-semantic-compaction/) | [Multi-Modal Fusion ✅](./perception/d-multimodal-fusion/) | [Context Triage ✅](./perception/a-context-triage/) | — | [Progressive Discovery ✅](./perception/c-progressive-discovery/) | — |
 | **Remember** | [RAG ✅](./memory/b-rag/) | — | [Hierarchical Retention ✅](./memory/a-hierarchical-retention/) | [Failure Journals ✅](./memory/d-failure-journals/) | [Progress Tracking ✅](./memory/c-progress-tracking/) | — |
 | **Reason** | [Chain of Thought ✅](./reasoning/a-chain-of-thought/) | [Parallel Exploration ✅](./reasoning/c-parallel-exploration/) | [Complexity Routing ✅](./reasoning/b-complexity-routing/) | [Iterative Hypothesis ✅](./reasoning/d-iterative-hypothesis/) | — | — |
-| **Act** | [Prompt Chaining 🟡](./action/c-prompt-chaining/) | — | [Tool Dispatch 🟡](./action/a-tool-dispatch/) | — | [Plan & Execute 🟡](./action/b-plan-and-execute/) | [Guardrail Sandwich 🟡](./action/d-guardrail-sandwich/) |
+| **Act** | [Prompt Chaining ✅](./action/c-prompt-chaining/) | — | [Tool Dispatch ✅](./action/a-tool-dispatch/) | — | [Plan & Execute ✅](./action/b-plan-and-execute/) | [Guardrail Sandwich ✅](./action/d-guardrail-sandwich/) |
 | **Reflect** | [Generator-Critic 🟡](./reflection/a-generator-critic/) | — | [Skill Package 🟡](./reflection/b-skill-package/) | [Self-Heal Loop 🟡](./reflection/d-self-heal-loop/) | — | [Experience Replay 🟡](./reflection/c-experience-replay/) |
 | **Collaborate** | [Handoff Chain 🟡](./collaboration/d-handoff-chain/) | [Fan-out & Gather 🟡](./collaboration/b-fan-out-gather/) | — | [Adversarial Review 🟡](./collaboration/c-adversarial-review/) | — | [Hierarchical Delegation 🟡](./collaboration/a-hierarchical-delegation/) |
 | **Govern** | — | [Progressive Commitment 🟡](./governance/c-progressive-commitment/) | [Approval Gate 🟡](./governance/a-approval-gate/) | — | [Observability Harness 🟡](./governance/d-observability-harness/) | [Blast Radius 🟡](./governance/b-blast-radius/) |
@@ -108,6 +108,10 @@ open an issue — that's a bug, not a documentation choice.
 | Complexity Routing | Claude Code `FallbackTriggeredError`, [Hermes 6-tier `ReasoningEffort`](https://github.com/openhermes/agent), Aider `--model` + `--weak-model`, [Anthropic *Building Effective Agents*](https://www.anthropic.com/research/building-effective-agents) |
 | Parallel Exploration | [Wang 2022 Self-Consistency](https://arxiv.org/abs/2203.11171), [Yao 2023 Tree of Thoughts](https://arxiv.org/abs/2305.10601), [CoT-PoT N=2 → 90% of N=10 lift](https://arxiv.org/abs/2406.14833), DeerFlow isolated event-loop |
 | Iterative Hypothesis | [Anthropic 2026 three-agent harness (Planner/Generator/Evaluator)](https://www.anthropic.com/research/multi-agent-research), [ReAct (Yao 2022)](https://arxiv.org/abs/2210.03629), [ReWOO (Xu 2023)](https://arxiv.org/abs/2305.18323), [Self-Refine (Madaan 2023)](https://arxiv.org/abs/2303.17651), Karl Popper falsificationism |
+| Tool Dispatch | Claude Code `Tool.ts` 14-field schema, [Anthropic Programmatic Tool Calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling), Codex CLI `execpolicy` crate, [arxiv:2602.14878 *MCP Tool Descriptions Are Smelly*](https://arxiv.org/html/2602.14878v1), [OWASP Top 10 for Agentic Apps 2026 A2](https://genai.owasp.org/), Manus 32-tool ceiling |
+| Plan-and-Execute | [Aider `architect_coder.py` (9-line core)](https://github.com/Aider-AI/aider/blob/main/aider/coders/architect_coder.py), Claude Code ExitPlanMode (plan-as-file), [LangGraph 1.0 BSP/Pregel](https://blog.langchain.com/building-langgraph/), Manus `todo.md`, [Anthropic Adaptive Replanning](https://www.anthropic.com/research/multi-agent-research) |
+| Prompt Chaining | [Aider `history.py` 49-line recursive chain](https://github.com/Aider-AI/aider/blob/main/aider/history.py), Claude Code PRA loop + Skills + slash commands, [Anthropic *Building Effective Agents*](https://www.anthropic.com/research/building-effective-agents), [Anthropic prompt best practices (XML structure)](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices), Doug McIlroy Unix philosophy |
+| Guardrail Sandwich | Claude Code Hooks Pipeline (12 lifecycle events; PreToolUse blocks), [OWASP Top 10 for Agentic Apps 2026 A1/A2/A3](https://genai.owasp.org/), NVIDIA NeMo Guardrails (Colang 4-rail), GuardrailsAI (RAIL spec), Microsoft Guidance (grammar-level), [arxiv:2509.23994 *Policy-as-Prompt Synthesis*](https://arxiv.org/abs/2509.23994) |
 
 The eight production harnesses the framework tracks: **Claude Code,
 Codex CLI, Aider, OpenCode, OpenClaw, Hermes Agent, DeepAgents, DeerFlow,
@@ -197,9 +201,9 @@ as a system rather than as a flat list.
 | | |
 |---|---|
 | **Manning** · *Designing AI Agents* | English-language technical book. 28 patterns across 7 cognitive functions and 6 topologies. ISBN 9781633433632. MEAP launch May 2026. |
-| **极客时间** · 《Agent 设计模式之美》 | Chinese-language video column. Pattern-by-pattern walkthrough with engineering slices from real production harnesses. |
+| **极客时间** · *[《Agent 设计模式之美》](https://time.geekbang.org/)* | Chinese-language video column. Pattern-by-pattern walkthrough with engineering slices from real production harnesses. |
 | **Substack** · *[Agent Design Patterns](https://agentpatterns.substack.com)* | Free English newsletter, one essay every 1–2 weeks. Structural observation, not hype. |
-| **极客时间** · *Claude Code 工程化实战* | Published Chinese-language video column on the engineering practice of building agents on Claude Code. |
+| **极客时间** · *[Claude Code 工程化实战](https://time.geekbang.org/)* | Published Chinese-language video column on the engineering practice of building agents on Claude Code. |
 
 This GitHub repo is the **third leg**. The book gives you the theory. The
 column gives you the lectures. This repo gives you code you can clone and

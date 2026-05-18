@@ -36,5 +36,9 @@ jobs:
           python reasoning/b-complexity-routing/example.py
           python reasoning/c-parallel-exploration/example.py
           python reasoning/d-iterative-hypothesis/example.py
+          python action/a-tool-dispatch/example.py
+          python action/b-plan-and-execute/example.py
+          python action/c-prompt-chaining/example.py
+          python action/d-guardrail-sandwich/example.py
       - name: Run tests
         run: pytest -v
