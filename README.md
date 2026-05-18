@@ -47,84 +47,33 @@ question. A matrix does not.
 
 ---
 
-## Hero example — a real failure and the 90-line fix
+## The matrix — click into any pattern
 
-A production loan-evaluation agent. Eight documents on standard cases,
-fine. Then a 43-document commercial loan arrives, the context window
-can't hold it, the agent silently sorts by filename, drops a 2024
-collateral appraisal, keeps a 2019 expired business registration, and
-recommends approval. Two weeks later the loan defaults.
+![Two-Axis Framework matrix: 7 cognitive functions × 6 execution topologies = 42 cells, 28 patterns](./docs/matrix.png)
 
-The reasoning was fine. **The agent never saw the disqualifying
-document.** This is a Perception-stage budget allocation failure. The
-Context Triage pattern is what it is for.
+The matrix is the framework's main IP. Every pattern below lives at one
+coordinate. Click any pattern name to enter that folder's code and README.
+Cells marked ✅ have runnable code; cells marked 🟡 have README
+scaffolding waiting for the lecture release.
 
-```python
-from pattern import ContextItem, ContextTriage, Priority
+|  | **Chain** | **Parallel** | **Route** | **Loop** | **Orchestrate** | **Hierarchy** |
+|---|---|---|---|---|---|---|
+| **Perceive** | [Semantic Compaction ✅](./perception/b-semantic-compaction/) | [Multi-Modal Fusion 🟡](./perception/d-multimodal-fusion/) | [Context Triage ✅](./perception/a-context-triage/) | — | [Progressive Discovery 🟡](./perception/c-progressive-discovery/) | — |
+| **Remember** | [RAG 🟡](./memory/b-rag/) | — | [Hierarchical Retention 🟡](./memory/a-hierarchical-retention/) | [Failure Journals 🟡](./memory/d-failure-journals/) | [Progress Tracking 🟡](./memory/c-progress-tracking/) | — |
+| **Reason** | [Chain of Thought 🟡](./reasoning/a-chain-of-thought/) | [Parallel Exploration 🟡](./reasoning/c-parallel-exploration/) | [Complexity Routing 🟡](./reasoning/b-complexity-routing/) | [Iterative Hypothesis 🟡](./reasoning/d-iterative-hypothesis/) | — | — |
+| **Act** | [Prompt Chaining 🟡](./action/c-prompt-chaining/) | — | [Tool Dispatch 🟡](./action/a-tool-dispatch/) | — | [Plan & Execute 🟡](./action/b-plan-and-execute/) | [Guardrail Sandwich 🟡](./action/d-guardrail-sandwich/) |
+| **Reflect** | [Generator-Critic 🟡](./reflection/a-generator-critic/) | — | [Skill Package 🟡](./reflection/b-skill-package/) | [Self-Heal Loop 🟡](./reflection/d-self-heal-loop/) | — | [Experience Replay 🟡](./reflection/c-experience-replay/) |
+| **Collaborate** | [Handoff Chain 🟡](./collaboration/d-handoff-chain/) | [Fan-out & Gather 🟡](./collaboration/b-fan-out-gather/) | — | [Adversarial Review 🟡](./collaboration/c-adversarial-review/) | — | [Hierarchical Delegation 🟡](./collaboration/a-hierarchical-delegation/) |
+| **Govern** | — | [Progressive Commitment 🟡](./governance/c-progressive-commitment/) | [Approval Gate 🟡](./governance/a-approval-gate/) | — | [Observability Harness 🟡](./governance/d-observability-harness/) | [Blast Radius 🟡](./governance/b-blast-radius/) |
 
-triage = ContextTriage(budget=8_000)
-items = [
-    ContextItem("system_prompt", "...", priority=Priority.CRITICAL),
-    ContextItem("tenant_identity", "tenant_id=acme-corp ...",
-                priority=Priority.CRITICAL),
-    ContextItem("error_trace", "TimeoutError: pool exhausted ...",
-                priority=Priority.IMPORTANT, is_error=True),
-    ContextItem("full_product_manual", long_manual,
-                priority=Priority.SUPPORTING),
-    ContextItem("ticket_archive", "handle: ticket://...",
-                priority=Priority.DEFERRABLE),
-    # ... 7 more candidates
-]
+**Composition** (putting patterns together):
+[Pattern Selection Card](./composition/a-pattern-selection-card/) ·
+[Six-Step Methodology](./composition/b-six-step-methodology/) ·
+[Argus Full Case Study](./composition/c-argus-full-case/)
 
-selected, deferred, decision = triage.triage(items)
-```
-
-The pattern enforces two invariants regardless of budget pressure:
-
-* **P3 deferrable items never pre-load** — they wait behind a handle
-  and the agent fetches them only when needed
-* **Error traces never get dropped** — even when budget overflows, the
-  feedback loop survives
-
-```
-$ python perception/a-context-triage/example.py
-Budget        : 8,000 tokens
-Tokens used   : 4,770
-Selected (10):
-  - P0 system_prompt (17 tok)
-  - P0 user_message (13 tok)
-  - P0 tenant_identity (12 tok)
-  - P1 recent_error_trace (42 tok) [ERROR-PROTECTED]
-  - P1 product_config_snapshot (18 tok)
-  - ...
-Deferred (2): ['historical_ticket_archive', 'full_runbook_library']
-Invariant check:
-  All error items kept? True
-  All P3 items deferred (not loaded)? True
-```
-
-Full code in [`perception/a-context-triage/`](./perception/a-context-triage/).
-The OS-scheduling analogy in the pattern README explains why the four-tier
-priority feels obvious in hindsight.
-
----
-
-## The 28-pattern map
-
-Patterns are released as the column publishes lectures. The matrix below
-is the full target; cells with ✅ have runnable code, cells with 🟡 have
-README scaffolding.
-
-| Cognitive function | Patterns | Coverage |
-|---|---|---|
-| **Perception** · seeing the world | Context Triage ✅ · Semantic Compaction ✅ · Progressive Discovery 🟡 · Multi-Modal Fusion 🟡 | 2 of 4 |
-| **Memory** · what carries across turns | Hierarchical Retention · RAG · Progress Tracking · Failure Journals | scaffolding |
-| **Reasoning** · how decisions get made | Chain of Thought · Complexity-Based Routing · Parallel Exploration · Iterative Hypothesis Testing | scaffolding |
-| **Action** · effecting the world | Tool Dispatch · Plan-and-Execute · Prompt Chaining · Guardrail Sandwich | scaffolding |
-| **Reflection** · improving over time | Generator-Critic · Skill Package · Experience Replay · Self-Heal Loop | scaffolding |
-| **Collaboration** · multi-agent work | Hierarchical Delegation · Fan-out & Gather · Adversarial Review · Handoff Chain | scaffolding |
-| **Governance** · safety and control | Approval Gate · Blast Radius · Progressive Commitment · Observability Harness | scaffolding |
-| **Composition** · putting it together | Pattern Selection Card · Six-Step Methodology · Argus (full case study) | scaffolding |
+The 14 empty cells are not bugs. They mark either industry gaps not yet
+filled by any production harness, or topology-function combinations whose
+patterns haven't crystallized. They are research surface, not noise.
 
 Each pattern folder follows the same shape: `pattern.py` (the minimal
 honest reference, 50–250 lines), `example.py` (a real-scenario case that

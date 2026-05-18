@@ -33,72 +33,28 @@
 
 ---
 
-## 看一个真实例子 · 90 行代码挡住的生产事故
+## 双轴矩阵 · 点击进入每一个模式
 
-生产环境的贷款评审 agent。8 份文档的标准件跑得挺顺，直到来了 43 份文档的商业贷款申请。Context 窗口装不下，agent 默默按文件名排序，把 2024 年的抵押物估值评估砍掉，留下了 2019 年早就过期的工商登记，给出"建议批准"。两周后这笔贷款进入坏账。
+![双轴正交框架矩阵：7 认知功能 × 6 执行拓扑 = 42 格，28 模式](./docs/matrix.png)
 
-Agent 的推理没问题，**它根本没看到那份关键文档**。这是 Perception 层的 budget 分配失败。Context Triage 模式就是干这个的。
+矩阵是这个框架的 main IP。下面每个模式都坐落在一个坐标上。**点击模式名直接进入文件夹**看代码和 README。✅ 表示有可跑代码，🟡 表示 README 占位等讲次发布。
 
-```python
-from pattern import ContextItem, ContextTriage, Priority
+|  | **串行** | **并行** | **路由** | **循环** | **交接** | **层级** |
+|---|---|---|---|---|---|---|
+| **感知** | [语义压缩 ✅](./perception/b-semantic-compaction/) | [多模态融合 🟡](./perception/d-multimodal-fusion/) | [上下文分诊 ✅](./perception/a-context-triage/) | — | [渐进发现 🟡](./perception/c-progressive-discovery/) | — |
+| **记忆** | [RAG 🟡](./memory/b-rag/) | — | [分层保留 🟡](./memory/a-hierarchical-retention/) | [失败日记 🟡](./memory/d-failure-journals/) | [进度追踪 🟡](./memory/c-progress-tracking/) | — |
+| **推理** | [思维链 🟡](./reasoning/a-chain-of-thought/) | [并行探索 🟡](./reasoning/c-parallel-exploration/) | [复杂度路由 🟡](./reasoning/b-complexity-routing/) | [迭代假设 🟡](./reasoning/d-iterative-hypothesis/) | — | — |
+| **行动** | [提示链 🟡](./action/c-prompt-chaining/) | — | [工具调度 🟡](./action/a-tool-dispatch/) | — | [规划执行 🟡](./action/b-plan-and-execute/) | [守卫三明治 🟡](./action/d-guardrail-sandwich/) |
+| **反思** | [生成-批评 🟡](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
+| **协作** | [交接链 🟡](./collaboration/d-handoff-chain/) | [扇出聚合 🟡](./collaboration/b-fan-out-gather/) | — | [对抗评审 🟡](./collaboration/c-adversarial-review/) | — | [层级委派 🟡](./collaboration/a-hierarchical-delegation/) |
+| **治理** | — | [渐进承诺 🟡](./governance/c-progressive-commitment/) | [审批门 🟡](./governance/a-approval-gate/) | — | [可观测性 🟡](./governance/d-observability-harness/) | [爆炸半径 🟡](./governance/b-blast-radius/) |
 
-triage = ContextTriage(budget=8_000)
-items = [
-    ContextItem("system_prompt", "...", priority=Priority.CRITICAL),
-    ContextItem("tenant_identity", "tenant_id=acme-corp ...",
-                priority=Priority.CRITICAL),
-    ContextItem("error_trace", "TimeoutError: pool exhausted ...",
-                priority=Priority.IMPORTANT, is_error=True),
-    ContextItem("full_product_manual", long_manual,
-                priority=Priority.SUPPORTING),
-    ContextItem("ticket_archive", "handle: ticket://...",
-                priority=Priority.DEFERRABLE),
-    # ... 还有 7 个候选
-]
+**组合**（把模式组装起来）：
+[模式选型卡](./composition/a-pattern-selection-card/) ·
+[六步选型法](./composition/b-six-step-methodology/) ·
+[Argus 完整案例](./composition/c-argus-full-case/)
 
-selected, deferred, decision = triage.triage(items)
-```
-
-模式无论 budget 多紧都保证两条不变量：
-
-* **P3 deferrable 永不预加载**——挂为 handle，agent 按需取
-* **错误堆栈永不丢**——预算溢出也不丢，反馈回路必须活着
-
-```
-$ python perception/a-context-triage/example.py
-Budget        : 8,000 tokens
-Tokens used   : 4,770
-Selected (10):
-  - P0 system_prompt (17 tok)
-  - P0 user_message (13 tok)
-  - P0 tenant_identity (12 tok)
-  - P1 recent_error_trace (42 tok) [ERROR-PROTECTED]
-  - P1 product_config_snapshot (18 tok)
-  - ...
-Deferred (2): ['historical_ticket_archive', 'full_runbook_library']
-Invariant check:
-  All error items kept? True
-  All P3 items deferred (not loaded)? True
-```
-
-完整代码在 [`perception/a-context-triage/`](./perception/a-context-triage/)。模式 README 里有跟操作系统调度器的类比，让四级优先级在事后看起来"不言自明"。
-
----
-
-## 28 个模式的矩阵
-
-模式会随专栏发布陆续落到代码里。下面是完整目标矩阵，✅ 表示有可跑代码，🟡 表示有 README 占位。
-
-| 认知功能 | 模式 | 进度 |
-|---|---|---|
-| **Perception** · 感知世界 | Context Triage ✅ · Semantic Compaction ✅ · Progressive Discovery 🟡 · Multi-Modal Fusion 🟡 | 2 / 4 |
-| **Memory** · 跨轮沉淀 | Hierarchical Retention · RAG · Progress Tracking · Failure Journals | 待补 |
-| **Reasoning** · 推理决策 | Chain of Thought · Complexity-Based Routing · Parallel Exploration · Iterative Hypothesis Testing | 待补 |
-| **Action** · 行动落地 | Tool Dispatch · Plan-and-Execute · Prompt Chaining · Guardrail Sandwich | 待补 |
-| **Reflection** · 自我演化 | Generator-Critic · Skill Package · Experience Replay · Self-Heal Loop | 待补 |
-| **Collaboration** · 多 agent 协作 | Hierarchical Delegation · Fan-out & Gather · Adversarial Review · Handoff Chain | 待补 |
-| **Governance** · 治理守正 | Approval Gate · Blast Radius · Progressive Commitment · Observability Harness | 待补 |
-| **Composition** · 组合集成 | Pattern Selection Card · Six-Step Methodology · Argus 完整案例 | 待补 |
+14 个空格子不是 bug。它们标的是**工业还没填上的空白**或**那种拓扑-功能组合下还没有结晶的模式**。是研究面，不是噪声。
 
 每个模式文件夹结构一致：`pattern.py`（最小诚实参考实现，50-250 行）+ `example.py`（拟真场景，无需 API key 也能跑）+ `test_pattern.py`（不变量测试）+ 中英双语 README。
 
