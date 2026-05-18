@@ -6,6 +6,11 @@
 
 [English README](README.md) · [Manning · *Designing AI Agents*](#书--专栏--newsletter) · [极客时间专栏](#书--专栏--newsletter) · [Substack Newsletter](https://agentpatterns.substack.com) · [作者主页](https://kage-ai.com)
 
+> **想看完整 Argus running example 作为一个一章一章长出来的代码库？**
+> 配套仓库在 [**huangjia2019/designing-ai-agents**](https://github.com/huangjia2019/designing-ai-agents)
+> —— Argus 从第 2 章长到第 10 章，每章 `patterns/` + `argus/` 并列。
+> 那个仓库按书的章节叙事走；这个仓库是独立的模式 catalog。
+
 ---
 
 ## 为什么有这个仓库
@@ -42,7 +47,7 @@
 |  | **串行** | **并行** | **路由** | **循环** | **交接** | **层级** |
 |---|---|---|---|---|---|---|
 | **感知** | [语义压缩 ✅](./perception/b-semantic-compaction/) | [多模态融合 ✅](./perception/d-multimodal-fusion/) | [上下文分诊 ✅](./perception/a-context-triage/) | — | [渐进发现 ✅](./perception/c-progressive-discovery/) | — |
-| **记忆** | [RAG 🟡](./memory/b-rag/) | — | [分层保留 🟡](./memory/a-hierarchical-retention/) | [失败日记 🟡](./memory/d-failure-journals/) | [进度追踪 🟡](./memory/c-progress-tracking/) | — |
+| **记忆** | [RAG ✅](./memory/b-rag/) | — | [分层保留 ✅](./memory/a-hierarchical-retention/) | [失败日记 ✅](./memory/d-failure-journals/) | [进度追踪 ✅](./memory/c-progress-tracking/) | — |
 | **推理** | [思维链 🟡](./reasoning/a-chain-of-thought/) | [并行探索 🟡](./reasoning/c-parallel-exploration/) | [复杂度路由 🟡](./reasoning/b-complexity-routing/) | [迭代假设 🟡](./reasoning/d-iterative-hypothesis/) | — | — |
 | **行动** | [提示链 🟡](./action/c-prompt-chaining/) | — | [工具调度 🟡](./action/a-tool-dispatch/) | — | [规划执行 🟡](./action/b-plan-and-execute/) | [守卫三明治 🟡](./action/d-guardrail-sandwich/) |
 | **反思** | [生成-批评 🟡](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
@@ -68,6 +73,10 @@
 |---|---|
 | Context Triage | [Aider 的 RepoMap](https://github.com/Aider-AI/aider/blob/main/aider/repomap.py)、[Claude Code memory hierarchy](https://docs.claude.com/en/docs/claude-code/memory)、[DeerFlow schema 化分诊](https://github.com/bytedance/deer-flow) |
 | Semantic Compaction | [OpenHands condenser_config](https://github.com/All-Hands-AI/OpenHands/blob/main/openhands/core/config/condenser_config.py)、[Aider history.py](https://github.com/Aider-AI/aider/blob/main/aider/history.py)、[Manus Context Engineering 博客](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus) |
+| 分层保留 | [Claude Code 四层记忆](https://docs.claude.com/en/docs/claude-code/memory)、[MemGPT 虚拟内存层级 (arxiv:2310.08560)](https://arxiv.org/abs/2310.08560) |
+| RAG | [Anthropic Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval)、[RRF (Cormack 2009)](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf)、agentic search vs RAG 分解 |
+| 进度追踪 | Claude Code `TodoWrite` 三字段、[DeepAgents `TodoListMiddleware`](https://github.com/langchain-ai/deepagents)、DeerFlow 上下文丢失检测、Anthropic effective-context-engineering(U 形注意力) |
+| 失败日记 | [Hermes Agent error_classifier 13 种 FailoverReason](https://github.com/openhermes/agent)、[Aider 自愈循环](https://github.com/Aider-AI/aider/blob/main/aider/coders/base_coder.py)、[Manus *Context Engineering*](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus)、[arxiv:2509.25370 *Where LLM Agents Fail*](https://arxiv.org/abs/2509.25370) |
 
 框架追踪的 8 个生产 harness：**Claude Code、Codex CLI、Aider、OpenCode、OpenClaw、Hermes Agent、DeepAgents、DeerFlow、OpenHands**。每个模式的 README 都从其中至少一个抽出真实生产形态，而不是 toy 代码。
 

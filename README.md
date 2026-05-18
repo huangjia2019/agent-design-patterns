@@ -6,6 +6,13 @@
 
 [简体中文 README](README.zh-CN.md) · [Manning · *Designing AI Agents*](#book--column--newsletter) · [极客时间专栏](#book--column--newsletter) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
 
+> **Looking for the full Argus running example as one evolving
+> codebase, organized by book chapter?** See the companion repo
+> [**huangjia2019/designing-ai-agents**](https://github.com/huangjia2019/designing-ai-agents)
+> — Argus grows module by module from Ch2 to Ch10, with each chapter's
+> `patterns/` + `argus/` side by side. That repo follows the book's
+> narrative; this repo is the standalone pattern catalog.
+
 ---
 
 ## Why this exists
@@ -59,7 +66,7 @@ scaffolding waiting for the lecture release.
 |  | **Chain** | **Parallel** | **Route** | **Loop** | **Orchestrate** | **Hierarchy** |
 |---|---|---|---|---|---|---|
 | **Perceive** | [Semantic Compaction ✅](./perception/b-semantic-compaction/) | [Multi-Modal Fusion ✅](./perception/d-multimodal-fusion/) | [Context Triage ✅](./perception/a-context-triage/) | — | [Progressive Discovery ✅](./perception/c-progressive-discovery/) | — |
-| **Remember** | [RAG 🟡](./memory/b-rag/) | — | [Hierarchical Retention 🟡](./memory/a-hierarchical-retention/) | [Failure Journals 🟡](./memory/d-failure-journals/) | [Progress Tracking 🟡](./memory/c-progress-tracking/) | — |
+| **Remember** | [RAG ✅](./memory/b-rag/) | — | [Hierarchical Retention ✅](./memory/a-hierarchical-retention/) | [Failure Journals ✅](./memory/d-failure-journals/) | [Progress Tracking ✅](./memory/c-progress-tracking/) | — |
 | **Reason** | [Chain of Thought 🟡](./reasoning/a-chain-of-thought/) | [Parallel Exploration 🟡](./reasoning/c-parallel-exploration/) | [Complexity Routing 🟡](./reasoning/b-complexity-routing/) | [Iterative Hypothesis 🟡](./reasoning/d-iterative-hypothesis/) | — | — |
 | **Act** | [Prompt Chaining 🟡](./action/c-prompt-chaining/) | — | [Tool Dispatch 🟡](./action/a-tool-dispatch/) | — | [Plan & Execute 🟡](./action/b-plan-and-execute/) | [Guardrail Sandwich 🟡](./action/d-guardrail-sandwich/) |
 | **Reflect** | [Generator-Critic 🟡](./reflection/a-generator-critic/) | — | [Skill Package 🟡](./reflection/b-skill-package/) | [Self-Heal Loop 🟡](./reflection/d-self-heal-loop/) | — | [Experience Replay 🟡](./reflection/c-experience-replay/) |
@@ -93,6 +100,10 @@ open an issue — that's a bug, not a documentation choice.
 |---|---|
 | Context Triage | [Aider's RepoMap](https://github.com/Aider-AI/aider/blob/main/aider/repomap.py), [Claude Code memory hierarchy](https://docs.claude.com/en/docs/claude-code/memory), [DeerFlow schema-driven triage](https://github.com/bytedance/deer-flow) |
 | Semantic Compaction | [OpenHands condenser_config](https://github.com/All-Hands-AI/OpenHands/blob/main/openhands/core/config/condenser_config.py), [Aider history.py](https://github.com/Aider-AI/aider/blob/main/aider/history.py), [Manus Context Engineering blog](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus) |
+| Hierarchical Retention | [Claude Code 4-layer memory](https://docs.claude.com/en/docs/claude-code/memory), [MemGPT virtual memory hierarchy (arxiv:2310.08560)](https://arxiv.org/abs/2310.08560) |
+| RAG | [Anthropic Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval), [Reciprocal Rank Fusion (Cormack 2009)](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf), agentic-search vs. RAG decomposition |
+| Progress Tracking | Claude Code `TodoWrite` (three fields), [DeepAgents `TodoListMiddleware`](https://github.com/langchain-ai/deepagents), DeerFlow context-loss detection, Anthropic effective-context-engineering (U-shaped attention) |
+| Failure Journals | [Hermes Agent error_classifier (13 FailoverReason)](https://github.com/openhermes/agent), [Aider self-heal loop](https://github.com/Aider-AI/aider/blob/main/aider/coders/base_coder.py), [Manus *Context Engineering*](https://manus.im/blog/Context-Engineering-for-AI-Agents-Lessons-from-Building-Manus), [arxiv:2509.25370 *Where LLM Agents Fail*](https://arxiv.org/abs/2509.25370) |
 
 The eight production harnesses the framework tracks: **Claude Code,
 Codex CLI, Aider, OpenCode, OpenClaw, Hermes Agent, DeepAgents, DeerFlow,

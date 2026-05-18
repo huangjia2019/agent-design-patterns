@@ -28,5 +28,9 @@ jobs:
           python perception/b-semantic-compaction/example.py
           python perception/c-progressive-discovery/example.py
           python perception/d-multimodal-fusion/example.py
+          python memory/a-hierarchical-retention/example.py
+          python memory/b-rag/example.py
+          python memory/c-progress-tracking/example.py
+          python memory/d-failure-journals/example.py
       - name: Run tests
         run: pytest -v
