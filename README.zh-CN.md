@@ -20,9 +20,7 @@
 双轴框架、27 个命名模式、五条模式选型定律，都出自论文 **[A
 Two-Dimensional Framework for AI Agent Design Patterns: Cognitive
 Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
-（Huang & Zhou, arXiv:2605.13850）。这个仓库是那篇论文的**可跑配套
-代码**。在学术或工业工作中引用这个框架时，请**[引用论文](#引用)**——
-不是引用这个仓库。
+（Huang & Zhou, arXiv:2605.13850）。这个仓库是这篇论文的可跑配套代码。
 
 ---
 
@@ -55,7 +53,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 
 ![双轴正交框架矩阵：7 认知功能 × 6 执行拓扑 = 42 格，28 模式](./docs/matrix.png)
 
-矩阵是这个框架的 main IP。下面每个模式都坐落在一个坐标上。**点击模式名直接进入文件夹**看代码和 README。✅ 表示有可跑代码，🟡 表示 README 占位等讲次发布。
+下面每个模式都坐落在一个坐标上。**点击模式名直接进入文件夹**看代码和 README。✅ 表示有可跑代码，🟡 表示占位脚手架。
 
 |  | **串行** | **并行** | **路由** | **循环** | **交接** | **层级** |
 |---|---|---|---|---|---|---|
@@ -73,7 +71,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 [Argus 完整案例](./composition/c-argus-full-case/) ·
 [清单抽取基准案例](./composition/d-checklist-benchmark/)
 
-14 个空格子不是 bug。它们标的是**工业还没填上的空白**或**那种拓扑-功能组合下还没有结晶的模式**。是研究面，不是噪声。
+14 个空格子标的是工业还没填上的空白，或那种拓扑-功能组合下还没有结晶的模式。
 
 每个模式文件夹结构一致：`pattern.py`（最小诚实参考实现，50-250 行）+ `example.py`（拟真场景，无需 API key 也能跑）+ `test_pattern.py`（不变量测试）+ 中英双语 README。
 
@@ -107,7 +105,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 ## 这个仓库不是什么
 
 * **不是框架**。要生产 runtime，请用 [LangGraph](https://github.com/langchain-ai/langgraph)、[agno](https://github.com/agno-agi/agno)、[DeerFlow](https://github.com/bytedance/deer-flow) 或 [OpenHands](https://github.com/All-Hands-AI/OpenHands)。本仓库是你应用在它们之上的设计语言。换框架不改矩阵。
-* **不是平铺清单**。"17 个 agentic architecture" 类清单回答"有什么模式"。矩阵回答**"你的问题落在哪儿、哪些模式是错位选择"**。第二个问题才是真正决定你上线后翻不翻车的那个。
+* **不是平铺清单**。清单回答"有哪些模式存在"。矩阵回答**"你的问题落在哪儿、哪些模式是错位选择"**。
 * **不是 toy 代码**。每个 `pattern.py` 故意保持小（50-250 行），但里面是有真不变量、有测试的诚实代码。每个 `example.py` 跑在像生产数据的输入上。README 里的工程切片都是核对过的上游真实文件。
 
 ---
@@ -149,7 +147,7 @@ pytest
 
 ## 框架背后的核心论
 
-书里反复出现的三句话，是这个仓库的实操面：
+书里反复出现的三句话：
 
 * **设计一个 agent，是在解一个有约束的资源分配问题。**
 * **固定的 token 预算要在多种竞争的认知需求之间分配，路径不确定。**
@@ -168,7 +166,7 @@ pytest
 | **Substack** · *[Agent Design Patterns](https://agentpatterns.substack.com)* | 免费英文 newsletter，1-2 周一篇。结构性观察，不写 hype。 |
 | **极客时间** · *[Claude Code 工程化实战](https://time.geekbang.org/)* | 已上线的中文视频专栏，讲 Claude Code 上做 agent 工程化。 |
 
-这个 GitHub 仓库是**第三条腿**。书给你理论。专栏给你讲解。这里给你 90 秒能读完、5 分钟能跑通的代码。
+书给你理论。专栏给你讲解。这里给你可跑的代码。
 
 ---
 
@@ -197,13 +195,7 @@ pytest
 
 ## 引用
 
-双轴框架、27 个命名模式、五条模式选型定律都出自下面这篇论文。在学术
-或工业工作中引用这个框架时，请**引用论文，不要引用这个仓库**。GitHub
-仓库是配套代码，可被引用的学术成果是 arXiv 论文。
-
-> Huang, J. & Zhou, J. T. (2026). *A Two-Dimensional Framework for AI
-> Agent Design Patterns: Cognitive Function × Execution Topology.*
-> arXiv:2605.13850. https://arxiv.org/abs/2605.13850
+如果这个框架对你的工作有帮助，请引用论文：
 
 ```bibtex
 @misc{huang_zhou_2026_dual_axis,
@@ -218,11 +210,6 @@ pytest
   url           = {https://arxiv.org/abs/2605.13850}
 }
 ```
-
-论文同时在 Zenodo 有永久 DOI
-（[10.5281/zenodo.19036557](https://doi.org/10.5281/zenodo.19036557)）——
-该 DOI 已写进 BibTeX 的 `doi` 字段做长期稳定引用。如果要引用某段具体
-**代码**（某个 `pattern.py`），直接链文件 URL；框架引用仍然是论文。
 
 ## 许可证
 

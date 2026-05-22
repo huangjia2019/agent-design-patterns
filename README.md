@@ -23,9 +23,8 @@ The two-axis framework, the 27 named patterns, and the five
 pattern-selection laws are introduced in **[A Two-Dimensional Framework
 for AI Agent Design Patterns: Cognitive Function × Execution
 Topology](https://arxiv.org/abs/2605.13850)** (Huang & Zhou,
-arXiv:2605.13850). This repository is the **runnable companion** to that
-paper. If you reference the framework in academic or industrial work,
-**[cite the paper](#citation)** — not this repo.
+arXiv:2605.13850). This repository is the runnable companion to the
+paper.
 
 ---
 
@@ -59,7 +58,7 @@ Every agent pattern sits at the intersection of two orthogonal axes.
 
 Seven × six = 42 cells. The 28 cells where interesting patterns live are
 the chapters of *Designing AI Agents* (Manning) and the lectures of the
-极客时间 column. The code in this repo is the third leg of the work.
+极客时间 column.
 
 The framework's claim is not that everything fits the matrix. The claim
 is that **giving a pattern a coordinate forces an answer to "why is this
@@ -72,10 +71,9 @@ question. A matrix does not.
 
 ![Two-Axis Framework matrix: 7 cognitive functions × 6 execution topologies = 42 cells, 28 patterns](./docs/matrix.png)
 
-The matrix is the framework's main IP. Every pattern below lives at one
-coordinate. Click any pattern name to enter that folder's code and README.
-Cells marked ✅ have runnable code; cells marked 🟡 have README
-scaffolding waiting for the lecture release.
+Every pattern below lives at one coordinate. Click any pattern name to
+enter that folder's code and README. Cells marked ✅ have runnable code;
+cells marked 🟡 are scaffolded.
 
 |  | **Chain** | **Parallel** | **Route** | **Loop** | **Orchestrate** | **Hierarchy** |
 |---|---|---|---|---|---|---|
@@ -93,9 +91,9 @@ scaffolding waiting for the lecture release.
 [Argus Full Case Study](./composition/c-argus-full-case/) ·
 [Checklist Benchmark Case](./composition/d-checklist-benchmark/)
 
-The 14 empty cells are not bugs. They mark either industry gaps not yet
-filled by any production harness, or topology-function combinations whose
-patterns haven't crystallized. They are research surface, not noise.
+The 14 empty cells mark either industry gaps no production harness has
+filled yet, or topology-function combinations whose patterns haven't
+crystallized.
 
 Each pattern folder follows the same shape: `pattern.py` (the minimal
 honest reference, 50–250 lines), `example.py` (a real-scenario case that
@@ -143,10 +141,9 @@ show the pattern in real production form, not toy form.
   [OpenHands](https://github.com/All-Hands-AI/OpenHands) for a production
   runtime. This repo is the design vocabulary you apply on top of any of
   them. Switching frameworks does not change the matrix.
-* **Not a flat catalog.** Flat lists ("17 agentic architectures") answer
-  *what exists*. The matrix answers *where your problem lives* and *which
-  patterns are wrong for that position*. The second question is the one
-  that costs you when you ship.
+* **Not a flat catalog.** A list answers *what patterns exist*. The matrix
+  answers *where a problem sits* and *which patterns are wrong for that
+  position*.
 * **Not toy code.** Every `pattern.py` is small (50–250 lines) on
   purpose, but it is honest code with real invariants and tests. Each
   `example.py` runs on data shaped like production. Engineering slices
@@ -196,7 +193,7 @@ you must not break when adapting.
 
 ## The thesis behind the framework
 
-Three lines from the book that this repo is the practical face of:
+Three lines from the book:
 
 * *Designing an agent is solving a constrained allocation problem.*
 * *A fixed token budget must be distributed across competing cognitive
@@ -220,9 +217,8 @@ as a system rather than as a flat list.
 | **Substack** · *[Agent Design Patterns](https://agentpatterns.substack.com)* | Free English newsletter, one essay every 1–2 weeks. Structural observation, not hype. |
 | **极客时间** · *[Claude Code 工程化实战](https://time.geekbang.org/)* | Published Chinese-language video column on the engineering practice of building agents on Claude Code. |
 
-This GitHub repo is the **third leg**. The book gives you the theory. The
-column gives you the lectures. This repo gives you code you can clone and
-read in 90 seconds.
+The book gives you the theory. The column gives you the lectures. This
+repo gives you runnable code.
 
 ---
 
@@ -264,15 +260,7 @@ where the pattern sits in the matrix.
 
 ## Citation
 
-The two-axis framework, the 27 named patterns, and the five
-pattern-selection laws come from the paper below. If you reference the
-framework in academic or industrial work, **cite the paper — not this
-repo.** A GitHub repository is companion code; the citable scholarly
-artifact is the arXiv paper.
-
-> Huang, J. & Zhou, J. T. (2026). *A Two-Dimensional Framework for AI
-> Agent Design Patterns: Cognitive Function × Execution Topology.*
-> arXiv:2605.13850. https://arxiv.org/abs/2605.13850
+If this framework is useful in your work, please cite the paper:
 
 ```bibtex
 @misc{huang_zhou_2026_dual_axis,
@@ -287,12 +275,6 @@ artifact is the arXiv paper.
   url           = {https://arxiv.org/abs/2605.13850}
 }
 ```
-
-The paper is also archived on Zenodo with a permanent DOI
-([10.5281/zenodo.19036557](https://doi.org/10.5281/zenodo.19036557)) —
-that DOI is carried in the BibTeX `doi` field for long-term stability.
-To reference a specific piece of *code* (a particular `pattern.py`),
-link the file URL directly; the framework citation stays the paper.
 
 ## License
 
