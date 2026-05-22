@@ -4,7 +4,7 @@
 
 *The model spends. The harness budgets. This repo is the vocabulary you can put in your project tomorrow.*
 
-[简体中文 README](README.zh-CN.md) · [Manning · *Designing AI Agents*](#book--column--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
+[简体中文 README](README.zh-CN.md) · [**Paper · arXiv:2605.13850**](https://arxiv.org/abs/2605.13850) · [Manning · *Designing AI Agents*](#book--column--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
 
 > **Looking for the full Argus running example as one evolving
 > codebase, organized by book chapter?** See the companion repo
@@ -12,6 +12,20 @@
 > — Argus grows module by module from Ch2 to Ch10, with each chapter's
 > `patterns/` + `argus/` side by side. That repo follows the book's
 > narrative; this repo is the standalone pattern catalog.
+
+---
+
+## The framework comes from a paper
+
+[![A Two-Dimensional Framework for AI Agent Design Patterns — arXiv:2605.13850](./docs/paper-card.png)](https://arxiv.org/abs/2605.13850)
+
+The two-axis framework, the 27 named patterns, and the five
+pattern-selection laws are introduced in **[A Two-Dimensional Framework
+for AI Agent Design Patterns: Cognitive Function × Execution
+Topology](https://arxiv.org/abs/2605.13850)** (Huang & Zhou,
+arXiv:2605.13850). This repository is the **runnable companion** to that
+paper. If you reference the framework in academic or industrial work,
+**[cite the paper](#citation)** — not this repo.
 
 ---
 
@@ -250,18 +264,35 @@ where the pattern sits in the matrix.
 
 ## Citation
 
-If you use the two-axis framework or any pattern in academic or
-industrial work:
+The two-axis framework, the 27 named patterns, and the five
+pattern-selection laws come from the paper below. If you reference the
+framework in academic or industrial work, **cite the paper — not this
+repo.** A GitHub repository is companion code; the citable scholarly
+artifact is the arXiv paper.
+
+> Huang, J. & Zhou, J. T. (2026). *A Two-Dimensional Framework for AI
+> Agent Design Patterns: Cognitive Function × Execution Topology.*
+> arXiv:2605.13850. https://arxiv.org/abs/2605.13850
 
 ```bibtex
-@misc{huang2026agentpatterns,
-  author = {Jia Huang},
-  title  = {Agent Design Patterns: A Two-Axis Framework},
-  year   = {2026},
-  url    = {https://github.com/huangjia2019/agent-design-patterns},
-  note   = {Companion code to \emph{Designing AI Agents} (Manning, 2026)}
+@misc{huang_zhou_2026_dual_axis,
+  author        = {Huang, Jia and Zhou, Joey Tianyi},
+  title         = {A Two-Dimensional Framework for AI Agent Design Patterns:
+                   Cognitive Function and Execution Topology},
+  year          = {2026},
+  eprint        = {2605.13850},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi           = {10.5281/zenodo.19036557},
+  url           = {https://arxiv.org/abs/2605.13850}
 }
 ```
+
+The paper is also archived on Zenodo with a permanent DOI
+([10.5281/zenodo.19036557](https://doi.org/10.5281/zenodo.19036557)) —
+that DOI is carried in the BibTeX `doi` field for long-term stability.
+To reference a specific piece of *code* (a particular `pattern.py`),
+link the file URL directly; the framework citation stays the paper.
 
 ## License
 

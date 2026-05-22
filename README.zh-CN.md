@@ -4,12 +4,25 @@
 
 *模型负责花，Harness 负责管账。这个仓库是你明天就能用进项目里的设计语言。*
 
-[English README](README.md) · [Manning · *Designing AI Agents*](#书--专栏--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Substack Newsletter](https://agentpatterns.substack.com) · [作者主页](https://kage-ai.com)
+[English README](README.md) · [**论文 · arXiv:2605.13850**](https://arxiv.org/abs/2605.13850) · [Manning · *Designing AI Agents*](#书--专栏--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Substack Newsletter](https://agentpatterns.substack.com) · [作者主页](https://kage-ai.com)
 
 > **想看完整 Argus running example 作为一个一章一章长出来的代码库？**
 > 配套仓库在 [**huangjia2019/designing-ai-agents**](https://github.com/huangjia2019/designing-ai-agents)
 > —— Argus 从第 2 章长到第 10 章，每章 `patterns/` + `argus/` 并列。
 > 那个仓库按书的章节叙事走；这个仓库是独立的模式 catalog。
+
+---
+
+## 框架来自一篇论文
+
+[![A Two-Dimensional Framework for AI Agent Design Patterns — arXiv:2605.13850](./docs/paper-card.png)](https://arxiv.org/abs/2605.13850)
+
+双轴框架、27 个命名模式、五条模式选型定律，都出自论文 **[A
+Two-Dimensional Framework for AI Agent Design Patterns: Cognitive
+Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
+（Huang & Zhou, arXiv:2605.13850）。这个仓库是那篇论文的**可跑配套
+代码**。在学术或工业工作中引用这个框架时，请**[引用论文](#引用)**——
+不是引用这个仓库。
 
 ---
 
@@ -184,17 +197,32 @@ pytest
 
 ## 引用
 
-学术或工业工作中使用双轴框架或某个模式：
+双轴框架、27 个命名模式、五条模式选型定律都出自下面这篇论文。在学术
+或工业工作中引用这个框架时，请**引用论文，不要引用这个仓库**。GitHub
+仓库是配套代码，可被引用的学术成果是 arXiv 论文。
+
+> Huang, J. & Zhou, J. T. (2026). *A Two-Dimensional Framework for AI
+> Agent Design Patterns: Cognitive Function × Execution Topology.*
+> arXiv:2605.13850. https://arxiv.org/abs/2605.13850
 
 ```bibtex
-@misc{huang2026agentpatterns,
-  author = {Jia Huang},
-  title  = {Agent Design Patterns: A Two-Axis Framework},
-  year   = {2026},
-  url    = {https://github.com/huangjia2019/agent-design-patterns},
-  note   = {Companion code to \emph{Designing AI Agents} (Manning, 2026)}
+@misc{huang_zhou_2026_dual_axis,
+  author        = {Huang, Jia and Zhou, Joey Tianyi},
+  title         = {A Two-Dimensional Framework for AI Agent Design Patterns:
+                   Cognitive Function and Execution Topology},
+  year          = {2026},
+  eprint        = {2605.13850},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi           = {10.5281/zenodo.19036557},
+  url           = {https://arxiv.org/abs/2605.13850}
 }
 ```
+
+论文同时在 Zenodo 有永久 DOI
+（[10.5281/zenodo.19036557](https://doi.org/10.5281/zenodo.19036557)）——
+该 DOI 已写进 BibTeX 的 `doi` 字段做长期稳定引用。如果要引用某段具体
+**代码**（某个 `pattern.py`），直接链文件 URL；框架引用仍然是论文。
 
 ## 许可证
 
