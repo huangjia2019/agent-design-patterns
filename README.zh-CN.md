@@ -4,7 +4,7 @@
 
 *模型负责花，Harness 负责管账。这个仓库是你明天就能用进项目里的设计语言。*
 
-[English README](README.md) · [**论文 · arXiv:2605.13850**](https://arxiv.org/abs/2605.13850) · [Manning · *Designing AI Agents*](#书--专栏--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Substack Newsletter](https://agentpatterns.substack.com) · [作者主页](https://kage-ai.com)
+[English README](README.md) · [**Manning · *Designing AI Agents***](https://hubs.la/Q04hCsH10) · [论文 · arXiv:2605.13850](https://arxiv.org/abs/2605.13850) · [极客时间专栏](https://time.geekbang.org/) · [Substack Newsletter](https://agentpatterns.substack.com) · [作者主页](https://kage-ai.com)
 
 > **想看完整 Argus running example 作为一个一章一章长出来的代码库？**
 > 配套仓库在 [**huangjia2019/designing-ai-agents**](https://github.com/huangjia2019/designing-ai-agents)
@@ -15,11 +15,11 @@
 
 ## 配套新书
 
-<a href="https://www.manning.com/books/designing-ai-agents">
-  <img src="./docs/manning-book-card.png" alt="Designing AI Agents — Manning Publications, MEAP" width="420">
+<a href="https://hubs.la/Q04hCsH10">
+  <img src="./docs/manning-book-card.png" alt="Designing AI Agents — Manning" width="420">
 </a>
 
-**[Designing AI Agents — Manning Publications](https://www.manning.com/books/designing-ai-agents)** · 黄佳 · MEAP 已开放 · ISBN 9781633433632
+**[*Designing AI Agents*](https://hubs.la/Q04hCsH10)** —— 生产级 AI Agent 设计模式的工程参考。(Manning)
 
 ---
 
@@ -171,7 +171,7 @@ pytest
 
 | | |
 |---|---|
-| **Manning** · *[Designing AI Agents](https://www.manning.com/books/designing-ai-agents)* | 英文技术书。28 个模式 × 7 认知功能 × 6 拓扑。ISBN 9781633433632，MEAP 已开放。 |
+| **Manning** · *[Designing AI Agents](https://hubs.la/Q04hCsH10)* | 生产级 AI Agent 设计模式的工程参考。27 模式 × 7 认知功能 × 6 拓扑。 |
 | **极客时间** · *[《Agent 设计模式之美》](https://time.geekbang.org/)* | 中文视频专栏。模式逐讲讲透，配真实生产 harness 工程切片。 |
 | **Substack** · *[Agent Design Patterns](https://agentpatterns.substack.com)* | 免费英文 newsletter，1-2 周一篇。结构性观察，不写 hype。 |
 | **极客时间** · *[Claude Code 工程化实战](https://time.geekbang.org/)* | 已上线的中文视频专栏，讲 Claude Code 上做 agent 工程化。 |

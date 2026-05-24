@@ -4,7 +4,7 @@
 
 *The model spends. The harness budgets. This repo is the vocabulary you can put in your project tomorrow.*
 
-[简体中文 README](README.zh-CN.md) · [**Paper · arXiv:2605.13850**](https://arxiv.org/abs/2605.13850) · [Manning · *Designing AI Agents*](#book--column--newsletter) · [极客时间专栏](https://time.geekbang.org/) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
+[简体中文 README](README.zh-CN.md) · [**Manning · *Designing AI Agents***](https://hubs.la/Q04hCsH10) · [Paper · arXiv:2605.13850](https://arxiv.org/abs/2605.13850) · [极客时间专栏](https://time.geekbang.org/) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
 
 > **Looking for the full Argus running example as one evolving
 > codebase, organized by book chapter?** See the companion repo
@@ -17,11 +17,11 @@
 
 ## The book
 
-<a href="https://www.manning.com/books/designing-ai-agents">
-  <img src="./docs/manning-book-card.png" alt="Designing AI Agents — Manning Publications, MEAP" width="420">
+<a href="https://hubs.la/Q04hCsH10">
+  <img src="./docs/manning-book-card.png" alt="Designing AI Agents — Manning" width="420">
 </a>
 
-**[Designing AI Agents — Manning Publications](https://www.manning.com/books/designing-ai-agents)** · Jia Huang · MEAP open · ISBN 9781633433632
+**[*Designing AI Agents*](https://hubs.la/Q04hCsH10)** — the design-pattern catalogue for production AI agents. (Manning)
 
 ---
 
@@ -222,7 +222,7 @@ as a system rather than as a flat list.
 
 | | |
 |---|---|
-| **Manning** · *[Designing AI Agents](https://www.manning.com/books/designing-ai-agents)* | English-language technical book. 28 patterns across 7 cognitive functions and 6 topologies. ISBN 9781633433632. MEAP open. |
+| **Manning** · *[Designing AI Agents](https://hubs.la/Q04hCsH10)* | The design-pattern catalogue for production AI agents. 27 patterns across 7 cognitive functions and 6 topologies. |
 | **极客时间** · *[《Agent 设计模式之美》](https://time.geekbang.org/)* | Chinese-language video column. Pattern-by-pattern walkthrough with engineering slices from real production harnesses. |
 | **Substack** · *[Agent Design Patterns](https://agentpatterns.substack.com)* | Free English newsletter, one essay every 1–2 weeks. Structural observation, not hype. |
 | **极客时间** · *[Claude Code 工程化实战](https://time.geekbang.org/)* | Published Chinese-language video column on the engineering practice of building agents on Claude Code. |
