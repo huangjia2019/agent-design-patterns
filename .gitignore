@@ -15,5 +15,9 @@ dist/
 *.log
 .coverage
 htmlcov/
+seekdb_data.db
+checkpoints.db
 .idea/
 .vscode/
+LANGGRAPH_PLAN.md
+docs/superpowers/

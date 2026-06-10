@@ -7,7 +7,7 @@ name = "agent-design-patterns"
 version = "0.1.0"
 description = "Companion code for the Agent Design Patterns column and book by Jia Huang"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Jia Huang", email = "tohuangjia@gmail.com" }]
 keywords = ["agent", "llm", "design-patterns", "ai-engineering"]
@@ -20,8 +20,21 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+langgraph = [
+  "langchain>=1.0,<2",
+  "langchain-core>=1.0,<2",
+  "langgraph>=1.0,<2",
+  "langchain-openai>=1.0,<2",
+  "langchain-anthropic>=1.0,<2",
+  "langchain-oceanbase>=0.5.1",
+  "langchain-dev-utils>=1.4.6",
+  "python-dotenv>=1.0",
+]
 dev = [
   "pytest>=8.0",
+  "nbmake>=1.5",
+  "jupyterlab>=4.0",
+  "ipykernel>=6.0",
   "ruff>=0.5",
 ]
 
@@ -38,4 +51,4 @@ addopts = "--import-mode=importlib"
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
