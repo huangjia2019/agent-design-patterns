@@ -7872,7 +7872,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a2c383f0">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a2c383f0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7884,42 +7884,31 @@ a.anchor-link {
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TypedDict</span>
 
-<span class="c1"># Make root and pattern folder importable</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">"../../.."</span><span class="p">)))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">".."</span><span class="p">)))</span>
+<span class="c1"># shared.py lives in the pattern folder (the parent dir); model_config.py and</span>
+<span class="c1"># nbtools.py at the repo root. Find each by walking up, so the notebook isn't</span>
+<span class="c1"># tied to a fixed folder depth (no brittle "../../.." counting).</span>
+<span class="k">for</span> <span class="n">_marker</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"shared.py"</span><span class="p">,</span> <span class="s2">"model_config.py"</span><span class="p">,</span> <span class="s2">"nbtools.py"</span><span class="p">):</span>
+    <span class="n">_dir</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">(),</span> <span class="o">*</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">_marker</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_dir</span><span class="p">))</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.messages</span><span class="w"> </span><span class="kn">import</span> <span class="n">AIMessage</span><span class="p">,</span> <span class="n">AnyMessage</span><span class="p">,</span> <span class="n">ToolMessage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">StructuredTool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">END</span><span class="p">,</span> <span class="n">START</span><span class="p">,</span> <span class="n">StateGraph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.prebuilt</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolNode</span>
 
-<span class="c1"># Shared hook factories — same definitions used by langchain/ notebook</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hooks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="c1"># Shared hook factories + runner — same definitions used by the langchain/ notebook.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shared</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HookPhase</span><span class="p">,</span> <span class="n">HookResult</span><span class="p">,</span>
     <span class="n">amount_threshold_hook</span><span class="p">,</span> <span class="n">blocklist_hook</span><span class="p">,</span> <span class="n">output_schema_hook</span><span class="p">,</span>
+    <span class="n">applicable_hooks</span><span class="p">,</span> <span class="n">run_single_hook</span><span class="p">,</span>
 <span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Imports ready"</span><span class="p">)</span>
+<span class="c1"># Shared graph renderer (PNG, ASCII fallback) — used by every pattern's notebooks.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">nbtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_graph</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Imports ready
-</pre>
 </div>
 </div>
 </div>
@@ -7943,7 +7932,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=18fc4db5">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=18fc4db5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7959,7 +7948,7 @@ a.anchor-link {
     <span class="n">tool_args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 
     <span class="c1"># Single list of hook config dicts — each has {"name", "fn", "phase", "priority", "blocks", "applies_to"}.</span>
-    <span class="c1"># Same shape as langchain/ hooks, plus a "phase" key for routing.</span>
+    <span class="c1"># The nodes select the relevant ones per phase/tool via shared.applicable_hooks.</span>
     <span class="n">hooks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
 
     <span class="n">pre_outcomes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
@@ -7970,22 +7959,7 @@ a.anchor-link {
     <span class="n">final_status</span><span class="p">:</span> <span class="nb">str</span>
 
 <span class="n">ToolFn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"State ready"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>State ready
-</pre>
 </div>
 </div>
 </div>
@@ -8003,7 +7977,7 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c9892558">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c9892558">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8035,22 +8009,7 @@ a.anchor-link {
         <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">text</span>
     <span class="k">return</span> <span class="n">text</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"ToolNode helpers ready"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>ToolNode helpers ready
-</pre>
 </div>
 </div>
 </div>
@@ -8062,66 +8021,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Hook-runner">Hook runner<a class="anchor-link" href="#Hook-runner">¶</a></h2><p><code>run_single_hook</code> is the graph-specific dispatcher. It reads <code>fn</code> from the hook config dict and handles fail-closed + shadow-mode semantics — same behavior as <code>GuardrailSandwichMiddleware._run_hook</code> in the langchain/ version.</p>
-<p>The hook factories themselves (<code>amount_threshold_hook</code>, <code>blocklist_hook</code>, <code>output_schema_hook</code>) are imported from the shared <a href="../hooks.py"><code>hooks.py</code></a>.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3c8c4a8e">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">run_single_hook</span><span class="p">(</span><span class="n">hook_cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">tool_output</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Run one hook and return a structured outcome dict.</span>
-<span class="sd">    Same fail-closed + shadow-mode semantics as GuardrailSandwichMiddleware in langchain/."""</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"fn"</span><span class="p">]</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">result</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">tool_output</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="c1"># Fail closed: crash → BLOCK</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"hook_name"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
-            <span class="s2">"phase"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"phase"</span><span class="p">],</span>
-            <span class="s2">"result"</span><span class="p">:</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">BLOCK</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="s2">"reason"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"hook crashed: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-        <span class="p">}</span>
-
-    <span class="c1"># Shadow mode: blocks=False downgrades BLOCK to WARN</span>
-    <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">BLOCK</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">hook_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"blocks"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"hook_name"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
-            <span class="s2">"phase"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"phase"</span><span class="p">],</span>
-            <span class="s2">"result"</span><span class="p">:</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">WARN</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-            <span class="s2">"reason"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"[shadow] </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-        <span class="p">}</span>
-
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">"hook_name"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
-        <span class="s2">"phase"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"phase"</span><span class="p">],</span>
-        <span class="s2">"result"</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span>
-        <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
-    <span class="p">}</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"run_single_hook ready"</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>run_single_hook ready
-</pre>
-</div>
+<h2 id="Hook-runner">Hook runner<a class="anchor-link" href="#Hook-runner">¶</a></h2><p><code>run_single_hook</code> runs one hook and returns a structured outcome dict, with two safety rules: <strong>fail-closed</strong> (a hook that raises is treated as <code>BLOCK</code>, never <code>PASS</code>) and <strong>shadow mode</strong> (<code>blocks=False</code> downgrades a <code>BLOCK</code> to <code>WARN</code> so the tool still runs). It lives in the shared <a href="../shared.py"><code>shared.py</code></a> — the <em>same</em> runner the langchain/ middleware calls — so both notebooks produce identical outcome records. The hook factories (<code>amount_threshold_hook</code>, <code>blocklist_hook</code>, <code>output_schema_hook</code>) and the <code>applicable_hooks</code> selector come from there too.</p>
 </div>
 </div>
 </div>
@@ -8140,12 +8040,12 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=03dcc362">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=03dcc362">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">pre_hooks_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">SandwichState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
@@ -8153,11 +8053,8 @@ a.anchor-link {
     <span class="n">args</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tool_args"</span><span class="p">,</span> <span class="p">{})</span>
     <span class="n">hooks</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hooks"</span><span class="p">,</span> <span class="p">[])</span>
 
-    <span class="c1"># Filter by phase — the graph uses a single hooks list, unlike langchain/'s separate lists.</span>
-    <span class="n">pre_hooks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hooks</span> <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="s2">"phase"</span><span class="p">]</span> <span class="o">==</span> <span class="n">HookPhase</span><span class="o">.</span><span class="n">PRE</span><span class="o">.</span><span class="n">value</span><span class="p">],</span>
-        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">h</span><span class="p">:</span> <span class="n">h</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"priority"</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
-    <span class="p">)</span>
+    <span class="c1"># Select PRE hooks that apply to this tool, in priority order (shared with langchain/).</span>
+    <span class="n">pre_hooks</span> <span class="o">=</span> <span class="n">applicable_hooks</span><span class="p">(</span><span class="n">hooks</span><span class="p">,</span> <span class="n">HookPhase</span><span class="o">.</span><span class="n">PRE</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">)</span>
     <span class="n">outcomes</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># Run hooks in priority order. First hard BLOCK stops the graph immediately.</span>
@@ -8172,22 +8069,7 @@ a.anchor-link {
         <span class="s2">"pre_outcomes"</span><span class="p">:</span> <span class="n">outcomes</span><span class="p">,</span>
         <span class="s2">"messages"</span><span class="p">:</span> <span class="p">[</span><span class="n">make_tool_call_message</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">)],</span>
     <span class="p">}</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"pre_hooks_node ready"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>pre_hooks_node ready
-</pre>
 </div>
 </div>
 </div>
@@ -8203,12 +8085,12 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a1fbd3a8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a1fbd3a8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_tool_node</span><span class="p">(</span><span class="n">tools</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ToolFn</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ToolNode</span><span class="p">:</span>
@@ -8221,22 +8103,7 @@ a.anchor-link {
     <span class="c1"># instead of re-raising into the graph runtime. That keeps the pattern</span>
     <span class="c1"># logic in one place: post_hooks_node can normalize the failure.</span>
     <span class="k">return</span> <span class="n">ToolNode</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">handle_tool_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"ToolNode builder ready"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>ToolNode builder ready
-</pre>
 </div>
 </div>
 </div>
@@ -8253,12 +8120,12 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fc656084">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=fc656084">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">post_hooks_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">SandwichState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
@@ -8282,10 +8149,8 @@ a.anchor-link {
 
     <span class="n">tool_output</span> <span class="o">=</span> <span class="n">decode_tool_message</span><span class="p">(</span><span class="n">last_message</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_message</span><span class="p">,</span> <span class="n">ToolMessage</span><span class="p">)</span> <span class="k">else</span> <span class="n">last_message</span>
 
-    <span class="n">post_hooks</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hooks</span> <span class="k">if</span> <span class="n">h</span><span class="p">[</span><span class="s2">"phase"</span><span class="p">]</span> <span class="o">==</span> <span class="n">HookPhase</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">value</span><span class="p">],</span>
-        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">h</span><span class="p">:</span> <span class="n">h</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"priority"</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
-    <span class="p">)</span>
+    <span class="c1"># Select POST hooks that apply to this tool, in priority order (shared with langchain/).</span>
+    <span class="n">post_hooks</span> <span class="o">=</span> <span class="n">applicable_hooks</span><span class="p">(</span><span class="n">hooks</span><span class="p">,</span> <span class="n">HookPhase</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">)</span>
     <span class="n">outcomes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">rollback</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -8302,22 +8167,7 @@ a.anchor-link {
         <span class="s2">"rollback_marked"</span><span class="p">:</span> <span class="n">rollback</span><span class="p">,</span>
         <span class="s2">"final_status"</span><span class="p">:</span> <span class="s2">"blocked_post"</span> <span class="k">if</span> <span class="n">rollback</span> <span class="k">else</span> <span class="s2">"passed"</span><span class="p">,</span>
     <span class="p">}</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"post_hooks_node ready"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>post_hooks_node ready
-</pre>
 </div>
 </div>
 </div>
@@ -8334,12 +8184,12 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d965ccc5">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d965ccc5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">route_after_pre_hooks</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">SandwichState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -8357,22 +8207,7 @@ a.anchor-link {
     <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">"execute_tool"</span><span class="p">,</span> <span class="s2">"post_hooks"</span><span class="p">)</span>
     <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">"post_hooks"</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Graph builder ready"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Graph builder ready
-</pre>
 </div>
 </div>
 </div>
@@ -8388,39 +8223,24 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0a0df58e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0a0df58e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">transfer_funds</span><span class="p">(</span><span class="n">account</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">memo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Simulate a successful transfer."""</span>
     <span class="c1"># A healthy receipt includes the fields our downstream system expects.</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"account"</span><span class="p">:</span> <span class="n">account</span><span class="p">,</span> <span class="s2">"amount"</span><span class="p">:</span> <span class="n">amount</span><span class="p">,</span> <span class="s2">"tx_id"</span><span class="p">:</span> <span class="s2">"TX-20250609-001"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"account"</span><span class="p">:</span> <span class="n">account</span><span class="p">,</span> <span class="s2">"amount"</span><span class="p">:</span> <span class="n">amount</span><span class="p">,</span> <span class="s2">"tx_id"</span><span class="p">:</span> <span class="s2">"TX-20250610-001"</span><span class="p">}</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">broken_transfer_funds</span><span class="p">(</span><span class="n">account</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">memo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Simulate a buggy transfer that forgets tx_id."""</span>
     <span class="c1"># This intentionally breaks the schema so the post-hook has something to catch.</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"account"</span><span class="p">:</span> <span class="n">account</span><span class="p">,</span> <span class="s2">"amount"</span><span class="p">:</span> <span class="n">amount</span><span class="p">}</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Mock tools ready"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Mock tools ready
-</pre>
 </div>
 </div>
 </div>
@@ -8446,10 +8266,10 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Hook configs — imported from shared hooks.py, fn inlined in each dict.</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Hook configs — imported from the shared shared.py, fn inlined in each dict.</span>
 <span class="n">all_hooks</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">amount_threshold_hook</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">),</span>
     <span class="n">blocklist_hook</span><span class="p">(</span><span class="s2">"account"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"BLOCKED-999"</span><span class="p">,</span> <span class="s2">"SANCTIONED-001"</span><span class="p">}),</span>
@@ -8460,7 +8280,7 @@ a.anchor-link {
 <span class="n">sandwich</span> <span class="o">=</span> <span class="n">build_guardrail_graph</span><span class="p">({</span><span class="s2">"transfer"</span><span class="p">:</span> <span class="n">transfer_funds</span><span class="p">},</span> <span class="n">all_hooks</span><span class="p">)</span>
 <span class="n">broken_sandwich</span> <span class="o">=</span> <span class="n">build_guardrail_graph</span><span class="p">({</span><span class="s2">"transfer"</span><span class="p">:</span> <span class="n">broken_transfer_funds</span><span class="p">},</span> <span class="n">all_hooks</span><span class="p">)</span>
 
-<span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">sandwich</span><span class="o">.</span><span class="n">get_graph</span><span class="p">()</span><span class="o">.</span><span class="n">draw_mermaid_png</span><span class="p">(),</span> <span class="n">alt</span><span class="o">=</span><span class="s2">"Guardrail Sandwich LangGraph graph"</span><span class="p">))</span>
+<span class="n">show_graph</span><span class="p">(</span><span class="n">sandwich</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="s2">"Guardrail Sandwich graph"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8489,12 +8309,12 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=59a4ca8f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=59a4ca8f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">print_trace</span><span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -8507,24 +8327,9 @@ a.anchor-link {
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"pre_outcomes"</span><span class="p">,</span> <span class="s2">"post_outcomes"</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">:"</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">"  -"</span><span class="p">,</span> <span class="n">outcome</span><span class="p">[</span><span class="s2">"hook_name"</span><span class="p">],</span> <span class="n">outcome</span><span class="p">[</span><span class="s2">"result"</span><span class="p">],</span> <span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">outcome</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">])</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Trace printer ready"</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - [</span><span class="si">{</span><span class="n">o</span><span class="p">[</span><span class="s1">'phase'</span><span class="p">]</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">o</span><span class="p">[</span><span class="s1">'hook_name'</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">o</span><span class="p">[</span><span class="s1">'result'</span><span class="p">]</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="p">[</span><span class="s1">'reason'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Trace printer ready
-</pre>
 </div>
 </div>
 </div>
@@ -8545,7 +8350,7 @@ a.anchor-link {
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">result_ok</span> <span class="o">=</span> <span class="n">sandwich</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
@@ -8570,12 +8375,12 @@ a.anchor-link {
 Mock run 1: routine transfer
 ----------------------------
 final_status: passed
-tool_output : {'status': 'ok', 'account': 'CORP-1234', 'amount': 4200.0, 'tx_id': 'TX-20250609-001'}
+tool_output : {'status': 'ok', 'account': 'CORP-1234', 'amount': 4200.0, 'tx_id': 'TX-20250610-001'}
 pre_outcomes:
-  - amount_threshold pass -&gt; amount=4200 within limit
-  - blocklist pass -&gt; account clear
+  - [pre] amount_threshold pass -&gt; amount=4200 within limit
+  - [pre] blocklist pass -&gt; account clear
 post_outcomes:
-  - output_schema pass -&gt; output schema valid
+  - [post] output_schema pass -&gt; output schema valid
 </pre>
 </div>
 </div>
@@ -8597,7 +8402,7 @@ post_outcomes:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">result_blocked_pre</span> <span class="o">=</span> <span class="n">sandwich</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
@@ -8624,7 +8429,7 @@ Mock run 2: threshold block
 final_status: blocked_pre
 tool_output : None
 pre_outcomes:
-  - amount_threshold block -&gt; amount=5000000 exceeds 1000000
+  - [pre] amount_threshold block -&gt; amount=5000000 exceeds 1000000
 </pre>
 </div>
 </div>
@@ -8646,7 +8451,7 @@ pre_outcomes:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">result_blocklist</span> <span class="o">=</span> <span class="n">sandwich</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
@@ -8673,8 +8478,8 @@ Mock run 3: blocklist block
 final_status: blocked_pre
 tool_output : None
 pre_outcomes:
-  - amount_threshold pass -&gt; amount=500 within limit
-  - blocklist block -&gt; account='SANCTIONED-001' on blocklist
+  - [pre] amount_threshold pass -&gt; amount=500 within limit
+  - [pre] blocklist block -&gt; account='SANCTIONED-001' on blocklist
 </pre>
 </div>
 </div>
@@ -8696,7 +8501,7 @@ pre_outcomes:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">result_blocked_post</span> <span class="o">=</span> <span class="n">broken_sandwich</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span>
@@ -8723,10 +8528,10 @@ Mock run 4: bad receipt schema
 final_status: blocked_post
 tool_output : {'status': 'ok', 'account': 'CORP-1234', 'amount': 4200.0}
 pre_outcomes:
-  - amount_threshold pass -&gt; amount=4200 within limit
-  - blocklist pass -&gt; account clear
+  - [pre] amount_threshold pass -&gt; amount=4200 within limit
+  - [pre] blocklist pass -&gt; account clear
 post_outcomes:
-  - output_schema block -&gt; output missing keys: ['tx_id']
+  - [post] output_schema block -&gt; output missing keys: ['tx_id']
 </pre>
 </div>
 </div>
@@ -8749,7 +8554,7 @@ post_outcomes:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [15]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Shared model loader — registers CN providers (AI Studio, DashScope, etc.)</span>
@@ -8779,7 +8584,7 @@ post_outcomes:
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [16]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">email</span> <span class="o">=</span> <span class="s2">"""</span>
@@ -8829,7 +8634,7 @@ Memo: office supplies.
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">transfer_args</span> <span class="o">=</span> <span class="kc">None</span>
@@ -8862,7 +8667,11 @@ Memo: office supplies.
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Model call failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+<pre>{
+  "account": "CORP-1234",
+  "amount": "JPY 4,200",
+  "memo": "office supplies"
+}
 </pre>
 </div>
 </div>
@@ -8884,7 +8693,7 @@ Memo: office supplies.
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [19]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [18]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">if</span> <span class="n">transfer_args</span><span class="p">:</span>
@@ -8908,7 +8717,13 @@ Memo: office supplies.
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>No extracted args available.
+<pre>
+Real run: extracted transfer
+----------------------------
+final_status: blocked_pre
+tool_output : None
+pre_outcomes:
+  - [pre] amount_threshold block -&gt; hook crashed: TypeError: '&gt;' not supported between instances of 'str' and 'int'
 </pre>
 </div>
 </div>

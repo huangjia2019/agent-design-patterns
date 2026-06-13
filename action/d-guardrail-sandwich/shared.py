@@ -1,12 +1,18 @@
-"""Shared hook factories for Guardrail Sandwich tutorials.
+"""Shared hook factories for the Guardrail Sandwich reference implementations.
 
-Both the langgraph/ and langchain/ notebooks import from here so the hook
-definitions stay in sync. Each factory returns a config dict:
+Both the langgraph/ and langchain/ notebooks import from here, so the hook
+definitions — and the runner that executes them — stay in sync between the two
+frameworks. Each factory returns a config dict:
 
-    {"name", "fn", "phase" (langgraph only), "priority", "blocks", "applies_to"}
+    {"name", "fn", "phase", "priority", "blocks", "applies_to"}
 
-The langchain/ notebook ignores the "phase" key since it uses separate
-pre_hooks/post_hooks lists.
+- phase       — PRE (before the tool) or POST (after it)
+- priority    — lower runs first
+- blocks      — False = shadow mode (a BLOCK is downgraded to WARN, tool still runs)
+- applies_to  — None = every tool; or a list of tool names this hook guards
+
+Both notebooks honor every field: they filter by `phase` and `applies_to`,
+sort by `priority`, and run each hook through `run_single_hook` below.
 """
 from __future__ import annotations
 
@@ -66,3 +72,38 @@ def output_schema_hook(required_keys: list[str], *,
         return HookResult.PASS.value, "output schema valid"
     return {"name": name, "fn": fn, "phase": HookPhase.POST.value,
             "priority": priority, "blocks": blocks, "applies_to": applies_to}
+
+
+def applicable_hooks(hooks: list[dict[str, Any]], phase: HookPhase, tool_name: str) -> list[dict[str, Any]]:
+    """Hooks for this phase that apply to this tool, in priority order.
+
+    `applies_to=None` means the hook guards every tool; otherwise the tool name
+    must be listed. Both notebooks select hooks through this one function."""
+    selected = [
+        h for h in hooks
+        if h["phase"] == phase.value
+        and (h.get("applies_to") is None or tool_name in h["applies_to"])
+    ]
+    return sorted(selected, key=lambda h: h.get("priority", 100))
+
+
+def run_single_hook(hook_cfg: dict[str, Any], tool_name: str, args: dict[str, Any],
+                    tool_output: Any) -> dict[str, Any]:
+    """Run one hook and return a structured outcome dict.
+
+    Two safety rules, identical on both sides:
+    - Fail closed: if the hook fn raises, treat it as BLOCK (never PASS).
+    - Shadow mode: if blocks=False, a BLOCK is downgraded to WARN (tool still runs).
+    """
+    outcome = {"hook_name": hook_cfg["name"], "phase": hook_cfg["phase"]}
+    fn = hook_cfg["fn"]
+    try:
+        result, reason = fn(tool_name, args, tool_output)
+    except Exception as e:  # noqa: BLE001 — fail closed: a crashing guard must not open the door
+        return {**outcome, "result": HookResult.BLOCK.value,
+                "reason": f"hook crashed: {type(e).__name__}: {e}"}
+
+    if result == HookResult.BLOCK.value and not hook_cfg.get("blocks", True):
+        return {**outcome, "result": HookResult.WARN.value, "reason": f"[shadow] {reason}"}
+
+    return {**outcome, "result": result, "reason": reason}

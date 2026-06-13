@@ -40,32 +40,31 @@ from __future__ import annotations
 
 import json
 import operator
-import os
 import sys
+from pathlib import Path
 from typing import Annotated, Any, Callable, TypedDict
 
-# Make root and pattern folder importable
-sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "../../..")))
-sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "..")))
+# shared.py lives in the pattern folder (the parent dir); model_config.py and
+# nbtools.py at the repo root. Find each by walking up, so the notebook isn't
+# tied to a fixed folder depth (no brittle "../../.." counting).
+for _marker in ("shared.py", "model_config.py", "nbtools.py"):
+    _dir = next(p for p in (Path.cwd(), *Path.cwd().parents) if (p / _marker).exists())
+    sys.path.insert(0, str(_dir))
 
-from dotenv import load_dotenv
-from IPython.display import Image, display
 from langchain_core.messages import AIMessage, AnyMessage, ToolMessage
 from langchain_core.tools import StructuredTool
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
-# Shared hook factories — same definitions used by langchain/ notebook
-from hooks import (
+# Shared hook factories + runner — same definitions used by the langchain/ notebook.
+from shared import (
     HookPhase, HookResult,
     amount_threshold_hook, blocklist_hook, output_schema_hook,
+    applicable_hooks, run_single_hook,
 )
-
-print("Imports ready")
+# Shared graph renderer (PNG, ASCII fallback) — used by every pattern's notebooks.
+from nbtools import show_graph
 ```
-
-    Imports ready
-
 
 ## State
 
@@ -89,7 +88,7 @@ class SandwichState(TypedDict, total=False):
     tool_args: dict[str, Any]
 
     # Single list of hook config dicts — each has {"name", "fn", "phase", "priority", "blocks", "applies_to"}.
-    # Same shape as langchain/ hooks, plus a "phase" key for routing.
+    # The nodes select the relevant ones per phase/tool via shared.applicable_hooks.
     hooks: list[dict[str, Any]]
 
     pre_outcomes: list[dict[str, Any]]
@@ -100,12 +99,7 @@ class SandwichState(TypedDict, total=False):
     final_status: str
 
 ToolFn = Callable[..., Any]
-
-print("State ready")
 ```
-
-    State ready
-
 
 ## `ToolNode`: the middle slice
 
@@ -141,57 +135,11 @@ def decode_tool_message(message: ToolMessage) -> Any:
         except json.JSONDecodeError:
             return text
     return text
-
-print("ToolNode helpers ready")
 ```
-
-    ToolNode helpers ready
-
 
 ## Hook runner
 
-`run_single_hook` is the graph-specific dispatcher. It reads `fn` from the hook config dict and handles fail-closed + shadow-mode semantics — same behavior as `GuardrailSandwichMiddleware._run_hook` in the langchain/ version.
-
-The hook factories themselves (`amount_threshold_hook`, `blocklist_hook`, `output_schema_hook`) are imported from the shared [`hooks.py`](../hooks.py).
-
-
-```python
-def run_single_hook(hook_cfg: dict[str, Any], tool_name: str, args: dict[str, Any], tool_output: Any) -> dict[str, Any]:
-    """Run one hook and return a structured outcome dict.
-    Same fail-closed + shadow-mode semantics as GuardrailSandwichMiddleware in langchain/."""
-    fn = hook_cfg["fn"]
-    try:
-        result, reason = fn(tool_name, args, tool_output)
-    except Exception as e:
-        # Fail closed: crash → BLOCK
-        return {
-            "hook_name": hook_cfg["name"],
-            "phase": hook_cfg["phase"],
-            "result": HookResult.BLOCK.value,
-            "reason": f"hook crashed: {type(e).__name__}: {e}",
-        }
-
-    # Shadow mode: blocks=False downgrades BLOCK to WARN
-    if result == HookResult.BLOCK.value and not hook_cfg.get("blocks", True):
-        return {
-            "hook_name": hook_cfg["name"],
-            "phase": hook_cfg["phase"],
-            "result": HookResult.WARN.value,
-            "reason": f"[shadow] {reason}",
-        }
-
-    return {
-        "hook_name": hook_cfg["name"],
-        "phase": hook_cfg["phase"],
-        "result": result,
-        "reason": reason,
-    }
-
-print("run_single_hook ready")
-```
-
-    run_single_hook ready
-
+`run_single_hook` runs one hook and returns a structured outcome dict, with two safety rules: **fail-closed** (a hook that raises is treated as `BLOCK`, never `PASS`) and **shadow mode** (`blocks=False` downgrades a `BLOCK` to `WARN` so the tool still runs). It lives in the shared [`shared.py`](../shared.py) — the *same* runner the langchain/ middleware calls — so both notebooks produce identical outcome records. The hook factories (`amount_threshold_hook`, `blocklist_hook`, `output_schema_hook`) and the `applicable_hooks` selector come from there too.
 
 ## Node 1: pre-hooks
 
@@ -207,11 +155,8 @@ def pre_hooks_node(state: SandwichState) -> dict[str, Any]:
     args = state.get("tool_args", {})
     hooks = state.get("hooks", [])
 
-    # Filter by phase — the graph uses a single hooks list, unlike langchain/'s separate lists.
-    pre_hooks = sorted(
-        [h for h in hooks if h["phase"] == HookPhase.PRE.value],
-        key=lambda h: h.get("priority", 100),
-    )
+    # Select PRE hooks that apply to this tool, in priority order (shared with langchain/).
+    pre_hooks = applicable_hooks(hooks, HookPhase.PRE, tool_name)
     outcomes = []
 
     # Run hooks in priority order. First hard BLOCK stops the graph immediately.
@@ -226,12 +171,7 @@ def pre_hooks_node(state: SandwichState) -> dict[str, Any]:
         "pre_outcomes": outcomes,
         "messages": [make_tool_call_message(tool_name, args)],
     }
-
-print("pre_hooks_node ready")
 ```
-
-    pre_hooks_node ready
-
 
 ## Node 2: tool execution
 
@@ -249,12 +189,7 @@ def build_tool_node(tools: dict[str, ToolFn]) -> ToolNode:
     # instead of re-raising into the graph runtime. That keeps the pattern
     # logic in one place: post_hooks_node can normalize the failure.
     return ToolNode(wrapped, handle_tool_errors=True)
-
-print("ToolNode builder ready")
 ```
-
-    ToolNode builder ready
-
 
 ## Node 3: post-hooks
 
@@ -285,10 +220,8 @@ def post_hooks_node(state: SandwichState) -> dict[str, Any]:
 
     tool_output = decode_tool_message(last_message) if isinstance(last_message, ToolMessage) else last_message
 
-    post_hooks = sorted(
-        [h for h in hooks if h["phase"] == HookPhase.POST.value],
-        key=lambda h: h.get("priority", 100),
-    )
+    # Select POST hooks that apply to this tool, in priority order (shared with langchain/).
+    post_hooks = applicable_hooks(hooks, HookPhase.POST, tool_name)
     outcomes = []
     rollback = False
 
@@ -305,12 +238,7 @@ def post_hooks_node(state: SandwichState) -> dict[str, Any]:
         "rollback_marked": rollback,
         "final_status": "blocked_post" if rollback else "passed",
     }
-
-print("post_hooks_node ready")
 ```
-
-    post_hooks_node ready
-
 
 ## Build the graph
 
@@ -335,12 +263,7 @@ def build_guardrail_graph(tools: dict[str, ToolFn], hooks: list[dict[str, Any]])
     graph.add_edge("execute_tool", "post_hooks")
     graph.add_edge("post_hooks", END)
     return graph.compile()
-
-print("Graph builder ready")
 ```
-
-    Graph builder ready
-
 
 ## Mock tools
 
@@ -351,18 +274,13 @@ We use one healthy tool and one broken tool so readers can see both sides of the
 def transfer_funds(account: str = "", amount: float = 0, memo: str = "") -> dict:
     """Simulate a successful transfer."""
     # A healthy receipt includes the fields our downstream system expects.
-    return {"status": "ok", "account": account, "amount": amount, "tx_id": "TX-20250609-001"}
+    return {"status": "ok", "account": account, "amount": amount, "tx_id": "TX-20250610-001"}
 
 def broken_transfer_funds(account: str = "", amount: float = 0, memo: str = "") -> dict:
     """Simulate a buggy transfer that forgets tx_id."""
     # This intentionally breaks the schema so the post-hook has something to catch.
     return {"status": "ok", "account": account, "amount": amount}
-
-print("Mock tools ready")
 ```
-
-    Mock tools ready
-
 
 ## Assemble the demo
 
@@ -374,7 +292,7 @@ Same hooks as the langchain/ version:
 
 
 ```python
-# Hook configs — imported from shared hooks.py, fn inlined in each dict.
+# Hook configs — imported from the shared shared.py, fn inlined in each dict.
 all_hooks = [
     amount_threshold_hook("amount", 1_000_000),
     blocklist_hook("account", {"BLOCKED-999", "SANCTIONED-001"}),
@@ -385,12 +303,12 @@ all_hooks = [
 sandwich = build_guardrail_graph({"transfer": transfer_funds}, all_hooks)
 broken_sandwich = build_guardrail_graph({"transfer": broken_transfer_funds}, all_hooks)
 
-display(Image(data=sandwich.get_graph().draw_mermaid_png(), alt="Guardrail Sandwich LangGraph graph"))
+show_graph(sandwich, alt="Guardrail Sandwich graph")
 ```
 
 
     
-![png](tutorial_files/tutorial_21_0.png)
+![png](tutorial_files/tutorial_20_0.png)
     
 
 
@@ -410,14 +328,9 @@ def print_trace(label: str, result: dict) -> None:
     for key in ["pre_outcomes", "post_outcomes"]:
         if result.get(key):
             print(f"{key}:")
-            for outcome in result[key]:
-                print("  -", outcome["hook_name"], outcome["result"], "->", outcome["reason"])
-
-print("Trace printer ready")
+            for o in result[key]:
+                print(f"  - [{o['phase']}] {o['hook_name']} {o['result']} -> {o['reason']}")
 ```
-
-    Trace printer ready
-
 
 ## Mock run 1: routine transfer passes
 
@@ -435,12 +348,12 @@ print_trace("Mock run 1: routine transfer", result_ok)
     Mock run 1: routine transfer
     ----------------------------
     final_status: passed
-    tool_output : {'status': 'ok', 'account': 'CORP-1234', 'amount': 4200.0, 'tx_id': 'TX-20250609-001'}
+    tool_output : {'status': 'ok', 'account': 'CORP-1234', 'amount': 4200.0, 'tx_id': 'TX-20250610-001'}
     pre_outcomes:
-      - amount_threshold pass -> amount=4200 within limit
-      - blocklist pass -> account clear
+      - [pre] amount_threshold pass -> amount=4200 within limit
+      - [pre] blocklist pass -> account clear
     post_outcomes:
-      - output_schema pass -> output schema valid
+      - [post] output_schema pass -> output schema valid
 
 
 ## Mock run 2: pre-hook blocks the action
@@ -461,7 +374,7 @@ print_trace("Mock run 2: threshold block", result_blocked_pre)
     final_status: blocked_pre
     tool_output : None
     pre_outcomes:
-      - amount_threshold block -> amount=5000000 exceeds 1000000
+      - [pre] amount_threshold block -> amount=5000000 exceeds 1000000
 
 
 ## Mock run 3: blocklist blocks a sanctioned account
@@ -482,8 +395,8 @@ print_trace("Mock run 3: blocklist block", result_blocklist)
     final_status: blocked_pre
     tool_output : None
     pre_outcomes:
-      - amount_threshold pass -> amount=500 within limit
-      - blocklist block -> account='SANCTIONED-001' on blocklist
+      - [pre] amount_threshold pass -> amount=500 within limit
+      - [pre] blocklist block -> account='SANCTIONED-001' on blocklist
 
 
 ## Mock run 4: post-hook catches a bad receipt
@@ -504,10 +417,10 @@ print_trace("Mock run 4: bad receipt schema", result_blocked_post)
     final_status: blocked_post
     tool_output : {'status': 'ok', 'account': 'CORP-1234', 'amount': 4200.0}
     pre_outcomes:
-      - amount_threshold pass -> amount=4200 within limit
-      - blocklist pass -> account clear
+      - [pre] amount_threshold pass -> amount=4200 within limit
+      - [pre] blocklist pass -> account clear
     post_outcomes:
-      - output_schema block -> output missing keys: ['tx_id']
+      - [post] output_schema block -> output missing keys: ['tx_id']
 
 
 ## Real backend
@@ -571,7 +484,11 @@ else:
     print("Skipping — no API key set.")
 ```
 
-    Model call failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    {
+      "account": "CORP-1234",
+      "amount": "JPY 4,200",
+      "memo": "office supplies"
+    }
 
 
 ## Real run 2: feed those args through the same sandwich
@@ -589,7 +506,13 @@ else:
     print("No extracted args available.")
 ```
 
-    No extracted args available.
+    
+    Real run: extracted transfer
+    ----------------------------
+    final_status: blocked_pre
+    tool_output : None
+    pre_outcomes:
+      - [pre] amount_threshold block -> hook crashed: TypeError: '>' not supported between instances of 'str' and 'int'
 
 
 ## Composing as a subgraph

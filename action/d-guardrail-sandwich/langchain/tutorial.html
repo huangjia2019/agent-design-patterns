@@ -7870,7 +7870,7 @@ See <a href="../../../.env.example"><code>.env.example</code></a> for provider c
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=549324cb">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=549324cb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7878,40 +7878,35 @@ See <a href="../../../.env.example"><code>.env.example</code></a> for provider c
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">re</span><span class="o">,</span><span class="w"> </span><span class="nn">time</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="c1"># Make root and pattern folder importable</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">"../../.."</span><span class="p">)))</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">".."</span><span class="p">)))</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="c1"># shared.py lives in the pattern folder (the parent dir); model_config.py and</span>
+<span class="c1"># nbtools.py at the repo root. Find each by walking up, so the notebook isn't</span>
+<span class="c1"># tied to a fixed folder depth (no brittle "../../.." counting).</span>
+<span class="k">for</span> <span class="n">_marker</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"shared.py"</span><span class="p">,</span> <span class="s2">"model_config.py"</span><span class="p">,</span> <span class="s2">"nbtools.py"</span><span class="p">):</span>
+    <span class="n">_dir</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">(),</span> <span class="o">*</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">_marker</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_dir</span><span class="p">))</span>
 
 <span class="c1"># Official LangChain v1 middleware API</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langchain.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_agent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">langchain.agents.middleware</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentMiddleware</span><span class="p">,</span> <span class="n">ToolCallRequest</span><span class="p">,</span> <span class="n">wrap_tool_call</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">langchain.agents.middleware</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentMiddleware</span><span class="p">,</span> <span class="n">wrap_tool_call</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.messages</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolMessage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">tool</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
 
-<span class="c1"># Shared model loader and hook factories</span>
+<span class="c1"># Shared model loader, hook factories/runner, and graph renderer — same modules as the langgraph/ notebook.</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">model_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">hooks</span><span class="w"> </span><span class="kn">import</span> <span class="n">HookResult</span><span class="p">,</span> <span class="n">amount_threshold_hook</span><span class="p">,</span> <span class="n">blocklist_hook</span><span class="p">,</span> <span class="n">output_schema_hook</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Imports ready"</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shared</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">HookPhase</span><span class="p">,</span> <span class="n">HookResult</span><span class="p">,</span>
+    <span class="n">amount_threshold_hook</span><span class="p">,</span> <span class="n">blocklist_hook</span><span class="p">,</span> <span class="n">output_schema_hook</span><span class="p">,</span>
+    <span class="n">applicable_hooks</span><span class="p">,</span> <span class="n">run_single_hook</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">nbtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_graph</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Imports ready
-</pre>
 </div>
 </div>
 </div>
@@ -7955,7 +7950,7 @@ See <a href="../../../.env.example"><code>.env.example</code></a> for provider c
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5dc3fbb7">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5dc3fbb7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7967,22 +7962,7 @@ See <a href="../../../.env.example"><code>.env.example</code></a> for provider c
 <span class="k">def</span><span class="w"> </span><span class="nf">transfer</span><span class="p">(</span><span class="n">account</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">memo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Transfer funds to an account. Returns a receipt."""</span>
     <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"account"</span><span class="p">:</span> <span class="n">account</span><span class="p">,</span> <span class="s2">"amount"</span><span class="p">:</span> <span class="n">amount</span><span class="p">,</span> <span class="s2">"tx_id"</span><span class="p">:</span> <span class="s2">"TX-20250610-001"</span><span class="p">}</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Tool registered: </span><span class="si">{</span><span class="n">transfer</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Tool registered: transfer
-</pre>
 </div>
 </div>
 </div>
@@ -8066,8 +8046,8 @@ Is AgentMiddleware? True
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># create_agent returns a CompiledStateGraph — same type as langgraph/ graphs.</span>
 <span class="n">agent_a</span> <span class="o">=</span> <span class="n">create_agent</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">transfer</span><span class="p">],</span> <span class="n">middleware</span><span class="o">=</span><span class="p">[</span><span class="n">amount_guard</span><span class="p">])</span>
 
-<span class="c1"># Visualize the agent graph — middleware is invisible but the tool-call loop is visible.</span>
-<span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">agent_a</span><span class="o">.</span><span class="n">get_graph</span><span class="p">()</span><span class="o">.</span><span class="n">draw_mermaid_png</span><span class="p">(),</span> <span class="n">alt</span><span class="o">=</span><span class="s2">"Agent with amount_guard middleware"</span><span class="p">))</span>
+<span class="c1"># Middleware is invisible, but the tool-call loop is visible in the graph.</span>
+<span class="n">show_graph</span><span class="p">(</span><span class="n">agent_a</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="s2">"Agent with amount_guard middleware"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8146,7 +8126,9 @@ Is AgentMiddleware? True
 <pre>  HumanMessage: Transfer 5000000 to CORP-1234 for Q2 bonus
   AIMessage: 
   ToolMessage: BLOCKED: amount 5000000 exceeds threshold 1,000,000
-  AIMessage: The transfer of 5,000,000 was blocked because it exceeds the maximum allowed threshold of 1,000,000 per transaction. Wou
+  AIMessage: The transfer of 5,000,000 was blocked because it exceeds the maximum allowed threshold of 1,000,000 per transaction. 
+
+W
 </pre>
 </div>
 </div>
@@ -8159,22 +8141,22 @@ Is AgentMiddleware? True
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Style-B:-GuardrailSandwichMiddleware-%E2%80%94-the-composable-class">Style B: <code>GuardrailSandwichMiddleware</code> — the composable class<a class="anchor-link" href="#Style-B:-GuardrailSandwichMiddleware-%E2%80%94-the-composable-class">¶</a></h2><p>For multiple hooks, we subclass the official <code>AgentMiddleware</code> and override <code>wrap_tool_call</code>. This gives us:</p>
+<h2 id="Style-B:-GuardrailSandwichMiddleware-%E2%80%94-the-composable-class">Style B: <code>GuardrailSandwichMiddleware</code> — the composable class<a class="anchor-link" href="#Style-B:-GuardrailSandwichMiddleware-%E2%80%94-the-composable-class">¶</a></h2><p>For multiple hooks, we subclass the official <code>AgentMiddleware</code> and override <code>wrap_tool_call</code>. It takes one list of hook config dicts and, inside the tool-call interceptor:</p>
 <ol>
 <li><strong>Pre-hooks</strong> in priority order — first <code>BLOCK</code> stops the pipeline</li>
 <li><strong>Tool execution</strong> — only if all pre-hooks pass</li>
 <li><strong>Post-hooks</strong> for audit — all run even after a <code>BLOCK</code> (audit completeness)</li>
 </ol>
-<p>Three critical behaviors:</p>
+<p>The selection (<code>applicable_hooks</code>) and execution (<code>run_single_hook</code>) come from the shared <a href="../shared.py"><code>shared.py</code></a> — the <em>same</em> functions the langgraph/ nodes call — so the three critical behaviors are identical on both sides:</p>
 <ul>
 <li><strong>Fail-closed:</strong> hook crash → <code>BLOCK</code>. A broken guardrail must not become an open door.</li>
 <li><strong>Shadow mode:</strong> <code>blocks=False</code> downgrades <code>BLOCK</code> to <code>WARN</code> — the tool still runs.</li>
-<li><strong><code>applies_to</code>:</strong> hooks can target specific tools by name.</li>
+<li><strong><code>applies_to</code>:</strong> hooks can target specific tools by name (and <code>phase</code> splits pre vs post).</li>
 </ul>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b4a8320b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=b4a8320b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8182,44 +8164,40 @@ Is AgentMiddleware? True
 <div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># HookResult is imported from the shared hooks.py — same enum used by langgraph/ notebook.</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_decode</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Tool output reaches the middleware as a ToolMessage whose `.content` is</span>
+<span class="sd">    a JSON string. Decode it to the plain dict the POST hooks expect — the same</span>
+<span class="sd">    normalization the langgraph/ post_hooks_node does via decode_tool_message,</span>
+<span class="sd">    so output_schema_hook validates the receipt, not its message wrapper."""</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">content</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+    <span class="n">stripped</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">stripped</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">stripped</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"["</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">stripped</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">content</span>
+    <span class="k">return</span> <span class="n">content</span>
+
 
 <span class="k">class</span><span class="w"> </span><span class="nc">GuardrailSandwichMiddleware</span><span class="p">(</span><span class="n">AgentMiddleware</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""pre-hooks → tool → post-hooks, with fail-closed and shadow mode.</span>
 
-<span class="sd">    Extends the official AgentMiddleware base class.</span>
-<span class="sd">    Each hook is a config dict: {"name", "fn", "priority", "blocks", "applies_to"}.</span>
+<span class="sd">    Extends the official AgentMiddleware base class. Takes ONE list of hook</span>
+<span class="sd">    config dicts (same shape and same `shared.py` factories as the langgraph/</span>
+<span class="sd">    notebook); `applicable_hooks` splits them by phase + `applies_to`, and</span>
+<span class="sd">    `run_single_hook` applies the fail-closed / shadow-mode rules — so both</span>
+<span class="sd">    notebooks share the exact selection and execution logic.</span>
+
+<span class="sd">    Post-hooks detect, they don't roll back (rollback is a separate pattern):</span>
+<span class="sd">    the tool result still flows, but the audit record is kept on `last_trace`</span>
+<span class="sd">    — the middleware analogue of the langgraph/ print_trace output.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pre_hooks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">post_hooks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pre_hooks</span> <span class="o">=</span> <span class="n">pre_hooks</span> <span class="ow">or</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">post_hooks</span> <span class="o">=</span> <span class="n">post_hooks</span> <span class="ow">or</span> <span class="p">[]</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_applicable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hooks</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">):</span>
-        <span class="n">applicable</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hooks</span> <span class="k">if</span> <span class="n">h</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"applies_to"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">tool_name</span> <span class="ow">in</span> <span class="n">h</span><span class="p">[</span><span class="s2">"applies_to"</span><span class="p">]]</span>
-        <span class="n">applicable</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">h</span><span class="p">:</span> <span class="n">h</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"priority"</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">applicable</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_run_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hook_cfg</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">tool_output</span><span class="p">):</span>
-        <span class="n">fn</span> <span class="o">=</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"fn"</span><span class="p">]</span>
-        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">result_str</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">tool_output</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># Fail closed: crash → BLOCK</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">"hook_name"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="s2">"result"</span><span class="p">:</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">BLOCK</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                    <span class="s2">"reason"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"hook crashed: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-                    <span class="s2">"elapsed_ms"</span><span class="p">:</span> <span class="nb">int</span><span class="p">((</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)}</span>
-
-        <span class="c1"># Shadow mode: blocks=False → BLOCK downgraded to WARN</span>
-        <span class="k">if</span> <span class="n">result_str</span> <span class="o">==</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">BLOCK</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">hook_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"blocks"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">{</span><span class="s2">"hook_name"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="s2">"result"</span><span class="p">:</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">WARN</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                    <span class="s2">"reason"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"[shadow] </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-                    <span class="s2">"elapsed_ms"</span><span class="p">:</span> <span class="nb">int</span><span class="p">((</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)}</span>
-
-        <span class="k">return</span> <span class="p">{</span><span class="s2">"hook_name"</span><span class="p">:</span> <span class="n">hook_cfg</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="s2">"result"</span><span class="p">:</span> <span class="n">result_str</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
-                <span class="s2">"elapsed_ms"</span><span class="p">:</span> <span class="nb">int</span><span class="p">((</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span> <span class="o">=</span> <span class="n">hooks</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_trace</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">wrap_tool_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">handler</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""The sandwich: pre-hooks → tool → post-hooks."""</span>
@@ -8227,10 +8205,11 @@ Is AgentMiddleware? True
         <span class="n">args</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">tool_call</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"args"</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">tool_call_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">tool_call</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
         <span class="n">trace</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"pre_outcomes"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"post_outcomes"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"blocked"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"rollback_marked"</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_trace</span> <span class="o">=</span> <span class="n">trace</span>
 
-        <span class="c1"># 1. Pre-hooks — first BLOCK stops the pipeline, tool never runs</span>
-        <span class="k">for</span> <span class="n">hook_cfg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_applicable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_hooks</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">):</span>
-            <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_hook</span><span class="p">(</span><span class="n">hook_cfg</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># 1. Pre-hooks — first BLOCK stops the pipeline, tool never runs.</span>
+        <span class="k">for</span> <span class="n">hook_cfg</span> <span class="ow">in</span> <span class="n">applicable_hooks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">,</span> <span class="n">HookPhase</span><span class="o">.</span><span class="n">PRE</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">):</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_single_hook</span><span class="p">(</span><span class="n">hook_cfg</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">trace</span><span class="p">[</span><span class="s2">"pre_outcomes"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outcome</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">outcome</span><span class="p">[</span><span class="s2">"result"</span><span class="p">]</span> <span class="o">==</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">BLOCK</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">hook_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"blocks"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
                 <span class="n">trace</span><span class="p">[</span><span class="s2">"blocked"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
@@ -8239,33 +8218,19 @@ Is AgentMiddleware? True
                     <span class="n">tool_call_id</span><span class="o">=</span><span class="n">tool_call_id</span><span class="p">,</span>
                 <span class="p">)</span>
 
-        <span class="c1"># 2. Tool execution</span>
+        <span class="c1"># 2. Tool execution.</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">handler</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">_decode</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>  <span class="c1"># ToolMessage -&gt; dict, so post-hooks see the receipt</span>
 
-        <span class="c1"># 3. Post-hooks — all run for audit completeness</span>
-        <span class="k">for</span> <span class="n">hook_cfg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_applicable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_hooks</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">):</span>
-            <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_hook</span><span class="p">(</span><span class="n">hook_cfg</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="c1"># 3. Post-hooks — all run for audit completeness, even after a BLOCK.</span>
+        <span class="k">for</span> <span class="n">hook_cfg</span> <span class="ow">in</span> <span class="n">applicable_hooks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">,</span> <span class="n">HookPhase</span><span class="o">.</span><span class="n">POST</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">):</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_single_hook</span><span class="p">(</span><span class="n">hook_cfg</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
             <span class="n">trace</span><span class="p">[</span><span class="s2">"post_outcomes"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outcome</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">outcome</span><span class="p">[</span><span class="s2">"result"</span><span class="p">]</span> <span class="o">==</span> <span class="n">HookResult</span><span class="o">.</span><span class="n">BLOCK</span><span class="o">.</span><span class="n">value</span> <span class="ow">and</span> <span class="n">hook_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"blocks"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
                 <span class="n">trace</span><span class="p">[</span><span class="s2">"rollback_marked"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">return</span> <span class="n">result</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"GuardrailSandwichMiddleware ready (extends </span><span class="si">{</span><span class="n">AgentMiddleware</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.AgentMiddleware)"</span><span class="p">)</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>GuardrailSandwichMiddleware ready (extends langchain.agents.middleware.types.AgentMiddleware)
-</pre>
 </div>
 </div>
 </div>
@@ -8277,7 +8242,7 @@ Is AgentMiddleware? True
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Hook-factories">Hook factories<a class="anchor-link" href="#Hook-factories">¶</a></h3><p>The hook factories (<code>amount_threshold_hook</code>, <code>blocklist_hook</code>, <code>output_schema_hook</code>) are imported from the shared <a href="../hooks.py"><code>hooks.py</code></a> — same definitions used by the langgraph/ notebook.</p>
+<h3 id="Hook-factories">Hook factories<a class="anchor-link" href="#Hook-factories">¶</a></h3><p>The hook factories (<code>amount_threshold_hook</code>, <code>blocklist_hook</code>, <code>output_schema_hook</code>) are imported from the shared <a href="../shared.py"><code>shared.py</code></a> — same definitions used by the langgraph/ notebook. Each returns a config dict carrying <code>phase</code> (PRE/POST), <code>priority</code>, <code>blocks</code>, and <code>applies_to</code>.</p>
 </div>
 </div>
 </div>
@@ -8331,21 +8296,19 @@ Hook name: amount_threshold, phase: pre
 <div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Build the sandwich with pre-hooks (amount + blocklist) and post-hooks (schema)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Build the sandwich from one hook list — phase splits them into pre/post.</span>
 <span class="n">sandwich</span> <span class="o">=</span> <span class="n">GuardrailSandwichMiddleware</span><span class="p">(</span>
-    <span class="n">pre_hooks</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">amount_threshold_hook</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">),</span>
-        <span class="n">blocklist_hook</span><span class="p">(</span><span class="s2">"account"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"BLOCKED-999"</span><span class="p">,</span> <span class="s2">"SANCTIONED-001"</span><span class="p">}),</span>
-    <span class="p">],</span>
-    <span class="n">post_hooks</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">output_schema_hook</span><span class="p">([</span><span class="s2">"status"</span><span class="p">,</span> <span class="s2">"tx_id"</span><span class="p">]),</span>
+    <span class="n">hooks</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">amount_threshold_hook</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">),</span>   <span class="c1"># PRE</span>
+        <span class="n">blocklist_hook</span><span class="p">(</span><span class="s2">"account"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"BLOCKED-999"</span><span class="p">,</span> <span class="s2">"SANCTIONED-001"</span><span class="p">}),</span>  <span class="c1"># PRE</span>
+        <span class="n">output_schema_hook</span><span class="p">([</span><span class="s2">"status"</span><span class="p">,</span> <span class="s2">"tx_id"</span><span class="p">]),</span>       <span class="c1"># POST</span>
     <span class="p">],</span>
 <span class="p">)</span>
 
 <span class="n">agent_b</span> <span class="o">=</span> <span class="n">create_agent</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">transfer</span><span class="p">],</span> <span class="n">middleware</span><span class="o">=</span><span class="p">[</span><span class="n">sandwich</span><span class="p">])</span>
 
 <span class="c1"># Same CompiledStateGraph — middleware hooks are wired inside the tool_call node.</span>
-<span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">agent_b</span><span class="o">.</span><span class="n">get_graph</span><span class="p">()</span><span class="o">.</span><span class="n">draw_mermaid_png</span><span class="p">(),</span> <span class="n">alt</span><span class="o">=</span><span class="s2">"Agent with GuardrailSandwichMiddleware"</span><span class="p">))</span>
+<span class="n">show_graph</span><span class="p">(</span><span class="n">agent_b</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="s2">"Agent with GuardrailSandwichMiddleware"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8397,12 +8360,58 @@ Hook name: amount_threshold, phase: pre
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=378acdbf">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0c15a34c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># The middleware keeps the full audit on `last_trace`. After a successful</span>
+<span class="c1"># transfer it shows the post-hooks running on the DECODED receipt (a dict, not</span>
+<span class="c1"># the ToolMessage) — output_schema passes. This is the langchain analogue of</span>
+<span class="c1"># the langgraph/ print_trace output.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pprint</span><span class="w"> </span><span class="kn">import</span> <span class="n">pprint</span>
+
+<span class="n">pprint</span><span class="p">(</span><span class="n">sandwich</span><span class="o">.</span><span class="n">last_trace</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>{'blocked': False,
+ 'post_outcomes': [{'hook_name': 'output_schema',
+                    'phase': 'post',
+                    'reason': 'output schema valid',
+                    'result': 'pass'}],
+ 'pre_outcomes': [{'hook_name': 'amount_threshold',
+                   'phase': 'pre',
+                   'reason': 'amount=4200 within limit',
+                   'result': 'pass'},
+                  {'hook_name': 'blocklist',
+                   'phase': 'pre',
+                   'reason': 'account clear',
+                   'result': 'pass'}],
+ 'rollback_marked': False}
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=378acdbf">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Sanctioned account — blocklist pre-hook should block</span>
@@ -8424,8 +8433,7 @@ Hook name: amount_threshold, phase: pre
 <pre>  HumanMessage: Transfer 500 to SANCTIONED-001 for advisory fee
   AIMessage: 
   ToolMessage: BLOCKED by blocklist: account='SANCTIONED-001' on blocklist
-  AIMessage: The transfer to **SANCTIONED-001** was blocked because the account is on a blocklist. This action cannot be completed. 
-
+  AIMessage: The transfer to **SANCTIONED-001** was blocked because the account is on a blocklist. This transaction cannot be process
 </pre>
 </div>
 </div>

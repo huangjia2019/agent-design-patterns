@@ -31,30 +31,35 @@ In the [graph version](../langgraph/tutorial.ipynb), these are three explicit no
 
 
 ```python
-import sys, os, re, time, json
-from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from __future__ import annotations
 
-# Make root and pattern folder importable
-sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "../../..")))
-sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "..")))
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+# shared.py lives in the pattern folder (the parent dir); model_config.py and
+# nbtools.py at the repo root. Find each by walking up, so the notebook isn't
+# tied to a fixed folder depth (no brittle "../../.." counting).
+for _marker in ("shared.py", "model_config.py", "nbtools.py"):
+    _dir = next(p for p in (Path.cwd(), *Path.cwd().parents) if (p / _marker).exists())
+    sys.path.insert(0, str(_dir))
 
 # Official LangChain v1 middleware API
 from langchain.agents import create_agent
-from langchain.agents.middleware import AgentMiddleware, ToolCallRequest, wrap_tool_call
+from langchain.agents.middleware import AgentMiddleware, wrap_tool_call
 from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
-from IPython.display import Image, display
 
-# Shared model loader and hook factories
+# Shared model loader, hook factories/runner, and graph renderer — same modules as the langgraph/ notebook.
 from model_config import get_model
-from hooks import HookResult, amount_threshold_hook, blocklist_hook, output_schema_hook
-
-print("Imports ready")
+from shared import (
+    HookPhase, HookResult,
+    amount_threshold_hook, blocklist_hook, output_schema_hook,
+    applicable_hooks, run_single_hook,
+)
+from nbtools import show_graph
 ```
-
-    Imports ready
-
 
 
 ```python
@@ -75,12 +80,7 @@ A simple banking transfer tool. The agent will call this when a user asks to mov
 def transfer(account: str, amount: float, memo: str) -> dict:
     """Transfer funds to an account. Returns a receipt."""
     return {"status": "ok", "account": account, "amount": amount, "tx_id": "TX-20250610-001"}
-
-print(f"Tool registered: {transfer.name}")
 ```
-
-    Tool registered: transfer
-
 
 ## Style A: `@wrap_tool_call` — the decorator guard
 
@@ -122,8 +122,8 @@ Pass the guard to `create_agent(middleware=[...])`. The agent calls the tool nor
 # create_agent returns a CompiledStateGraph — same type as langgraph/ graphs.
 agent_a = create_agent(model=model, tools=[transfer], middleware=[amount_guard])
 
-# Visualize the agent graph — middleware is invisible but the tool-call loop is visible.
-display(Image(data=agent_a.get_graph().draw_mermaid_png(), alt="Agent with amount_guard middleware"))
+# Middleware is invisible, but the tool-call loop is visible in the graph.
+show_graph(agent_a, alt="Agent with amount_guard middleware")
 ```
 
 
@@ -158,62 +158,60 @@ for msg in result["messages"]:
       HumanMessage: Transfer 5000000 to CORP-1234 for Q2 bonus
       AIMessage: 
       ToolMessage: BLOCKED: amount 5000000 exceeds threshold 1,000,000
-      AIMessage: The transfer of 5,000,000 was blocked because it exceeds the maximum allowed threshold of 1,000,000 per transaction. Wou
+      AIMessage: The transfer of 5,000,000 was blocked because it exceeds the maximum allowed threshold of 1,000,000 per transaction. 
+    
+    W
 
 
 ## Style B: `GuardrailSandwichMiddleware` — the composable class
 
-For multiple hooks, we subclass the official `AgentMiddleware` and override `wrap_tool_call`. This gives us:
+For multiple hooks, we subclass the official `AgentMiddleware` and override `wrap_tool_call`. It takes one list of hook config dicts and, inside the tool-call interceptor:
 
 1. **Pre-hooks** in priority order — first `BLOCK` stops the pipeline
 2. **Tool execution** — only if all pre-hooks pass
 3. **Post-hooks** for audit — all run even after a `BLOCK` (audit completeness)
 
-Three critical behaviors:
+The selection (`applicable_hooks`) and execution (`run_single_hook`) come from the shared [`shared.py`](../shared.py) — the *same* functions the langgraph/ nodes call — so the three critical behaviors are identical on both sides:
 - **Fail-closed:** hook crash → `BLOCK`. A broken guardrail must not become an open door.
 - **Shadow mode:** `blocks=False` downgrades `BLOCK` to `WARN` — the tool still runs.
-- **`applies_to`:** hooks can target specific tools by name.
+- **`applies_to`:** hooks can target specific tools by name (and `phase` splits pre vs post).
 
 
 ```python
-# HookResult is imported from the shared hooks.py — same enum used by langgraph/ notebook.
+def _decode(result: Any) -> Any:
+    """Tool output reaches the middleware as a ToolMessage whose `.content` is
+    a JSON string. Decode it to the plain dict the POST hooks expect — the same
+    normalization the langgraph/ post_hooks_node does via decode_tool_message,
+    so output_schema_hook validates the receipt, not its message wrapper."""
+    content = getattr(result, "content", result)
+    text = content if isinstance(content, str) else str(content)
+    stripped = text.strip()
+    if stripped.startswith("{") or stripped.startswith("["):
+        try:
+            return json.loads(stripped)
+        except json.JSONDecodeError:
+            return content
+    return content
+
 
 class GuardrailSandwichMiddleware(AgentMiddleware):
     """pre-hooks → tool → post-hooks, with fail-closed and shadow mode.
 
-    Extends the official AgentMiddleware base class.
-    Each hook is a config dict: {"name", "fn", "priority", "blocks", "applies_to"}.
+    Extends the official AgentMiddleware base class. Takes ONE list of hook
+    config dicts (same shape and same `shared.py` factories as the langgraph/
+    notebook); `applicable_hooks` splits them by phase + `applies_to`, and
+    `run_single_hook` applies the fail-closed / shadow-mode rules — so both
+    notebooks share the exact selection and execution logic.
+
+    Post-hooks detect, they don't roll back (rollback is a separate pattern):
+    the tool result still flows, but the audit record is kept on `last_trace`
+    — the middleware analogue of the langgraph/ print_trace output.
     """
 
-    def __init__(self, pre_hooks=None, post_hooks=None):
+    def __init__(self, hooks=None):
         super().__init__()
-        self.pre_hooks = pre_hooks or []
-        self.post_hooks = post_hooks or []
-
-    def _applicable(self, hooks, tool_name):
-        applicable = [h for h in hooks if h.get("applies_to") is None or tool_name in h["applies_to"]]
-        applicable.sort(key=lambda h: h.get("priority", 100))
-        return applicable
-
-    def _run_hook(self, hook_cfg, tool_name, args, tool_output):
-        fn = hook_cfg["fn"]
-        start = time.monotonic()
-        try:
-            result_str, reason = fn(tool_name, args, tool_output)
-        except Exception as e:
-            # Fail closed: crash → BLOCK
-            return {"hook_name": hook_cfg["name"], "result": HookResult.BLOCK.value,
-                    "reason": f"hook crashed: {type(e).__name__}: {e}",
-                    "elapsed_ms": int((time.monotonic() - start) * 1000)}
-
-        # Shadow mode: blocks=False → BLOCK downgraded to WARN
-        if result_str == HookResult.BLOCK.value and not hook_cfg.get("blocks", True):
-            return {"hook_name": hook_cfg["name"], "result": HookResult.WARN.value,
-                    "reason": f"[shadow] {reason}",
-                    "elapsed_ms": int((time.monotonic() - start) * 1000)}
-
-        return {"hook_name": hook_cfg["name"], "result": result_str, "reason": reason,
-                "elapsed_ms": int((time.monotonic() - start) * 1000)}
+        self.hooks = hooks or []
+        self.last_trace: dict[str, Any] = {}
 
     def wrap_tool_call(self, request, handler):
         """The sandwich: pre-hooks → tool → post-hooks."""
@@ -221,10 +219,11 @@ class GuardrailSandwichMiddleware(AgentMiddleware):
         args = request.tool_call.get("args", {})
         tool_call_id = request.tool_call.get("id", "")
         trace = {"pre_outcomes": [], "post_outcomes": [], "blocked": False, "rollback_marked": False}
+        self.last_trace = trace
 
-        # 1. Pre-hooks — first BLOCK stops the pipeline, tool never runs
-        for hook_cfg in self._applicable(self.pre_hooks, tool_name):
-            outcome = self._run_hook(hook_cfg, tool_name, args, None)
+        # 1. Pre-hooks — first BLOCK stops the pipeline, tool never runs.
+        for hook_cfg in applicable_hooks(self.hooks, HookPhase.PRE, tool_name):
+            outcome = run_single_hook(hook_cfg, tool_name, args, None)
             trace["pre_outcomes"].append(outcome)
             if outcome["result"] == HookResult.BLOCK.value and hook_cfg.get("blocks", True):
                 trace["blocked"] = True
@@ -233,27 +232,23 @@ class GuardrailSandwichMiddleware(AgentMiddleware):
                     tool_call_id=tool_call_id,
                 )
 
-        # 2. Tool execution
+        # 2. Tool execution.
         result = handler(request)
+        output = _decode(result)  # ToolMessage -> dict, so post-hooks see the receipt
 
-        # 3. Post-hooks — all run for audit completeness
-        for hook_cfg in self._applicable(self.post_hooks, tool_name):
-            outcome = self._run_hook(hook_cfg, tool_name, args, result)
+        # 3. Post-hooks — all run for audit completeness, even after a BLOCK.
+        for hook_cfg in applicable_hooks(self.hooks, HookPhase.POST, tool_name):
+            outcome = run_single_hook(hook_cfg, tool_name, args, output)
             trace["post_outcomes"].append(outcome)
             if outcome["result"] == HookResult.BLOCK.value and hook_cfg.get("blocks", True):
                 trace["rollback_marked"] = True
 
         return result
-
-print(f"GuardrailSandwichMiddleware ready (extends {AgentMiddleware.__module__}.AgentMiddleware)")
 ```
-
-    GuardrailSandwichMiddleware ready (extends langchain.agents.middleware.types.AgentMiddleware)
-
 
 ### Hook factories
 
-The hook factories (`amount_threshold_hook`, `blocklist_hook`, `output_schema_hook`) are imported from the shared [`hooks.py`](../hooks.py) — same definitions used by the langgraph/ notebook.
+The hook factories (`amount_threshold_hook`, `blocklist_hook`, `output_schema_hook`) are imported from the shared [`shared.py`](../shared.py) — same definitions used by the langgraph/ notebook. Each returns a config dict carrying `phase` (PRE/POST), `priority`, `blocks`, and `applies_to`.
 
 
 ```python
@@ -273,21 +268,19 @@ Wire the `GuardrailSandwichMiddleware` into a real agent. The agent calls tools 
 
 
 ```python
-# Build the sandwich with pre-hooks (amount + blocklist) and post-hooks (schema)
+# Build the sandwich from one hook list — phase splits them into pre/post.
 sandwich = GuardrailSandwichMiddleware(
-    pre_hooks=[
-        amount_threshold_hook("amount", 1_000_000),
-        blocklist_hook("account", {"BLOCKED-999", "SANCTIONED-001"}),
-    ],
-    post_hooks=[
-        output_schema_hook(["status", "tx_id"]),
+    hooks=[
+        amount_threshold_hook("amount", 1_000_000),   # PRE
+        blocklist_hook("account", {"BLOCKED-999", "SANCTIONED-001"}),  # PRE
+        output_schema_hook(["status", "tx_id"]),       # POST
     ],
 )
 
 agent_b = create_agent(model=model, tools=[transfer], middleware=[sandwich])
 
 # Same CompiledStateGraph — middleware hooks are wired inside the tool_call node.
-display(Image(data=agent_b.get_graph().draw_mermaid_png(), alt="Agent with GuardrailSandwichMiddleware"))
+show_graph(agent_b, alt="Agent with GuardrailSandwichMiddleware")
 ```
 
 
@@ -313,6 +306,33 @@ for msg in result["messages"]:
 
 
 ```python
+# The middleware keeps the full audit on `last_trace`. After a successful
+# transfer it shows the post-hooks running on the DECODED receipt (a dict, not
+# the ToolMessage) — output_schema passes. This is the langchain analogue of
+# the langgraph/ print_trace output.
+from pprint import pprint
+
+pprint(sandwich.last_trace)
+```
+
+    {'blocked': False,
+     'post_outcomes': [{'hook_name': 'output_schema',
+                        'phase': 'post',
+                        'reason': 'output schema valid',
+                        'result': 'pass'}],
+     'pre_outcomes': [{'hook_name': 'amount_threshold',
+                       'phase': 'pre',
+                       'reason': 'amount=4200 within limit',
+                       'result': 'pass'},
+                      {'hook_name': 'blocklist',
+                       'phase': 'pre',
+                       'reason': 'account clear',
+                       'result': 'pass'}],
+     'rollback_marked': False}
+
+
+
+```python
 # Sanctioned account — blocklist pre-hook should block
 result = agent_b.invoke({"messages": [{"role": "user", "content": "Transfer 500 to SANCTIONED-001 for advisory fee"}]})
 for msg in result["messages"]:
@@ -322,8 +342,7 @@ for msg in result["messages"]:
       HumanMessage: Transfer 500 to SANCTIONED-001 for advisory fee
       AIMessage: 
       ToolMessage: BLOCKED by blocklist: account='SANCTIONED-001' on blocklist
-      AIMessage: The transfer to **SANCTIONED-001** was blocked because the account is on a blocklist. This action cannot be completed. 
-    
+      AIMessage: The transfer to **SANCTIONED-001** was blocked because the account is on a blocklist. This transaction cannot be process
 
 
 ## Stacking both styles
