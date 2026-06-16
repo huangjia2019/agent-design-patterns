@@ -25,7 +25,8 @@ MUTED = "#c7d4e8"
 CYAN = "#00d4ff"
 
 ROWS = ["Perceive", "Remember", "Reason", "Act", "Reflect", "Collaborate", "Govern"]
-COLS = ["Chain", "Parallel", "Route", "Loop", "Orchestrate", "Hierarchy"]
+# Canonical column order (matches ZH render_matrix_28_orchestrate_right): Orchestrate moved to rightmost.
+COLS = ["Chain", "Route", "Parallel", "Loop", "Hierarchy", "Orchestrate"]
 
 ROW_COLORS = {
     0: "#00d4ff",   # Perceive
@@ -38,42 +39,43 @@ ROW_COLORS = {
 }
 
 # (row, col, English name, lecture code)
+# Column order: 0 Chain, 1 Route, 2 Parallel, 3 Loop, 4 Hierarchy, 5 Orchestrate
 PATTERNS = [
     # Perceive (row 0)
     (0, 0, "Semantic Compaction",        "02-03"),
-    (0, 1, "Multi-Modal Fusion",         "02-05"),
-    (0, 2, "Context Triage",             "02-02"),
-    (0, 4, "Progressive Discovery",      "02-04"),
+    (0, 1, "Context Triage",             "02-02"),
+    (0, 2, "Multi-Modal Fusion",         "02-05"),
+    (0, 3, "Progressive Discovery",      "02-04"),
     # Remember (row 1)
     (1, 0, "RAG",                        "03-03"),
-    (1, 2, "Hierarchical Retention",     "03-02"),
     (1, 3, "Failure Journals",           "03-05"),
-    (1, 4, "Progress Tracking",          "03-04"),
+    (1, 4, "Hierarchical Retention",     "03-02"),
+    (1, 5, "Progress Tracking",          "03-04"),
     # Reason (row 2)
     (2, 0, "Chain of Thought",           "04-02"),
-    (2, 1, "Parallel Exploration",       "04-04"),
-    (2, 2, "Complexity Routing",         "04-03"),
+    (2, 1, "Complexity Routing",         "04-03"),
+    (2, 2, "Parallel Exploration",       "04-04"),
     (2, 3, "Iterative Hypothesis",       "04-05"),
     # Act (row 3)
     (3, 0, "Prompt Chaining",            "05-04"),
-    (3, 2, "Tool Dispatch",              "05-02"),
-    (3, 4, "Plan & Execute",             "05-03"),
-    (3, 5, "Guardrail Sandwich",         "05-05"),
+    (3, 1, "Tool Dispatch",              "05-02"),
+    (3, 4, "Guardrail Sandwich",         "05-05"),
+    (3, 5, "Plan & Execute",             "05-03"),
     # Reflect (row 4)
     (4, 0, "Generator-Critic",           "06-02"),
-    (4, 2, "Skill Package",              "06-03"),
+    (4, 1, "Skill Package",              "06-03"),
     (4, 3, "Self-Heal Loop",             "06-05"),
-    (4, 5, "Experience Replay",          "06-04"),
+    (4, 4, "Experience Replay",          "06-04"),
     # Collaborate (row 5)
     (5, 0, "Handoff Chain",              "07-05"),
-    (5, 1, "Fan-out & Gather",           "07-03"),
+    (5, 2, "Fan-out & Gather",           "07-03"),
     (5, 3, "Adversarial Review",         "07-04"),
-    (5, 5, "Hierarchical Delegation",    "07-02"),
+    (5, 4, "Hierarchical Delegation",    "07-02"),
     # Govern (row 6)
-    (6, 1, "Progressive Commitment",     "08-04"),
-    (6, 2, "Approval Gate",              "08-02"),
-    (6, 4, "Observability Harness",      "08-05"),
-    (6, 5, "Blast Radius",               "08-03"),
+    (6, 0, "Progressive Commitment",     "08-04"),
+    (6, 1, "Approval Gate",              "08-02"),
+    (6, 4, "Blast Radius",               "08-03"),
+    (6, 5, "Observability Harness",      "08-05"),
 ]
 
 
@@ -166,7 +168,7 @@ def render(out_path: Path, clean: bool = False, show_codes: bool = True) -> None
                 n_rows * (cell_h + gap) + 0.35,
                 "Cognitive function (Perceive / Remember / Reason / Act / "
                 "Reflect / Collaborate / Govern)  ×  Execution topology "
-                "(Chain / Parallel / Route / Loop / Orchestrate / Hierarchy)  ·  "
+                "(Chain / Route / Parallel / Loop / Hierarchy / Orchestrate)  ·  "
                 "14 cells blank (industry gap / future research)",
                 color=MUTED, fontsize=10, ha="center", va="bottom",
                 style="italic")

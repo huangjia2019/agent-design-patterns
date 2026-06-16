@@ -1,4 +1,4 @@
-# d · Guardrail Sandwich · 守卫三明治
+# d · Guardrail Sandwich · 护栏三明治
 
 > 专栏第 **05-05** 讲 · pattern · 行动 × 层级
 >
