@@ -3,11 +3,9 @@
 > Lecture **09 Composition** companion case · Composition × mixed topologies
 > [中文 README](README.zh-CN.md)
 
-## Status
+## What this is
 
-Document-only. This folder turns a real financial regulatory-document POC into a public, anonymized case. The original regulator, jurisdiction, document title, internal meeting context, and project paths are removed. What remains is the engineering structure.
-
-The task: turn a financial product-disclosure standard into a reviewed checklist. A strong assistant plus human review creates 12 Golden Rules. Then several ordinary-model extraction strategies are compared against the same schema and gold set.
+An anonymized financial product-disclosure checklist benchmark. A strong assistant plus human review creates 12 Golden Rules. Several ordinary-model extraction strategies are then compared against the same schema and gold set.
 
 ## Why this case matters
 
@@ -28,14 +26,13 @@ The design lesson: one-shot extraction recovers 6 of 12 rules. A candidate-guide
 
 | File | Purpose |
 |---|---|
-| `CODEX_V1.zh-CN.md` | Chinese Codex v1 article draft for the Composition module |
-| `anonymized_case.json` | Static public case data |
-| `checklist_benchmark.ipynb` | Executed notebook for the column |
-| `VERSION_NOTES.zh-CN.md` | Version map from early schema work to public benchmark case |
+| `case-study.zh-CN.md` | Case narrative: 4 benchmark rounds + Pattern Selection Card walkthrough + 3 takeaways (Chinese) |
+| `anonymized_case.json` | Static anonymized case data |
+| `checklist_benchmark.ipynb` | Executed notebook showing the same benchmark table |
 
 ## Use
 
-This is a document package, not a runnable pattern package. Read `CODEX_V1.zh-CN.md` first, then open `checklist_benchmark.ipynb` for the saved benchmark table.
+This is a document package, not a runnable pattern package. Read `case-study.zh-CN.md` first, then open `checklist_benchmark.ipynb` for the saved benchmark table.
 
 ## Engineering slice
 

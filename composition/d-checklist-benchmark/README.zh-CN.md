@@ -3,11 +3,9 @@
 > 专栏第 **09-组合-集成之美** 配套案例 · 组合行 × 多拓扑组合
 > [English README](README.md)
 
-## 状态
+## 是什么
 
-文档版。这个目录把一个真实金融监管文档 POC 抽象成公开案例：不保留原始机构、地域、文件名和内部项目痕迹，只保留工程结构。
-
-案例的核心问题是：给定一份金融产品披露类规范，先由强智能工具和人工审阅得到 12 条 Golden Rules，然后让普通模型按照同一个 schema 去抽取 checklist。不同模式组合的得分不同，最后用数据说明为什么组合策略值得用。
+一个匿名的金融产品披露规范 checklist 抽取基准。先由强智能工具和人工审阅得到 12 条 Golden Rules，然后让普通模型按照同一个 schema 去抽取 checklist。不同模式组合的得分不同，用数据说明为什么组合策略值得用。
 
 ## 这个案例讲什么
 
@@ -30,36 +28,17 @@
 
 这就是第 09 模块要讲的组合思想：组合不是堆模式，而是让不同模式暴露不同类型的信息，再把这些信息交给正确的收口机制。
 
-## 脱敏原则
-
-公开版只保留：
-
-* 抽象后的金融产品披露场景
-* 12 条匿名 Golden Rules 的结构
-* 6 种模式组合的 benchmark 数字
-* 可运行的评分 harness
-* 一个已执行 notebook
-
-公开版不保留：
-
-* 原始监管机构名称
-* 原始文件标题
-* 原始 PDF 文本
-* 内部会议、汇报对象和项目目录
-* 任何能定位到具体司法辖区的线索
-
 ## 文件说明
 
 | 文件 | 作用 |
 |---|---|
-| `CODEX_V1.zh-CN.md` | 可直接放入专栏 09 模块的 Codex v1 文档草案 |
-| `anonymized_case.json` | 给读者看的静态匿名案例数据 |
+| `case-study.zh-CN.md` | 案例叙述：4 轮 benchmark + Pattern Selection Card 复盘 + 3 个 takeaway |
+| `anonymized_case.json` | 静态匿名案例数据 |
 | `checklist_benchmark.ipynb` | 已执行 notebook，展示同一套结果 |
-| `VERSION_NOTES.zh-CN.md` | 从早期 schema 版到公开 benchmark 版的版本地图 |
 
 ## 使用
 
-这不是程序包。建议先读 `CODEX_V1.zh-CN.md`，再打开 `checklist_benchmark.ipynb` 看表格化结果。`anonymized_case.json` 只是为了让结果数据有一个稳定引用。
+这不是程序包。建议先读 `case-study.zh-CN.md`，再打开 `checklist_benchmark.ipynb` 看表格化结果。`anonymized_case.json` 是结果数据的稳定引用。
 
 ## 跟第 09 模块的关系
 
