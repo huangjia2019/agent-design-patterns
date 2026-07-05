@@ -19,12 +19,13 @@ Both share the same hook factories ([`shared.py`](action/d-guardrail-sandwich/sh
 |---------|------|:---------:|:---------:|--------|
 | Guardrail Sandwich | `action/d-guardrail-sandwich/` | notebook + html + md | notebook + html + md | Done |
 | Prompt Chaining | `action/c-prompt-chaining/` | notebook + html + md | notebook + html + md | Done |
+| Generator-Critic | `reflection/a-generator-critic/` | notebook + html + md | notebook + html + md | Done |
 
 ### Roadmap
 
 | Wave | Patterns | Status |
 |------|----------|--------|
-| 1 | ~~Prompt Chaining~~ ✓ · Context Triage, Semantic Compaction, Chain of Thought, Generator-Critic | In progress |
+| 1 | ~~Prompt Chaining~~ ✓ · Context Triage, Semantic Compaction, Chain of Thought, ~~Generator-Critic~~ ✓ | In progress |
 | 2 | Progressive Discovery, Complexity Routing, Iterative Hypothesis, Self-Heal Loop | Planned |
 | 3 | Multimodal Fusion, Parallel Exploration, Fan-out & Gather | Planned |
 | 4 | Hierarchical Retention, Progress Tracking, Failure Journals, Experience Replay | Planned |
@@ -164,7 +165,7 @@ uv run jupyter lab
 | **Read on GitHub** | Nothing | Rendered notebook with saved outputs |
 | **Read pre-rendered HTML** | Nothing | Single-page walkthrough as HTML |
 | **Read in JupyterLab** | `uv sync --extra langgraph --extra dev` then `uv run jupyter lab` | Same, but you can collapse/expand cells |
-| **Run cells yourself** | Above + `.env` with API key | Your own LLM outputs, can tweak parameters |
+| **Run cells yourself** | Above; `.env` only for `RUN_REAL_LLM=1` cells | Mock outputs by default, live LLM outputs when opted in |
 
 ## Running cells
 
@@ -175,8 +176,10 @@ uv run jupyter lab
 ## Running tests
 
 ```bash
-# Re-execute notebooks (needs .env for real-backend cells)
-uv run pytest --nbmake --nbmake-timeout=120 'action/**/langgraph/tutorial.ipynb' 'action/**/langchain/tutorial.ipynb'
+# Re-execute notebooks. Live-backend cells are opt-in with RUN_REAL_LLM=1.
+uv run pytest --nbmake --nbmake-timeout=120 \
+  action/*/langgraph/tutorial.ipynb action/*/langchain/tutorial.ipynb \
+  reflection/*/langgraph/tutorial.ipynb reflection/*/langchain/tutorial.ipynb
 
 # Run pure-Python test suites
 uv run pytest --import-mode=importlib -v
@@ -209,6 +212,17 @@ action/c-prompt-chaining/
     tutorial.md       # Markdown export
   langchain/
     tutorial.ipynb    # LangChain LCEL: prompt | model | parser | gate, with .with_retry()
+    tutorial.html     # Pre-rendered HTML
+    tutorial.md       # Markdown export
+
+reflection/a-generator-critic/
+  shared.py           # Shared critique parser, policy, mock data, reviser, trace printer
+  langgraph/
+    tutorial.ipynb    # LangGraph StateGraph: generate -> critique -> gate -> optional revise
+    tutorial.html     # Pre-rendered HTML
+    tutorial.md       # Markdown export
+  langchain/
+    tutorial.ipynb    # LangChain LCEL: generator pipe + critic pipe + deterministic policy gate
     tutorial.html     # Pre-rendered HTML
     tutorial.md       # Markdown export
 ```
