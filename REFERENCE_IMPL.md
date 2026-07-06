@@ -9,7 +9,7 @@ Each pattern gets up to two implementation folders:
 | Folder | Framework | What it shows |
 |--------|-----------|---------------|
 | `langgraph/` | LangGraph `StateGraph` | The pattern as a visible graph with explicit nodes, edges, and conditional routing |
-| `langchain/` | LangChain v1 middleware | The pattern as middleware plugged into `create_agent` — less code, less visibility |
+| `langchain/` | LangChain | The pattern as LCEL pipes or middleware, whichever best fits the pattern — less code, less visibility |
 
 Both share the same hook factories ([`shared.py`](action/d-guardrail-sandwich/shared.py)) and model configuration ([`model_config.py`](model_config.py)).
 
@@ -76,7 +76,9 @@ Structure (cell order):
 
 ### 3. Write the LangChain notebook (`langchain/tutorial.ipynb`)
 
-Same conceptual flow but uses LangChain middleware / LCEL instead of explicit graph nodes. Highlights the **less code, less visibility** trade-off.
+Same conceptual flow but uses the most natural LangChain surface for the pattern:
+LCEL pipes for chain-shaped flows, middleware for agent-runtime hooks. Highlights
+the **less code, less visibility** trade-off.
 
 ### 4. Export artifacts
 
