@@ -82,18 +82,26 @@ def parse_critique_json(raw: str) -> Critique:
     """
     try:
         payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise TypeError("critique payload must be an object")
+        for key in ("score", "summary", "issues"):
+            if key not in payload:
+                raise KeyError(key)
+        if not isinstance(payload["issues"], list):
+            raise TypeError("issues must be a list")
+
         issues = [
             Issue(
                 severity=Severity(item["severity"]),
                 message=str(item["message"]),
-                location=str(item.get("location", "")),
+                location=str(item["location"]),
             )
-            for item in payload.get("issues", [])
+            for item in payload["issues"]
         ]
         return Critique(
             score=float(payload["score"]),
             issues=issues,
-            summary=str(payload.get("summary", "")),
+            summary=str(payload["summary"]),
         )
     except Exception as exc:  # noqa: BLE001 - parser failure must not become a pass
         return Critique(

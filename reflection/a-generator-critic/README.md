@@ -44,7 +44,7 @@ The implementation has three named pieces:
 | [`pattern.py`](pattern.py) | Framework-agnostic reference: `Artifact`, `Issue`, `Critique`, `AcceptancePolicy`, and `GeneratorCriticChain`. |
 | [`shared.py`](shared.py) | Shared parser, policy, mock data, reviser, and trace helpers used by both reference notebooks. |
 | [`example.py`](example.py) | Runs an incident-update draft through a mock critic and optional reviser. No API key. |
-| [`test_pattern.py`](test_pattern.py) | 8 tests covering score thresholds, blocker/warning gates, trace order, and the no-auto-accept-after-revision invariant. |
+| [`test_pattern.py`](test_pattern.py) | Tests covering score thresholds, blocker/warning gates, strict parser failure, trace order, and the no-auto-accept-after-revision invariant. |
 | [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | StateGraph implementation: explicit `generate -> critique -> gate -> revise` nodes plus conditional routing. |
 | [`langchain/tutorial.ipynb`](langchain/tutorial.ipynb) | LangChain LCEL implementation: compact runnable pipe with the same shared parser and policy gate. |
 
@@ -54,7 +54,7 @@ The implementation has three named pieces:
 python reflection/a-generator-critic/example.py
 pytest reflection/a-generator-critic/test_pattern.py -v
 
-# reference notebooks — deterministic cells skip live model calls by default
+# reference notebooks — deterministic verification should run with provider API keys unset
 pytest --nbmake --nbmake-timeout=120 \
   reflection/a-generator-critic/langgraph/tutorial.ipynb \
   reflection/a-generator-critic/langchain/tutorial.ipynb

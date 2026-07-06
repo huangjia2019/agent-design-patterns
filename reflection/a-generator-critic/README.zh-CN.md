@@ -39,7 +39,7 @@ generate -> critique -> gate -> optional revision draft
 | [`pattern.py`](pattern.py) | 框架无关参照：`Artifact`、`Issue`、`Critique`、`AcceptancePolicy`、`GeneratorCriticChain`。 |
 | [`shared.py`](shared.py) | 两套 reference notebook 共享的解析器、策略、mock 数据、reviser 和 trace 辅助函数。 |
 | [`example.py`](example.py) | 用 mock critic 和可选 reviser 跑一条故障更新草稿。无需 API key。 |
-| [`test_pattern.py`](test_pattern.py) | 8 个测试：分数阈值、blocker/warning 闸门、trace 顺序、修改稿不能自动放行的不变量。 |
+| [`test_pattern.py`](test_pattern.py) | 测试覆盖分数阈值、blocker/warning 闸门、严格解析失败、trace 顺序、修改稿不能自动放行的不变量。 |
 | [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | StateGraph 实现：显式 `generate -> critique -> gate -> revise` 节点和条件路由。 |
 | [`langchain/tutorial.ipynb`](langchain/tutorial.ipynb) | LangChain LCEL 实现：更短的 runnable pipe，复用同一套解析器和策略闸门。 |
 
