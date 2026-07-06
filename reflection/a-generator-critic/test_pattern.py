@@ -8,6 +8,7 @@ in for model roles so the pattern invariants are visible and repeatable.
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 
 import pytest
@@ -191,3 +192,37 @@ def test_model_loader_can_be_forced_off_for_deterministic_notebook_runs(tmp_path
     monkeypatch.setenv("OPENAI_API_KEY", "")
 
     assert model_config.get_model() is None
+
+
+def test_model_config_imports_without_optional_notebook_dependencies() -> None:
+    code = """
+import importlib.abc
+import sys
+
+class BlockOptionalNotebookDeps(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        blocked = ("dotenv", "langchain_dev_utils")
+        if fullname in blocked or fullname.startswith(tuple(f"{name}." for name in blocked)):
+            raise ModuleNotFoundError(f"No module named {fullname!r}")
+        return None
+
+sys.meta_path.insert(0, BlockOptionalNotebookDeps())
+
+import model_config
+
+assert model_config.get_model() is None
+"""
+    env = os.environ.copy()
+    for key in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ERNIE_API_KEY"):
+        env.pop(key, None)
+
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=_REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
