@@ -31,6 +31,8 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+
+from dotenv import load_dotenv
 from typing import Callable, TypedDict
 
 for _marker in ("shared.py", "model_config.py", "nbtools.py"):
@@ -216,6 +218,13 @@ The same graph can use a live model. If no API key is configured, this cell skip
 
 ```python
 import os
+
+from dotenv import load_dotenv
+
+for _candidate in (Path.cwd(), *Path.cwd().parents):
+    if (_candidate / ".env").exists():
+        load_dotenv(_candidate / ".env", override=False)
+        break
 
 model = get_model() if os.getenv("RUN_REAL_LLM") == "1" else None
 

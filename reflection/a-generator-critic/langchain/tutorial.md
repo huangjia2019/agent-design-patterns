@@ -27,6 +27,8 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 for _marker in ("shared.py", "model_config.py", "nbtools.py"):
     _dir = next(p for p in (Path.cwd(), *Path.cwd().parents) if (p / _marker).exists())
     sys.path.insert(0, str(_dir))
@@ -183,6 +185,13 @@ The same LCEL chain can use the configured model. If no API key is configured, t
 
 
 ```python
+from dotenv import load_dotenv
+
+for _candidate in (Path.cwd(), *Path.cwd().parents):
+    if (_candidate / ".env").exists():
+        load_dotenv(_candidate / ".env", override=False)
+        break
+
 model = get_model() if os.getenv("RUN_REAL_LLM") == "1" else None
 
 if model is None:

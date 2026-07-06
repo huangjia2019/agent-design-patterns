@@ -7856,6 +7856,8 @@ a.anchor-link {
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TypedDict</span>
 
 <span class="k">for</span> <span class="n">_marker</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"shared.py"</span><span class="p">,</span> <span class="s2">"model_config.py"</span><span class="p">,</span> <span class="s2">"nbtools.py"</span><span class="p">):</span>
@@ -8197,6 +8199,13 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+
+<span class="k">for</span> <span class="n">_candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">(),</span> <span class="o">*</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">_candidate</span> <span class="o">/</span> <span class="s2">".env"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">load_dotenv</span><span class="p">(</span><span class="n">_candidate</span> <span class="o">/</span> <span class="s2">".env"</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">break</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">()</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"RUN_REAL_LLM"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"1"</span> <span class="k">else</span> <span class="kc">None</span>
 
