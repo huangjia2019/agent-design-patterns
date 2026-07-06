@@ -7838,7 +7838,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Setup">Setup<a class="anchor-link" href="#Setup">¶</a></h2><p>The mock runs are deterministic and need no API key. The real-backend cell at the end uses the root <code>.env</code> through <a href="../../../model_config.py"><code>model_config.py</code></a>.</p>
+<h2 id="Setup">Setup<a class="anchor-link" href="#Setup">¶</a></h2><p>The mock runs are deterministic and need no API key. The real-backend cell at the end uses the root <code>.env</code> through <a href="../../../model_config.py"><code>model_config.py</code></a> and only calls a live model when <code>run_real_llm</code> is true.</p>
 </div>
 </div>
 </div>
@@ -7856,10 +7856,11 @@ a.anchor-link {
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TypedDict</span>
 
+<span class="c1"># Notebooks may run from the repo root, this folder, nbmake, or nbconvert.</span>
+<span class="c1"># Add the directory that owns each marker file so root helpers and local shared</span>
+<span class="c1"># pattern files resolve without installing the repository as a package.</span>
 <span class="k">for</span> <span class="n">_marker</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"shared.py"</span><span class="p">,</span> <span class="s2">"model_config.py"</span><span class="p">,</span> <span class="s2">"nbtools.py"</span><span class="p">):</span>
     <span class="n">_dir</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">(),</span> <span class="o">*</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">_marker</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_dir</span><span class="p">))</span>
@@ -7867,11 +7868,12 @@ a.anchor-link {
 <span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.messages</span><span class="w"> </span><span class="kn">import</span> <span class="n">HumanMessage</span><span class="p">,</span> <span class="n">SystemMessage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">END</span><span class="p">,</span> <span class="n">START</span><span class="p">,</span> <span class="n">StateGraph</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">model_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span><span class="p">,</span> <span class="n">run_real_llm_enabled</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">nbtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_graph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pattern</span><span class="w"> </span><span class="kn">import</span> <span class="n">Artifact</span><span class="p">,</span> <span class="n">ChainResult</span><span class="p">,</span> <span class="n">Critique</span><span class="p">,</span> <span class="n">Decision</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shared</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BAD_CRITIQUE_JSON</span><span class="p">,</span>
+    <span class="n">CRITIC_SYSTEM_PROMPT</span><span class="p">,</span>
     <span class="n">DEFAULT_PROMPT</span><span class="p">,</span>
     <span class="n">GOOD_CRITIQUE_JSON</span><span class="p">,</span>
     <span class="n">NEEDS_REVISION_CRITIQUE_JSON</span><span class="p">,</span>
@@ -7959,12 +7961,15 @@ a.anchor-link {
         <span class="k">return</span> <span class="p">{</span><span class="s2">"critique"</span><span class="p">:</span> <span class="n">critique</span><span class="p">,</span> <span class="s2">"trace"</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"trace"</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"critiqued"</span><span class="p">]}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">gate_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">ReviewState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="c1"># The critic provides evidence; AcceptancePolicy owns the decision.</span>
         <span class="n">decision</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">decide</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"critique"</span><span class="p">])</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"decision"</span><span class="p">:</span> <span class="n">decision</span><span class="p">,</span> <span class="s2">"trace"</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"trace"</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span><span class="n">decision</span><span class="o">.</span><span class="n">value</span><span class="p">]}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">revise_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">ReviewState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">reviser</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
+        <span class="c1"># Revision is a draft artifact only. The graph ends here so the revised</span>
+        <span class="c1"># text cannot be accepted without a separate generate/critique/gate pass.</span>
         <span class="n">artifact</span> <span class="o">=</span> <span class="n">reviser</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"artifact"</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s2">"critique"</span><span class="p">])</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"artifact"</span><span class="p">:</span> <span class="n">artifact</span><span class="p">,</span> <span class="s2">"trace"</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"trace"</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"revision_drafted"</span><span class="p">]}</span>
 
@@ -8017,7 +8022,10 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">accepted_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># LangGraph does not need a LangChain fake chat model here. The graph accepts</span>
+<span class="c1"># ordinary Python callables, so scripted_generator and scripted_critic are the</span>
+<span class="c1"># framework-agnostic fake roles equivalent to PR #2's fake LLM adapter.</span>
+<span class="n">accepted_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
     <span class="n">scripted_generator</span><span class="p">,</span>
     <span class="n">scripted_critic</span><span class="p">(</span><span class="n">GOOD_CRITIQUE_JSON</span><span class="p">),</span>
     <span class="n">reviser</span><span class="o">=</span><span class="n">revise_with_evidence</span><span class="p">,</span>
@@ -8102,7 +8110,9 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">revision_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Same generated draft, different critic evidence. The conditional edge follows</span>
+<span class="c1"># the policy decision into revise, then ends the pass without auto-accepting.</span>
+<span class="n">revision_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
     <span class="n">scripted_generator</span><span class="p">,</span>
     <span class="n">scripted_critic</span><span class="p">(</span><span class="n">NEEDS_REVISION_CRITIQUE_JSON</span><span class="p">),</span>
     <span class="n">reviser</span><span class="o">=</span><span class="n">revise_with_evidence</span><span class="p">,</span>
@@ -8150,7 +8160,9 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">parse_failure_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># The malformed critic response exercises the shared fail-closed parser. The</span>
+<span class="c1"># graph sees a blocker Critique, not raw invalid JSON.</span>
+<span class="n">parse_failure_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
     <span class="n">scripted_generator</span><span class="p">,</span>
     <span class="n">scripted_critic</span><span class="p">(</span><span class="n">BAD_CRITIQUE_JSON</span><span class="p">),</span>
     <span class="n">reviser</span><span class="o">=</span><span class="n">revise_with_evidence</span><span class="p">,</span>
@@ -8186,7 +8198,7 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Real-backend">Real backend<a class="anchor-link" href="#Real-backend">¶</a></h2><p>The same graph can use a live model. If no API key is configured, this cell skips safely.</p>
+<h2 id="Real-backend">Real backend<a class="anchor-link" href="#Real-backend">¶</a></h2><p>The same graph can use a live model. Live calls are opt-in through <code>RUN_REAL_LLM=1</code> (or local lowercase <code>run_real_llm=1</code>) so a normal <strong>Run All</strong> stays deterministic and does not spend API credits.</p>
 </div>
 </div>
 </div>
@@ -8198,19 +8210,15 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Keep the opt-in as a visible notebook variable. If this prints False, the</span>
+<span class="c1"># real call is intentionally disabled before get_model() can touch the backend.</span>
+<span class="n">run_real_llm</span> <span class="o">=</span> <span class="n">run_real_llm_enabled</span><span class="p">()</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">()</span> <span class="k">if</span> <span class="n">run_real_llm</span> <span class="k">else</span> <span class="kc">None</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
-
-<span class="k">for</span> <span class="n">_candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">(),</span> <span class="o">*</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">):</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">_candidate</span> <span class="o">/</span> <span class="s2">".env"</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="n">load_dotenv</span><span class="p">(</span><span class="n">_candidate</span> <span class="o">/</span> <span class="s2">".env"</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">break</span>
-
-<span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">()</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"RUN_REAL_LLM"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"1"</span> <span class="k">else</span> <span class="kc">None</span>
-
-<span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Skipping real backend run; set RUN_REAL_LLM=1 and configure .env to enable it."</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">run_real_llm</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it."</span><span class="p">)</span>
+<span class="k">elif</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Skipping real backend run; RUN_REAL_LLM is enabled but no configured model could be loaded."</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">real_generator</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Artifact</span><span class="p">:</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">invoke</span><span class="p">([</span>
@@ -8222,8 +8230,7 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
     <span class="k">def</span><span class="w"> </span><span class="nf">real_critic</span><span class="p">(</span><span class="n">artifact</span><span class="p">:</span> <span class="n">Artifact</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Critique</span><span class="p">:</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">invoke</span><span class="p">([</span>
             <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">"Critique the incident update. Return JSON with keys score, summary, "</span>
-                <span class="s2">"and issues. Each issue has severity, message, location."</span>
+                <span class="n">CRITIC_SYSTEM_PROMPT</span>
             <span class="p">)),</span>
             <span class="n">HumanMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">artifact</span><span class="o">.</span><span class="n">content</span><span class="p">),</span>
         <span class="p">])</span>
@@ -8244,7 +8251,7 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Skipping real backend run; set RUN_REAL_LLM=1 and configure .env to enable it.
+<pre>Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it.
 </pre>
 </div>
 </div>

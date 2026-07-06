@@ -21,7 +21,7 @@ Generator-Critic separates three jobs that often get blurred together:
 
 ## Setup
 
-The mock runs are deterministic and need no API key. The real-backend cell at the end uses the root `.env` through [`model_config.py`](../../../model_config.py).
+The mock runs are deterministic and need no API key. The real-backend cell at the end uses the root `.env` through [`model_config.py`](../../../model_config.py) and only calls a live model when `run_real_llm` is true.
 
 
 ```python
@@ -31,10 +31,11 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-
-from dotenv import load_dotenv
 from typing import Callable, TypedDict
 
+# Notebooks may run from the repo root, this folder, nbmake, or nbconvert.
+# Add the directory that owns each marker file so root helpers and local shared
+# pattern files resolve without installing the repository as a package.
 for _marker in ("shared.py", "model_config.py", "nbtools.py"):
     _dir = next(p for p in (Path.cwd(), *Path.cwd().parents) if (p / _marker).exists())
     sys.path.insert(0, str(_dir))
@@ -42,11 +43,12 @@ for _marker in ("shared.py", "model_config.py", "nbtools.py"):
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import END, START, StateGraph
 
-from model_config import get_model
+from model_config import get_model, run_real_llm_enabled
 from nbtools import show_graph
 from pattern import Artifact, ChainResult, Critique, Decision
 from shared import (
     BAD_CRITIQUE_JSON,
+    CRITIC_SYSTEM_PROMPT,
     DEFAULT_PROMPT,
     GOOD_CRITIQUE_JSON,
     NEEDS_REVISION_CRITIQUE_JSON,
@@ -57,6 +59,7 @@ from shared import (
     scripted_critic,
     scripted_generator,
 )
+
 ```
 
 ## State
@@ -102,12 +105,15 @@ def build_graph(
         return {"critique": critique, "trace": state.get("trace", []) + ["critiqued"]}
 
     def gate_node(state: ReviewState) -> dict:
+        # The critic provides evidence; AcceptancePolicy owns the decision.
         decision = policy.decide(state["critique"])
         return {"decision": decision, "trace": state.get("trace", []) + [decision.value]}
 
     def revise_node(state: ReviewState) -> dict:
         if reviser is None:
             return {}
+        # Revision is a draft artifact only. The graph ends here so the revised
+        # text cannot be accepted without a separate generate/critique/gate pass.
         artifact = reviser(state["artifact"], state["critique"])
         return {"artifact": artifact, "trace": state.get("trace", []) + ["revision_drafted"]}
 
@@ -136,18 +142,23 @@ def result_from_state(state: ReviewState) -> ChainResult:
         critique=state["critique"],
         trace=state["trace"],
     )
+
 ```
 
 ## Assemble the demo graph
 
 
 ```python
+# LangGraph does not need a LangChain fake chat model here. The graph accepts
+# ordinary Python callables, so scripted_generator and scripted_critic are the
+# framework-agnostic fake roles equivalent to PR #2's fake LLM adapter.
 accepted_graph = build_graph(
     scripted_generator,
     scripted_critic(GOOD_CRITIQUE_JSON),
     reviser=revise_with_evidence,
 )
 show_graph(accepted_graph, alt="Generator-Critic LangGraph")
+
 ```
 
 
@@ -175,6 +186,8 @@ print_trace(result_from_state(state))
 
 
 ```python
+# Same generated draft, different critic evidence. The conditional edge follows
+# the policy decision into revise, then ends the pass without auto-accepting.
 revision_graph = build_graph(
     scripted_generator,
     scripted_critic(NEEDS_REVISION_CRITIQUE_JSON),
@@ -182,6 +195,7 @@ revision_graph = build_graph(
 )
 state = revision_graph.invoke({"prompt": DEFAULT_PROMPT})
 print_trace(result_from_state(state))
+
 ```
 
     decision: needs_revision
@@ -195,6 +209,8 @@ print_trace(result_from_state(state))
 
 
 ```python
+# The malformed critic response exercises the shared fail-closed parser. The
+# graph sees a blocker Critique, not raw invalid JSON.
 parse_failure_graph = build_graph(
     scripted_generator,
     scripted_critic(BAD_CRITIQUE_JSON),
@@ -202,6 +218,7 @@ parse_failure_graph = build_graph(
 )
 state = parse_failure_graph.invoke({"prompt": DEFAULT_PROMPT})
 print_trace(result_from_state(state))
+
 ```
 
     decision: needs_revision
@@ -213,23 +230,19 @@ print_trace(result_from_state(state))
 
 ## Real backend
 
-The same graph can use a live model. If no API key is configured, this cell skips safely.
+The same graph can use a live model. Live calls are opt-in through `RUN_REAL_LLM=1` (or local lowercase `run_real_llm=1`) so a normal **Run All** stays deterministic and does not spend API credits.
 
 
 ```python
-import os
+# Keep the opt-in as a visible notebook variable. If this prints False, the
+# real call is intentionally disabled before get_model() can touch the backend.
+run_real_llm = run_real_llm_enabled()
+model = get_model() if run_real_llm else None
 
-from dotenv import load_dotenv
-
-for _candidate in (Path.cwd(), *Path.cwd().parents):
-    if (_candidate / ".env").exists():
-        load_dotenv(_candidate / ".env", override=False)
-        break
-
-model = get_model() if os.getenv("RUN_REAL_LLM") == "1" else None
-
-if model is None:
-    print("Skipping real backend run; set RUN_REAL_LLM=1 and configure .env to enable it.")
+if not run_real_llm:
+    print("Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it.")
+elif model is None:
+    print("Skipping real backend run; RUN_REAL_LLM is enabled but no configured model could be loaded.")
 else:
     def real_generator(prompt: str) -> Artifact:
         response = model.invoke([
@@ -241,8 +254,7 @@ else:
     def real_critic(artifact: Artifact) -> Critique:
         response = model.invoke([
             SystemMessage(content=(
-                "Critique the incident update. Return JSON with keys score, summary, "
-                "and issues. Each issue has severity, message, location."
+                CRITIC_SYSTEM_PROMPT
             )),
             HumanMessage(content=artifact.content),
         ])
@@ -251,9 +263,10 @@ else:
     real_graph = build_graph(real_generator, real_critic)
     state = real_graph.invoke({"prompt": DEFAULT_PROMPT})
     print_trace(result_from_state(state))
+
 ```
 
-    Skipping real backend run; set RUN_REAL_LLM=1 and configure .env to enable it.
+    Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it.
 
 
 ## What to remember

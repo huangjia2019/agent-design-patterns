@@ -1,8 +1,9 @@
 """Shared model configuration for all tutorial notebooks.
 
 Usage in notebooks:
-    from model_config import get_model
-    model = get_model()
+    from model_config import get_model, run_real_llm_enabled
+    run_real_llm = run_real_llm_enabled()
+    model = get_model() if run_real_llm else None
 
 Reads from root .env — see .env.example for all options.
 Default: ernie provider + ernie-5.1 via AI Studio.
@@ -15,12 +16,27 @@ from dotenv import load_dotenv
 from langchain_dev_utils.chat_models import load_chat_model, register_model_provider
 
 _providers_registered = False
+_TRUE_VALUES = {"1", "true", "yes", "on"}
 
 
 def _load_env() -> None:
     """Find .env by walking up from cwd."""
     for candidate in [".env", "../.env", "../../.env", "../../../.env"]:
         load_dotenv(candidate, override=False)
+
+
+def run_real_llm_enabled() -> bool:
+    """Return whether notebook real-backend cells should call the configured LLM.
+
+    `RUN_REAL_LLM=1` is the documented opt-in flag. The lowercase
+    `run_real_llm=1` spelling is also accepted so existing local notebooks do
+    not silently skip if that is what was added to .env.
+    """
+    _load_env()
+    value = os.getenv("RUN_REAL_LLM")
+    if value is None:
+        value = os.getenv("run_real_llm", "")
+    return value.strip().lower() in _TRUE_VALUES
 
 
 def _register_providers() -> None:

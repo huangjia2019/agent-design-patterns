@@ -6,6 +6,7 @@ critique parser, policy, revision rule, and trace rendering stay aligned.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from typing import Any
 
 from pattern import AcceptancePolicy, Artifact, ChainResult, Critique, Issue, Severity
@@ -19,6 +20,15 @@ INITIAL_DRAFT = (
 )
 
 REVISION_EVIDENCE = "Evidence: status dashboard incident INC-42."
+
+CRITIC_SYSTEM_PROMPT = (
+    "Critique the incident update. Return only valid JSON, no markdown. "
+    'Use this schema: {"score": number from 0 to 1, "summary": string, '
+    '"issues": [{"severity": "blocker" or "warning", "message": string, '
+    '"location": string}]}. '
+    'Use severity "blocker" only for facts that must be fixed before '
+    'publishing; use "warning" for polish issues.'
+)
 
 GOOD_CRITIQUE_JSON = json.dumps(
     {
@@ -108,10 +118,12 @@ def revise_with_evidence(artifact: Artifact, critique: Critique) -> Artifact:
 
 
 def scripted_generator(_prompt: str) -> Artifact:
+    """Framework-agnostic fake generator for notebook mock runs."""
     return Artifact(content=INITIAL_DRAFT, metadata={"source": "scripted"})
 
 
-def scripted_critic(raw_json: str):
+def scripted_critic(raw_json: str) -> Callable[[Artifact], Critique]:
+    """Return a fake critic that replays one JSON critique through the parser."""
     def critic(_artifact: Artifact) -> Critique:
         return parse_critique_json(raw_json)
 

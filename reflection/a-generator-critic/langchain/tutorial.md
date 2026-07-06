@@ -17,32 +17,36 @@ Generator-Critic is a one-pass reflection chain: generate an artifact, critique 
 
 ## Setup
 
+The mock runs are deterministic and need no API key. The real-backend cell at the end uses the root `.env` through [`model_config.py`](../../../model_config.py) and only calls a live model when `run_real_llm` is true.
+
 
 ```python
 from __future__ import annotations
 
 # ruff: noqa: E402
 
-import os
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
-
+# Notebooks may run from the repo root, this folder, nbmake, or nbconvert.
+# Add the directory that owns each marker file so root helpers and local shared
+# pattern files resolve without installing the repository as a package.
 for _marker in ("shared.py", "model_config.py", "nbtools.py"):
     _dir = next(p for p in (Path.cwd(), *Path.cwd().parents) if (p / _marker).exists())
     sys.path.insert(0, str(_dir))
 
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_core.messages import SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 
-from model_config import get_model
+from model_config import get_model, run_real_llm_enabled
 from nbtools import show_graph
 from pattern import Artifact, ChainResult, Decision
 from shared import (
     BAD_CRITIQUE_JSON,
+    CRITIC_SYSTEM_PROMPT,
     DEFAULT_PROMPT,
     GOOD_CRITIQUE_JSON,
     INITIAL_DRAFT,
@@ -52,6 +56,7 @@ from shared import (
     print_trace,
     revise_with_evidence,
 )
+
 ```
 
 ## The generator and critic as LCEL chains
@@ -65,25 +70,28 @@ def build_generator(model):
         ("system", "Draft a concise customer-facing incident update."),
         ("human", "{prompt}"),
     ])
+    # The core pattern receives an Artifact, not a LangChain AIMessage. Keeping
+    # that boundary explicit makes the LCEL notebook line up with pattern.py.
     return prompt | model | StrOutputParser() | RunnableLambda(lambda text: Artifact(content=text))
 
 
 def build_critic(model):
     prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            "Critique the incident update. Return JSON with keys score, summary, and issues. "
-            "Each issue has severity, message, location.",
-        ),
+        # Use a concrete SystemMessage so the JSON schema braces in the shared
+        # prompt are not parsed as LCEL template variables.
+        SystemMessage(content=CRITIC_SYSTEM_PROMPT),
         ("human", "Artifact:\n{artifact_content}"),
     ])
     return (
+        # The critic only sees the generated artifact text. It cannot approve;
+        # it can only emit evidence that parse_critique_json turns into Critique.
         RunnableLambda(lambda state: {"artifact_content": state["artifact"].content})
         | prompt
         | model
         | StrOutputParser()
         | RunnableLambda(parse_critique_json)
     )
+
 ```
 
 ## The policy gate as a Runnable
@@ -99,9 +107,12 @@ def make_policy_gate(*, policy=None, reviser=None) -> RunnableLambda:
         artifact = state["artifact"]
         critique = state["critique"]
         trace = ["generated", "critiqued"]
+        # The critic supplies evidence; deterministic policy code owns pass/fail.
         decision = policy.decide(critique)
         trace.append(decision.value)
         if decision is Decision.NEEDS_REVISION and reviser is not None:
+            # Draft a revision, but keep the decision as NEEDS_REVISION. A fresh
+            # critic pass is required before revised text can be accepted.
             artifact = reviser(artifact, critique)
             trace.append("revision_drafted")
         return ChainResult(decision=decision, artifact=artifact, critique=critique, trace=trace)
@@ -117,6 +128,7 @@ def build_chain(model, *, policy=None, reviser=None):
         | RunnablePassthrough.assign(critique=critic)
         | make_policy_gate(policy=policy, reviser=reviser)
     )
+
 ```
 
 ## Mock run 1: clean critique accepts
@@ -125,11 +137,16 @@ def build_chain(model, *, policy=None, reviser=None):
 
 
 ```python
+# FakeListChatModel consumes one response per model call, in order:
+# 1. generator -> INITIAL_DRAFT
+# 2. critic -> GOOD_CRITIQUE_JSON
+# This mirrors the live LCEL call sequence without requiring an API key.
 accepted_model = FakeListChatModel(responses=[INITIAL_DRAFT, GOOD_CRITIQUE_JSON])
 accepted_chain = build_chain(accepted_model, reviser=revise_with_evidence)
 show_graph(accepted_chain, alt="Generator-Critic LCEL")
 result = accepted_chain.invoke({"prompt": DEFAULT_PROMPT})
 print_trace(result)
+
 ```
 
 
@@ -149,10 +166,13 @@ print_trace(result)
 
 
 ```python
+# Same generated draft, different critic evidence. The policy follows the
+# critique object, so the blocker routes to revision instead of acceptance.
 revision_model = FakeListChatModel(responses=[INITIAL_DRAFT, NEEDS_REVISION_CRITIQUE_JSON])
 revision_chain = build_chain(revision_model, reviser=revise_with_evidence)
 result = revision_chain.invoke({"prompt": DEFAULT_PROMPT})
 print_trace(result)
+
 ```
 
     decision: needs_revision
@@ -166,10 +186,13 @@ print_trace(result)
 
 
 ```python
+# The malformed critic response proves the parser fails closed: bad JSON becomes
+# a blocker Critique, never an accidental pass.
 parse_failure_model = FakeListChatModel(responses=[INITIAL_DRAFT, BAD_CRITIQUE_JSON])
 parse_failure_chain = build_chain(parse_failure_model, reviser=revise_with_evidence)
 result = parse_failure_chain.invoke({"prompt": DEFAULT_PROMPT})
 print_trace(result)
+
 ```
 
     decision: needs_revision
@@ -181,21 +204,19 @@ print_trace(result)
 
 ## Real backend
 
-The same LCEL chain can use the configured model. If no API key is configured, this cell skips safely.
+The same LCEL chain can use the configured model. Live calls are opt-in through `RUN_REAL_LLM=1` (or local lowercase `run_real_llm=1`) so a normal **Run All** stays deterministic and does not spend API credits.
 
 
 ```python
-from dotenv import load_dotenv
+# Keep the opt-in as a visible notebook variable. If this prints False, the
+# real call is intentionally disabled before get_model() can touch the backend.
+run_real_llm = run_real_llm_enabled()
+model = get_model() if run_real_llm else None
 
-for _candidate in (Path.cwd(), *Path.cwd().parents):
-    if (_candidate / ".env").exists():
-        load_dotenv(_candidate / ".env", override=False)
-        break
-
-model = get_model() if os.getenv("RUN_REAL_LLM") == "1" else None
-
-if model is None:
-    print("Skipping real backend run; set RUN_REAL_LLM=1 and configure .env to enable it.")
+if not run_real_llm:
+    print("Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it.")
+elif model is None:
+    print("Skipping real backend run; RUN_REAL_LLM is enabled but no configured model could be loaded.")
 else:
     real_chain = build_chain(model)
     result = real_chain.invoke({"prompt": DEFAULT_PROMPT})
@@ -203,7 +224,7 @@ else:
 
 ```
 
-    Skipping real backend run; set RUN_REAL_LLM=1 and configure .env to enable it.
+    Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it.
 
 
 ## What to remember

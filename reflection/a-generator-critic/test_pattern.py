@@ -12,10 +12,13 @@ import sys
 
 import pytest
 
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, _REPO_ROOT)
 sys.path.insert(0, os.path.dirname(__file__))
 sys.modules.pop("pattern", None)
 
 import example  # noqa: E402
+import model_config  # noqa: E402
 from pattern import (  # noqa: E402
     AcceptancePolicy,
     Artifact,
@@ -152,3 +155,22 @@ def test_example_missing_evidence_drafts_revision_instead_of_accepting() -> None
     assert result.decision is Decision.NEEDS_REVISION
     assert result.trace == ["generated", "critiqued", "needs_revision", "revision_drafted"]
     assert "Evidence: status dashboard incident INC-42." in result.artifact.content
+
+
+@pytest.mark.parametrize("flag_name", ["RUN_REAL_LLM", "run_real_llm"])
+def test_real_llm_opt_in_flag_can_be_loaded_from_dotenv(tmp_path, monkeypatch, flag_name: str) -> None:
+    (tmp_path / ".env").write_text(f"{flag_name}=1\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("RUN_REAL_LLM", raising=False)
+    monkeypatch.delenv("run_real_llm", raising=False)
+
+    assert model_config.run_real_llm_enabled() is True
+
+
+def test_real_llm_process_env_override_wins_over_dotenv(tmp_path, monkeypatch) -> None:
+    (tmp_path / ".env").write_text("RUN_REAL_LLM=1\nrun_real_llm=1\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("RUN_REAL_LLM", "0")
+    monkeypatch.delenv("run_real_llm", raising=False)
+
+    assert model_config.run_real_llm_enabled() is False
