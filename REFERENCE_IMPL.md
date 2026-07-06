@@ -167,18 +167,18 @@ uv run jupyter lab
 | **Read on GitHub** | Nothing | Rendered notebook with saved outputs |
 | **Read pre-rendered HTML** | Nothing | Single-page walkthrough as HTML |
 | **Read in JupyterLab** | `uv sync --extra langgraph --extra dev` then `uv run jupyter lab` | Same, but you can collapse/expand cells |
-| **Run cells yourself** | Above; `.env` only for `RUN_REAL_LLM=1` cells | Mock outputs by default, live LLM outputs when opted in |
+| **Run cells yourself** | Above; `.env` only for live-backend cells | Mock outputs by default, live LLM outputs when a model is configured |
 
 ## Running cells
 
 - **Deterministic cells** (mock data) run without any API key
-- **"Real LLM" cells** default to `ernie:ernie-5.1` via AI Studio. Set `MODEL_PROVIDER` + `MODEL_NAME` in `.env` to switch. Any OpenAI-compatible endpoint works via `OPENAI_BASE_URL`.
+- **"Real LLM" cells** default to `ernie:ernie-5.1` via AI Studio. Set `MODEL_PROVIDER` + `MODEL_NAME` in `.env` to switch. Any OpenAI-compatible endpoint works via `OPENAI_BASE_URL`. Use `model = get_model()` directly; if it returns `None`, print a concise skip message.
 - To re-run the full notebook: **Kernel → Restart & Run All**
 
 ## Running tests
 
 ```bash
-# Re-execute notebooks. Live-backend cells are opt-in with RUN_REAL_LLM=1.
+# Re-execute notebooks. For deterministic CI, run without provider API keys.
 uv run pytest --nbmake --nbmake-timeout=120 \
   action/*/langgraph/tutorial.ipynb action/*/langchain/tutorial.ipynb \
   reflection/*/langgraph/tutorial.ipynb reflection/*/langchain/tutorial.ipynb

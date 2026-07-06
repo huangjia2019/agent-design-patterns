@@ -7796,21 +7796,24 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9c0e5444">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ccdd0e06">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Generator-Critic---LangGraph-Implementation">Generator-Critic - LangGraph Implementation<a class="anchor-link" href="#Generator-Critic---LangGraph-Implementation">¶</a></h1><blockquote>
+<h1 id="Generator-Critic-%E2%80%94-LangGraph-Implementation">Generator-Critic — LangGraph Implementation<a class="anchor-link" href="#Generator-Critic-%E2%80%94-LangGraph-Implementation">¶</a></h1><blockquote>
 <p>"The model critiques; the harness decides."</p>
 </blockquote>
-<p>This notebook implements Generator-Critic as a <strong>LangGraph <code>StateGraph</code></strong>: generate an artifact, critique it, run a deterministic policy gate, and optionally draft a revision. The <a href="../langchain/tutorial.ipynb">LangChain version</a> uses LCEL pipes for the same data and policy.</p>
+<p>This notebook implements Generator-Critic as a <strong>LangGraph <code>StateGraph</code></strong>:</p>
+<p><code>generate -&gt; critique -&gt; gate -&gt; optional revise -&gt; END</code></p>
+<p>The graph version is intentionally explicit. Every role is a node, the policy branch is a conditional edge, and the revision path is visible in the rendered graph. The <a href="../langchain/tutorial.ipynb">LangChain version</a> implements the same data and policy as LCEL runnables.</p>
+<p>Everything runs against deterministic fake roles first (no API key needed), then the real backend. Default: AI Studio + <code>ernie-5.1</code> (OpenAI-compatible). See <a href="../../../.env.example"><code>.env.example</code></a> for provider config and <a href="../../../model_config.py"><code>model_config.py</code></a> for the shared loader.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1c41ddf5">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ff75723f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7819,30 +7822,61 @@ a.anchor-link {
 <h2 id="What-this-pattern-does">What this pattern does<a class="anchor-link" href="#What-this-pattern-does">¶</a></h2><p>Generator-Critic separates three jobs that often get blurred together:</p>
 <ol>
 <li><strong>Generate</strong> the artifact under review.</li>
-<li><strong>Critique</strong> the artifact as evidence: score, issues, blockers, warnings.</li>
+<li><strong>Critique</strong> the artifact as structured evidence: score, summary, issues.</li>
 <li><strong>Gate</strong> the artifact in deterministic code.</li>
 </ol>
-<p>| | <code>langgraph/</code> (StateGraph) | <code>langchain/</code> (LCEL) |
-|---|---|---|
-| <strong>Mechanism</strong> | Explicit nodes: <code>generate -&gt; critique -&gt; gate -&gt; revise</code> | <code>prompt | model | parser</code>, then a runnable gate |
-| <strong>Visibility</strong> | Every transition is visible in the graph | Shorter pipe, less explicit routing |
-| <strong>Shared pieces</strong> | <code>shared.py</code> parser, policy, mock JSON, reviser | Same <code>shared.py</code> pieces |
-| <strong>Boundary</strong> | Revision draft ends the pass; no auto-accept | Same: revision draft still needs a fresh critique |</p>
+<p>The key design choice: <strong>revision is not acceptance</strong>. If the critic finds a blocker or the score is too low, this pass may draft a revision, but it ends as <code>needs_revision</code>. The revised artifact must go through a fresh critique before it can pass.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>langgraph/</code> (StateGraph)</th>
+<th><code>langchain/</code> (LCEL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>The roles are</strong></td>
+<td>Explicit nodes: <code>generate</code>, <code>critique</code>, <code>gate</code>, <code>revise</code></td>
+<td>Runnables: generator pipe, critic pipe, policy runnable</td>
+</tr>
+<tr>
+<td><strong>The branch is</strong></td>
+<td><code>add_conditional_edges("gate", ...)</code></td>
+<td>Code inside a <code>RunnableLambda</code> gate</td>
+</tr>
+<tr>
+<td><strong>Mock roles</strong></td>
+<td>Plain Python callables from <code>shared.py</code></td>
+<td><code>FakeListChatModel</code> responses in call order</td>
+</tr>
+<tr>
+<td><strong>Safety boundary</strong></td>
+<td>Revision path ends at <code>END</code></td>
+<td>Same: no auto-accept after revision</td>
+</tr>
+<tr>
+<td><strong>Trade-off</strong></td>
+<td>More code, every transition visible</td>
+<td>Less code, control flow implicit</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=89e400cb">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5297aedf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Setup">Setup<a class="anchor-link" href="#Setup">¶</a></h2><p>The mock runs are deterministic and need no API key. The real-backend cell at the end uses the root <code>.env</code> through <a href="../../../model_config.py"><code>model_config.py</code></a> and only calls a live model when <code>run_real_llm</code> is true.</p>
+<h2 id="Setup">Setup<a class="anchor-link" href="#Setup">¶</a></h2><p>The mock cells are deterministic and need no API key. The real-backend section at the end calls <code>get_model()</code> directly; when no model is configured, it skips with a short message.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4a1dc4be">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=e620f027">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7852,15 +7886,13 @@ a.anchor-link {
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="c1"># ruff: noqa: E402</span>
-
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TypedDict</span>
 
-<span class="c1"># Notebooks may run from the repo root, this folder, nbmake, or nbconvert.</span>
-<span class="c1"># Add the directory that owns each marker file so root helpers and local shared</span>
-<span class="c1"># pattern files resolve without installing the repository as a package.</span>
+<span class="c1"># shared.py lives in the pattern folder; model_config.py and nbtools.py live at</span>
+<span class="c1"># the repo root. Search upward for each marker so this notebook works from</span>
+<span class="c1"># JupyterLab, nbmake, nbconvert, or the repo root without brittle ../../ paths.</span>
 <span class="k">for</span> <span class="n">_marker</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"shared.py"</span><span class="p">,</span> <span class="s2">"model_config.py"</span><span class="p">,</span> <span class="s2">"nbtools.py"</span><span class="p">):</span>
     <span class="n">_dir</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">(),</span> <span class="o">*</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="n">_marker</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">_dir</span><span class="p">))</span>
@@ -7868,14 +7900,16 @@ a.anchor-link {
 <span class="kn">from</span><span class="w"> </span><span class="nn">langchain_core.messages</span><span class="w"> </span><span class="kn">import</span> <span class="n">HumanMessage</span><span class="p">,</span> <span class="n">SystemMessage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">END</span><span class="p">,</span> <span class="n">START</span><span class="p">,</span> <span class="n">StateGraph</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">model_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span><span class="p">,</span> <span class="n">run_real_llm_enabled</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">nbtools</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_graph</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pattern</span><span class="w"> </span><span class="kn">import</span> <span class="n">Artifact</span><span class="p">,</span> <span class="n">ChainResult</span><span class="p">,</span> <span class="n">Critique</span><span class="p">,</span> <span class="n">Decision</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shared</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BAD_CRITIQUE_JSON</span><span class="p">,</span>
     <span class="n">CRITIC_SYSTEM_PROMPT</span><span class="p">,</span>
     <span class="n">DEFAULT_PROMPT</span><span class="p">,</span>
+    <span class="n">GENERATOR_SYSTEM_PROMPT</span><span class="p">,</span>
     <span class="n">GOOD_CRITIQUE_JSON</span><span class="p">,</span>
+    <span class="n">LOW_SCORE_CRITIQUE_JSON</span><span class="p">,</span>
     <span class="n">NEEDS_REVISION_CRITIQUE_JSON</span><span class="p">,</span>
     <span class="n">default_policy</span><span class="p">,</span>
     <span class="n">parse_critique_json</span><span class="p">,</span>
@@ -7890,17 +7924,25 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bd131e0a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=95f4276c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="State">State<a class="anchor-link" href="#State">¶</a></h2><p>The state is intentionally small: the prompt, the artifact, the critique, the policy decision, and an audit trace. The graph shows the chain boundary explicitly: a revision can be drafted, but it is not accepted in the same pass.</p>
+<h2 id="State-and-role-interfaces">State and role interfaces<a class="anchor-link" href="#State-and-role-interfaces">¶</a></h2><p>The graph state is small on purpose:</p>
+<ul>
+<li><code>prompt</code> is the user request for the artifact.</li>
+<li><code>artifact</code> is the generated or revised <code>Artifact</code>.</li>
+<li><code>critique</code> is the parsed evidence from the critic.</li>
+<li><code>decision</code> is the deterministic policy verdict.</li>
+<li><code>trace</code> is a short audit path for the tutorial output.</li>
+</ul>
+<p>The graph accepts plain Python callables for each role. That is why the fake roles in this notebook are framework-agnostic functions instead of LangChain fake chat models.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=450b16dd">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=991ba839">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7925,17 +7967,24 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=117b972c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0f90546d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Core-nodes">Core nodes<a class="anchor-link" href="#Core-nodes">¶</a></h2><p>Each node owns one role. The gate node is the important one: it uses <code>AcceptancePolicy</code> from the core pattern, not the critic's prose, to decide whether the artifact can pass.</p>
+<h2 id="Core-nodes">Core nodes<a class="anchor-link" href="#Core-nodes">¶</a></h2><p>Each node owns exactly one role:</p>
+<ul>
+<li><code>generate_node</code> calls the generator and starts the trace.</li>
+<li><code>critique_node</code> calls the critic and appends evidence to state.</li>
+<li><code>gate_node</code> runs <code>AcceptancePolicy</code>; it does not ask the LLM to decide.</li>
+<li><code>revise_node</code> drafts a revised artifact when requested.</li>
+</ul>
+<p>The conditional edge after <code>gate</code> is the whole safety boundary. If the artifact needs revision and a reviser exists, the graph routes to <code>revise</code>; otherwise it ends. The <code>revise</code> node also ends the graph, so revised text cannot be accepted in the same pass.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=09aaa762">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=358af588">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8004,17 +8053,22 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8737e602">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2c2d4dbf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Assemble-the-demo-graph">Assemble the demo graph<a class="anchor-link" href="#Assemble-the-demo-graph">¶</a></h2>
+<h2 id="Deterministic-fake-roles">Deterministic fake roles<a class="anchor-link" href="#Deterministic-fake-roles">¶</a></h2><p>LangGraph does not require a LangChain model object. The graph only needs callables matching <code>GeneratorFn</code> and <code>CriticFn</code>, so the mock roles stay plain Python:</p>
+<ul>
+<li><code>scripted_generator(prompt)</code> returns the canned artifact.</li>
+<li><code>scripted_critic(raw_json)</code> returns a critic callable that replays one JSON payload through the shared parser.</li>
+</ul>
+<p>That mirrors the guidance in <code>REFERENCE_IMPL.md</code>: use <code>FakeListChatModel</code> for LangChain LCEL pipes, but keep LangGraph fakes framework-agnostic when the graph accepts bare callables.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a39edb59">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=845199ec">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8022,10 +8076,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># LangGraph does not need a LangChain fake chat model here. The graph accepts</span>
-<span class="c1"># ordinary Python callables, so scripted_generator and scripted_critic are the</span>
-<span class="c1"># framework-agnostic fake roles equivalent to PR #2's fake LLM adapter.</span>
-<span class="n">accepted_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">accepted_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
     <span class="n">scripted_generator</span><span class="p">,</span>
     <span class="n">scripted_critic</span><span class="p">(</span><span class="n">GOOD_CRITIQUE_JSON</span><span class="p">),</span>
     <span class="n">reviser</span><span class="o">=</span><span class="n">revise_with_evidence</span><span class="p">,</span>
@@ -8049,17 +8100,17 @@ a.anchor-link {
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a6ac26c9">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1def07ae">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Mock-run-1:-clean-critique-accepts">Mock run 1: clean critique accepts<a class="anchor-link" href="#Mock-run-1:-clean-critique-accepts">¶</a></h2>
+<h2 id="Mock-run-1:-clean-critique-accepts">Mock run 1: clean critique accepts<a class="anchor-link" href="#Mock-run-1:-clean-critique-accepts">¶</a></h2><p>The generator returns the incident update and the critic returns a high score with no issues. The gate accepts. The trace is short because each graph node appends exactly one event.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4bd7a742">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b1b9499b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8092,17 +8143,17 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8673e780">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=51d0905d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Mock-run-2:-blocker-drafts-a-revision,-but-does-not-auto-accept">Mock run 2: blocker drafts a revision, but does not auto-accept<a class="anchor-link" href="#Mock-run-2:-blocker-drafts-a-revision,-but-does-not-auto-accept">¶</a></h2>
+<h2 id="Mock-run-2:-blocker-drafts-a-revision,-but-does-not-auto-accept">Mock run 2: blocker drafts a revision, but does not auto-accept<a class="anchor-link" href="#Mock-run-2:-blocker-drafts-a-revision,-but-does-not-auto-accept">¶</a></h2><p>The blocker issue routes through <code>revise</code>, and the reviser adds evidence to the artifact. The decision remains <code>needs_revision</code>; the revision is a draft for the next pass, not an accepted result.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2f3fae2a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8f1142a3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8110,9 +8161,7 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Same generated draft, different critic evidence. The conditional edge follows</span>
-<span class="c1"># the policy decision into revise, then ends the pass without auto-accepting.</span>
-<span class="n">revision_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">revision_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
     <span class="n">scripted_generator</span><span class="p">,</span>
     <span class="n">scripted_critic</span><span class="p">(</span><span class="n">NEEDS_REVISION_CRITIQUE_JSON</span><span class="p">),</span>
     <span class="n">reviser</span><span class="o">=</span><span class="n">revise_with_evidence</span><span class="p">,</span>
@@ -8142,17 +8191,17 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a73457e5">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=af326989">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Mock-run-3:-malformed-critic-output-fails-closed">Mock run 3: malformed critic output fails closed<a class="anchor-link" href="#Mock-run-3:-malformed-critic-output-fails-closed">¶</a></h2>
+<h2 id="Mock-run-3:-low-score-without-blockers-still-fails">Mock run 3: low score without blockers still fails<a class="anchor-link" href="#Mock-run-3:-low-score-without-blockers-still-fails">¶</a></h2><p>Here the critic returns only a warning, but the score is below the default threshold. This demonstrates that the policy is more than a blocker check: score and issue severity both matter.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ac1bab5f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=878333a8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8160,9 +8209,55 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># The malformed critic response exercises the shared fail-closed parser. The</span>
-<span class="c1"># graph sees a blocker Critique, not raw invalid JSON.</span>
-<span class="n">parse_failure_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">low_score_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
+    <span class="n">scripted_generator</span><span class="p">,</span>
+    <span class="n">scripted_critic</span><span class="p">(</span><span class="n">LOW_SCORE_CRITIQUE_JSON</span><span class="p">),</span>
+    <span class="n">reviser</span><span class="o">=</span><span class="n">revise_with_evidence</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">low_score_graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">"prompt"</span><span class="p">:</span> <span class="n">DEFAULT_PROMPT</span><span class="p">})</span>
+<span class="n">print_trace</span><span class="p">(</span><span class="n">result_from_state</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>decision: needs_revision
+trace: generated -&gt; critiqued -&gt; needs_revision -&gt; revision_drafted
+score: 0.62
+issues: ['warning:sentence 3:next update timing is too vague']
+artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=567057b2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Mock-run-4:-malformed-critic-output-fails-closed">Mock run 4: malformed critic output fails closed<a class="anchor-link" href="#Mock-run-4:-malformed-critic-output-fails-closed">¶</a></h2><p>The critic returns invalid JSON. The shared parser converts that parse failure into a blocker <code>Critique</code>, so the graph takes the revision branch instead of accidentally accepting the artifact.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c80d22fc">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">parse_failure_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span>
     <span class="n">scripted_generator</span><span class="p">,</span>
     <span class="n">scripted_critic</span><span class="p">(</span><span class="n">BAD_CRITIQUE_JSON</span><span class="p">),</span>
     <span class="n">reviser</span><span class="o">=</span><span class="n">revise_with_evidence</span><span class="p">,</span>
@@ -8192,53 +8287,57 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a292282b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6bce4d83">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Real-backend">Real backend<a class="anchor-link" href="#Real-backend">¶</a></h2><p>The same graph can use a live model. Live calls are opt-in through <code>RUN_REAL_LLM=1</code> (or local lowercase <code>run_real_llm=1</code>) so a normal <strong>Run All</strong> stays deterministic and does not spend API credits.</p>
+<h2 id="Real-backend">Real backend<a class="anchor-link" href="#Real-backend">¶</a></h2><p>The live run uses the same graph shape. We swap fake role callables for real role callables, then pass them to <code>build_graph</code>:</p>
+<ul>
+<li>fake: <code>build_graph(scripted_generator, scripted_critic(...))</code></li>
+<li>real: <code>build_graph(real_generator, real_critic)</code></li>
+</ul>
+<p><code>get_model()</code> is the only boundary. If no provider key is configured, it returns <code>None</code> and the cell skips. For deterministic notebook verification, run tests with provider API keys unset rather than adding a notebook-specific fake/real mode flag.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0a26b79c">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0d519ff4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Keep the opt-in as a visible notebook variable. If this prints False, the</span>
-<span class="c1"># real call is intentionally disabled before get_model() can touch the backend.</span>
-<span class="n">run_real_llm</span> <span class="o">=</span> <span class="n">run_real_llm_enabled</span><span class="p">()</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">()</span> <span class="k">if</span> <span class="n">run_real_llm</span> <span class="k">else</span> <span class="kc">None</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">()</span>
 
-<span class="k">if</span> <span class="ow">not</span> <span class="n">run_real_llm</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it."</span><span class="p">)</span>
-<span class="k">elif</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Skipping real backend run; RUN_REAL_LLM is enabled but no configured model could be loaded."</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"No model configured — skipping real backend run. See .env.example to enable."</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">real_generator</span><span class="p">(</span><span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Artifact</span><span class="p">:</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">invoke</span><span class="p">([</span>
-            <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">"Draft a concise customer-facing incident update."</span><span class="p">),</span>
+            <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">GENERATOR_SYSTEM_PROMPT</span><span class="p">),</span>
             <span class="n">HumanMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">prompt</span><span class="p">),</span>
         <span class="p">])</span>
         <span class="k">return</span> <span class="n">Artifact</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">),</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"real_model"</span><span class="p">})</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">real_critic</span><span class="p">(</span><span class="n">artifact</span><span class="p">:</span> <span class="n">Artifact</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Critique</span><span class="p">:</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">invoke</span><span class="p">([</span>
-            <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="p">(</span>
-                <span class="n">CRITIC_SYSTEM_PROMPT</span>
-            <span class="p">)),</span>
+            <span class="n">SystemMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">CRITIC_SYSTEM_PROMPT</span><span class="p">),</span>
             <span class="n">HumanMessage</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">artifact</span><span class="o">.</span><span class="n">content</span><span class="p">),</span>
         <span class="p">])</span>
         <span class="k">return</span> <span class="n">parse_critique_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">))</span>
 
-    <span class="n">real_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span><span class="n">real_generator</span><span class="p">,</span> <span class="n">real_critic</span><span class="p">)</span>
-    <span class="n">state</span> <span class="o">=</span> <span class="n">real_graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">"prompt"</span><span class="p">:</span> <span class="n">DEFAULT_PROMPT</span><span class="p">})</span>
-    <span class="n">print_trace</span><span class="p">(</span><span class="n">result_from_state</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">real_graph</span> <span class="o">=</span> <span class="n">build_graph</span><span class="p">(</span><span class="n">real_generator</span><span class="p">,</span> <span class="n">real_critic</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">real_graph</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">"prompt"</span><span class="p">:</span> <span class="n">DEFAULT_PROMPT</span><span class="p">})</span>
+        <span class="n">print_trace</span><span class="p">(</span><span class="n">result_from_state</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
+        <span class="c1"># Provider outages, auth failures, and rate limits are reported instead</span>
+        <span class="c1"># of crashing the tutorial. Parser failures still fail closed inside the</span>
+        <span class="c1"># graph and show up as a needs_revision result.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Real backend failed gracefully: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8251,41 +8350,64 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Skipping real backend run; set RUN_REAL_LLM=1 (or run_real_llm=1) and configure .env to enable it.
+<pre>Model: ernie:ernie-5.1
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>decision: needs_revision
+trace: generated -&gt; critiqued -&gt; needs_revision
+score: 0.3
+issues: ['blocker:Body of the update:No specific description of the checkout issue (e.g., payment processing, cart errors).', 'blocker:Body of the update:No estimated time of resolution (ETR) or timeline provided.']
+artifact: **Subject: Checkout Issue Update**
+Dear Customers,
+We are experiencing a checkout issue and are working to fix it. Please try again later. We apologize for the inconvenience and thank you for your patience.
 </pre>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=caa3c33b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f957e4c6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Composing-as-a-subgraph">Composing as a subgraph<a class="anchor-link" href="#Composing-as-a-subgraph">¶</a></h2><p>A compiled Generator-Critic graph is a normal LangGraph runnable. A larger agent could route only high-risk outputs through this reviewer before releasing them:</p>
+<div class="highlight"><pre><span></span><span class="n">parent</span> <span class="o">=</span> <span class="n">StateGraph</span><span class="p">(</span><span class="n">AgentState</span><span class="p">)</span>
+<span class="n">parent</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">"draft"</span><span class="p">,</span> <span class="n">draft_node</span><span class="p">)</span>
+<span class="n">parent</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">"generator_critic"</span><span class="p">,</span> <span class="n">accepted_graph</span><span class="p">)</span>  <span class="c1"># compiled graph as a node</span>
+<span class="n">parent</span><span class="o">.</span><span class="n">add_conditional_edges</span><span class="p">(</span><span class="s2">"draft"</span><span class="p">,</span> <span class="n">route_if_review_needed</span><span class="p">,</span> <span class="p">{</span>
+    <span class="s2">"review"</span><span class="p">:</span> <span class="s2">"generator_critic"</span><span class="p">,</span>
+    <span class="s2">"skip"</span><span class="p">:</span> <span class="n">END</span><span class="p">,</span>
+<span class="p">})</span>
+</pre></div>
+<p>That composition point is why the revision boundary matters. If <code>generator_critic</code> returns <code>needs_revision</code>, the parent graph can send it to an editor, queue it for human review, or run a second pass explicitly.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0aa6a9dd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="What-to-remember">What to remember<a class="anchor-link" href="#What-to-remember">¶</a></h2><ul>
-<li>The critic returns evidence, not approval.</li>
-<li>The policy gate owns acceptance.</li>
+<li><code>StateGraph</code> makes the safety boundary visible: <code>generate -&gt; critique -&gt; gate -&gt; revise -&gt; END</code>.</li>
+<li>The critic returns evidence, not approval authority.</li>
+<li><code>AcceptancePolicy</code> owns both score threshold and blocker logic.</li>
 <li>Parser failures fail closed as blocker critiques.</li>
 <li>A revision draft is not accepted until another pass critiques it.</li>
-<li>LangGraph makes the chain and branch visible.</li>
 </ul>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=35c33ab3">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="Further-reading">Further reading<a class="anchor-link" href="#Further-reading">¶</a></h2><ul>
-<li><a href="../langchain/tutorial.ipynb">LangChain version</a></li>
-<li><a href="../README.md">Pattern README</a></li>
-<li><a href="../../../REFERENCE_IMPL.md">Reference implementation guide</a></li>
-<li><a href="https://langchain-ai.github.io/langgraph/">LangGraph docs</a></li>
+<li><a href="../langchain/tutorial.ipynb">LangChain version</a> — same pattern as LCEL pipes and a runnable policy gate</li>
+<li><a href="../README.md">Pattern README</a> — design rationale and Python core implementation</li>
+<li><a href="../../../REFERENCE_IMPL.md">Reference implementation guide</a> — repo conventions, fake-model guidance, notebook verification commands</li>
+<li><a href="https://langchain-ai.github.io/langgraph/reference/graphs/">StateGraph reference</a></li>
 </ul>
 </div>
 </div>

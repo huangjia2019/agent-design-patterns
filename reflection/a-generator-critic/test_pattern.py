@@ -19,6 +19,7 @@ sys.modules.pop("pattern", None)
 
 import example  # noqa: E402
 import model_config  # noqa: E402
+import shared  # noqa: E402
 from pattern import (  # noqa: E402
     AcceptancePolicy,
     Artifact,
@@ -157,20 +158,18 @@ def test_example_missing_evidence_drafts_revision_instead_of_accepting() -> None
     assert "Evidence: status dashboard incident INC-42." in result.artifact.content
 
 
-@pytest.mark.parametrize("flag_name", ["RUN_REAL_LLM", "run_real_llm"])
-def test_real_llm_opt_in_flag_can_be_loaded_from_dotenv(tmp_path, monkeypatch, flag_name: str) -> None:
-    (tmp_path / ".env").write_text(f"{flag_name}=1\n", encoding="utf-8")
+def test_shared_low_score_fixture_stays_below_default_policy_threshold() -> None:
+    critique = shared.parse_critique_json(shared.LOW_SCORE_CRITIQUE_JSON)
+
+    assert shared.default_policy().decide(critique) is Decision.NEEDS_REVISION
+
+
+def test_model_loader_can_be_forced_off_for_deterministic_notebook_runs(tmp_path, monkeypatch) -> None:
+    (tmp_path / ".env").write_text(
+        "MODEL_PROVIDER=ernie\nOPENAI_API_KEY=real-key-in-dotenv\n",
+        encoding="utf-8",
+    )
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("RUN_REAL_LLM", raising=False)
-    monkeypatch.delenv("run_real_llm", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
 
-    assert model_config.run_real_llm_enabled() is True
-
-
-def test_real_llm_process_env_override_wins_over_dotenv(tmp_path, monkeypatch) -> None:
-    (tmp_path / ".env").write_text("RUN_REAL_LLM=1\nrun_real_llm=1\n", encoding="utf-8")
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("RUN_REAL_LLM", "0")
-    monkeypatch.delenv("run_real_llm", raising=False)
-
-    assert model_config.run_real_llm_enabled() is False
+    assert model_config.get_model() is None

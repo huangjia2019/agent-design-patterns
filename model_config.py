@@ -1,9 +1,8 @@
 """Shared model configuration for all tutorial notebooks.
 
 Usage in notebooks:
-    from model_config import get_model, run_real_llm_enabled
-    run_real_llm = run_real_llm_enabled()
-    model = get_model() if run_real_llm else None
+    from model_config import get_model
+    model = get_model()
 
 Reads from root .env — see .env.example for all options.
 Default: ernie provider + ernie-5.1 via AI Studio.
@@ -16,27 +15,12 @@ from dotenv import load_dotenv
 from langchain_dev_utils.chat_models import load_chat_model, register_model_provider
 
 _providers_registered = False
-_TRUE_VALUES = {"1", "true", "yes", "on"}
 
 
 def _load_env() -> None:
     """Find .env by walking up from cwd."""
     for candidate in [".env", "../.env", "../../.env", "../../../.env"]:
         load_dotenv(candidate, override=False)
-
-
-def run_real_llm_enabled() -> bool:
-    """Return whether notebook real-backend cells should call the configured LLM.
-
-    `RUN_REAL_LLM=1` is the documented opt-in flag. The lowercase
-    `run_real_llm=1` spelling is also accepted so existing local notebooks do
-    not silently skip if that is what was added to .env.
-    """
-    _load_env()
-    value = os.getenv("RUN_REAL_LLM")
-    if value is None:
-        value = os.getenv("run_real_llm", "")
-    return value.strip().lower() in _TRUE_VALUES
 
 
 def _register_providers() -> None:
@@ -50,17 +34,20 @@ def _register_providers() -> None:
     global _providers_registered
     if _providers_registered:
         return
-    _providers_registered = True
 
     # Ernie (AI Studio) — OpenAI-compatible endpoint
     base_url = os.getenv("OPENAI_BASE_URL", "https://aistudio.baidu.com/llm/lmapi/v3")
-    if os.getenv("OPENAI_API_KEY"):
-        os.environ.setdefault("ERNIE_API_KEY", os.getenv("OPENAI_API_KEY"))
-        register_model_provider(
-            provider_name="ernie",
-            chat_model="openai-compatible",
-            base_url=base_url,
-        )
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        return
+
+    os.environ.setdefault("ERNIE_API_KEY", openai_api_key)
+    register_model_provider(
+        provider_name="ernie",
+        chat_model="openai-compatible",
+        base_url=base_url,
+    )
+    _providers_registered = True
 
 
 def get_model(temperature: float = 0):

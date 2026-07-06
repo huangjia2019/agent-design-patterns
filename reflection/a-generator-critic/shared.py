@@ -13,6 +13,7 @@ from pattern import AcceptancePolicy, Artifact, ChainResult, Critique, Issue, Se
 
 
 DEFAULT_PROMPT = "Draft a customer-facing checkout incident update."
+GENERATOR_SYSTEM_PROMPT = "Draft a concise customer-facing incident update."
 
 INITIAL_DRAFT = (
     "We identified elevated checkout errors. Impact is limited to card payments. "
@@ -47,6 +48,20 @@ NEEDS_REVISION_CRITIQUE_JSON = json.dumps(
                 "severity": "blocker",
                 "message": "impact claim lacks a cited source",
                 "location": "sentence 2",
+            }
+        ],
+    }
+)
+
+LOW_SCORE_CRITIQUE_JSON = json.dumps(
+    {
+        "score": 0.62,
+        "summary": "Readable, but too vague to publish safely.",
+        "issues": [
+            {
+                "severity": "warning",
+                "message": "next update timing is too vague",
+                "location": "sentence 3",
             }
         ],
     }
@@ -135,8 +150,13 @@ def print_trace(result: ChainResult) -> None:
         f"{issue.severity.value}:{issue.location}:{issue.message}"
         for issue in result.critique.issues
     ]
+    artifact = "\n".join(
+        line.rstrip()
+        for line in result.artifact.content.splitlines()
+        if line.strip()
+    )
     print("decision:", result.decision.value)
     print("trace:", " -> ".join(result.trace))
     print("score:", result.critique.score)
     print("issues:", issues or "none")
-    print("artifact:", result.artifact.content)
+    print("artifact:", artifact)

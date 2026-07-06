@@ -49,7 +49,7 @@ generate -> critique -> gate -> optional revision draft
 python reflection/a-generator-critic/example.py
 pytest reflection/a-generator-critic/test_pattern.py -v
 
-# reference notebooks —— 默认只跑确定性 cell，实时模型调用需要 RUN_REAL_LLM=1
+# reference notebooks —— mock cell 无需 API key；配置好 .env 后 real backend cell 会直接运行
 pytest --nbmake --nbmake-timeout=120 \
   reflection/a-generator-critic/langgraph/tutorial.ipynb \
   reflection/a-generator-critic/langchain/tutorial.ipynb
