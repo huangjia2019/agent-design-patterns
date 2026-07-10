@@ -45,7 +45,8 @@ def create():
         emp = f"E{i:04d}"
         name, salary = f"emp_{i:04d}", 8000 + (i * 37) % 22000
         if emp == "E0007":
-            name = "Kage (curriculum cast: the 18% adjustment, lecture 17)"
+            # 5400 = 18% of 30000, matching the lecture-17 case numbers
+            name, salary = "Kage (curriculum cast: the 18% adjustment, lecture 17)", 30000
         if emp == "E0012":
             name = "Xiaoxue (curriculum cast: the 9600 bonus, lecture 19)"
         cur.execute("INSERT INTO employees VALUES (?,?,?,?,?)",
