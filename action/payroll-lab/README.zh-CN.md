@@ -35,7 +35,7 @@ python3 naked_loop.py         # 看它眼都不眨地写进去
 |:--|:--|:--|
 | 21 导论 | 裸奔的 PRA 循环 + ActionTrace 观测层 | 本目录 `naked_loop.py` / `action_trace.py` |
 | 22 工具调度 | Action × Router | 本目录 `tool_dispatch_lab.py`（薪酬版五场景）+ 模式本体 [`../a-tool-dispatch/`](../a-tool-dispatch/) |
-| 23 规划执行 | Action × Orchestration | [`../b-plan-and-execute/`](../b-plan-and-execute/) |
+| 23 规划执行 | Action × Orchestration | 本目录 `plan_execute_lab.py`（800 人打款 DAG 四幕）+ 模式本体 [`../b-plan-and-execute/`](../b-plan-and-execute/) |
 | 24 提示链 | Action × Chain | [`../c-prompt-chaining/`](../c-prompt-chaining/) |
 | 25 守卫三明治 | Action × Hierarchy | [`../d-guardrail-sandwich/`](../d-guardrail-sandwich/) |
 
@@ -47,5 +47,6 @@ python3 naked_loop.py         # 看它眼都不眨地写进去
 - `naked_loop.py` — 50 行上下、无护栏的感知-推理-行动循环（反面教材，故意的）
 - `action_trace.py` — 行动模块共用的观测层：四个生产指标 + 健康检查（`python3 action_trace.py` 可看 scope-creep 报警的演示）
 - `tool_dispatch_lab.py` — 第 22 讲动手环节：把转账、冲正、查工资条、改银行账号四个工具挂上元数据，跑五个场景（工具臆造 / 过期状态 / 重复打款 / 审批门 / saga 冲正），第 21 讲那个"顺手改账号"在场景四被当场拦下
+- `plan_execute_lab.py` — 第 23 讲动手环节：800 人打款排成一张 DAG 计划，四幕剧本（财务审批 → 批次 b3 银行超时失败、已成批次不动 → 局部重排只补 b3 → 对账人审放行）
 
 表结构四张：`employees`（员工与银行账号）、`payroll`（月度工资单）、`approvals`（审批单）、`policies`（政策版本）。
