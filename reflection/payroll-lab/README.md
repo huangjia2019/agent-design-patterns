@@ -17,6 +17,9 @@ python3 generator_critic_lab.py --stubborn  # rounds exhausted, hand to a human
 
 python3 skill_package_lab.py                # lecture 28: verification gate + VERIFIED-only routing
 python3 skill_package_lab.py --no-gate      # stored without the gate: 209/800 bases wrong
+
+python3 experience_replay_lab.py                # lecture 29: recall changes the decision + reuse outcomes write back
+python3 experience_replay_lab.py --no-feedback  # feedback loop cut: the superstition never leaves the pool
 ```
 
 The introspective critic approves the wrong report twice (it can check
@@ -28,5 +31,5 @@ external signal to close the loop.
 |:--|:--|:--|
 | Generator-Critic (Reflection × Chain) | reconciliation tests / schema | `generator_critic_lab.py` here + [`../a-generator-critic/`](../a-generator-critic/) |
 | Skill Package (Reflection × Router) | verified-before-stored | `skill_package_lab.py` here + [`../b-skill-package/`](../b-skill-package/) |
-| Experience Replay (Reflection × Hierarchy) | post-reuse success rate | [`../c-experience-replay/`](../c-experience-replay/) |
+| Experience Replay (Reflection × Hierarchy) | post-reuse success rate | `experience_replay_lab.py` here + [`../c-experience-replay/`](../c-experience-replay/) |
 | Self-Heal Loop (Reflection × Loop) | deterministic CI signals | [`../d-self-heal-loop/`](../d-self-heal-loop/) |

@@ -126,7 +126,7 @@ if not NO_GATE:
     print("      TRIAL -- the router never saw it.")
 
     other = library.route("year-end bonus special payout")
-    print(f"   route('year-end bonus special payout')")
+    print("   route('year-end bonus special payout')")
     print(f"      matched: {other.matched}, fallback: {other.fallback}")
     print("      no verified skill fits: fall back to from-scratch, visibly.")
 
@@ -148,6 +148,6 @@ else:
     total = con.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
     print(f"   applied to all {total} employees with 2025 bounds:")
     print(f"   {wrong} contribution bases computed wrong. Every step reported")
-    print(f"   success; nothing in the run knows the policy year rolled over.")
-    print(f"   The three golden questions cost three comparisons. This costs")
+    print("   success; nothing in the run knows the policy year rolled over.")
+    print("   The three golden questions cost three comparisons. This costs")
     print(f"   {wrong} wrong social-insurance payments and a July of corrections.")
