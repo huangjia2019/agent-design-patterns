@@ -1,0 +1,26 @@
+# payroll-lab — hands-on bench for the Reflection module
+
+[简体中文](README.zh-CN.md)
+
+Continues the payroll bench from [`../../action/payroll-lab/`](../../action/payroll-lab/):
+same SQLite database, now at month-end — 798 payslips PAID, 2 REVERSED
+(the saga rollback from the Action module). The agent wrote a monthly
+report claiming 800 paid, 0 reversed. The Reflection module's question:
+how does it find out the report is wrong?
+
+```bash
+python3 self_grade_lab.py            # introspection vs. one external signal
+python3 self_grade_lab.py --strict   # a harsher self-critic changes the score, not the findings
+```
+
+The introspective critic approves the wrong report twice (it can check
+consistency, not truth). Two SQL counts against the ledger reject it
+immediately. That contrast is the module's spine: reflection needs an
+external signal to close the loop.
+
+| Pattern (coordinate) | External signal | Directory |
+|:--|:--|:--|
+| Generator-Critic (Reflection × Chain) | reconciliation tests / schema | [`../a-generator-critic/`](../a-generator-critic/) |
+| Skill Package (Reflection × Router) | verified-before-stored | [`../b-skill-package/`](../b-skill-package/) |
+| Experience Replay (Reflection × Hierarchy) | post-reuse success rate | [`../c-experience-replay/`](../c-experience-replay/) |
+| Self-Heal Loop (Reflection × Loop) | deterministic CI signals | [`../d-self-heal-loop/`](../d-self-heal-loop/) |
