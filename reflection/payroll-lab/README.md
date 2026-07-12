@@ -11,6 +11,12 @@ how does it find out the report is wrong?
 ```bash
 python3 self_grade_lab.py            # introspection vs. one external signal
 python3 self_grade_lab.py --strict   # a harsher self-critic changes the score, not the findings
+
+python3 generator_critic_lab.py             # lecture 27: generator-critic, three scenes
+python3 generator_critic_lab.py --stubborn  # rounds exhausted, hand to a human
+
+python3 skill_package_lab.py                # lecture 28: verification gate + VERIFIED-only routing
+python3 skill_package_lab.py --no-gate      # stored without the gate: 209/800 bases wrong
 ```
 
 The introspective critic approves the wrong report twice (it can check
@@ -21,6 +27,6 @@ external signal to close the loop.
 | Pattern (coordinate) | External signal | Directory |
 |:--|:--|:--|
 | Generator-Critic (Reflection × Chain) | reconciliation tests / schema | `generator_critic_lab.py` here + [`../a-generator-critic/`](../a-generator-critic/) |
-| Skill Package (Reflection × Router) | verified-before-stored | [`../b-skill-package/`](../b-skill-package/) |
+| Skill Package (Reflection × Router) | verified-before-stored | `skill_package_lab.py` here + [`../b-skill-package/`](../b-skill-package/) |
 | Experience Replay (Reflection × Hierarchy) | post-reuse success rate | [`../c-experience-replay/`](../c-experience-replay/) |
 | Self-Heal Loop (Reflection × Loop) | deterministic CI signals | [`../d-self-heal-loop/`](../d-self-heal-loop/) |
