@@ -321,14 +321,17 @@ else:
 
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision
-    score: 0.35
-    issues: ["blocker:Incident communication best practices:Paragraph 1, sentence 3:No specific resolution timeline provided; 'shortly' is too vague for an incident update", 'blocker:Incident management standards:Subject line and body:Missing incident reference number or identifier', 'blocker:Status page / incident comms checklist:Entire document:No last-updated timestamp or next-update commitment', 'blocker:Clarity and specificity check:Paragraph 1, sentence 1:Affected systems and scope are not specified', 'blocker:Completeness check:Paragraph 2, sentence 1:Contact placeholder not filled; support details are incomplete', "warning:Customer experience review:Paragraph 2, sentence 1:No specific workarounds or alternative actions offered beyond 'try again later'", 'warning:Tone and empathy audit:Entire document:Tone is overly generic and lacks empathy for specific customer impact']
+    score: 0.25
+    issues: ['blocker:Template completeness check:Throughout: greeting, platform, times, date, status link, support contact, company name:Multiple placeholders remain unfilled, making the template unpublishable', 'blocker:Incident communication checklist:First paragraph:No specific incident window is provided', 'blocker:Incident communication checklist:First paragraph:Affected platform or website is not identified', 'warning:Incident communication best practices:What happened section:Incident description is vague and uninformative', 'warning:Incident communication best practices:Impact section:Impact is not quantified or scoped', "warning:Incident communication best practices:What we're doing section:No root cause or specific remediation actions are described", "warning:Incident communication best practices:What we're doing section:No expected resolution time or next update commitment is given", 'warning:Incident communication best practices:Contact/assistance section:No customer remediation or compensation details are offered']
     dropped: none
-    artifact: **Subject: Checkout Issue Update**
-    Dear Valued Customer,
-    We are currently experiencing a technical issue affecting our checkout process, which may cause delays or errors when completing your purchase. Our team is actively working to resolve this as quickly as possible, and we expect to have the issue fixed shortly.
-    In the meantime, we recommend trying again later or contacting our support team at [support email/phone] for assistance. We sincerely apologize for the inconvenience and appreciate your patience.
-    Best regards,
+    artifact: **Subject**: Checkout Issue Update – [Date/Time]
+    Hi [Customer Name/Valued Customer],
+    We’re notifying you of a temporary checkout issue on [Platform/Website] from [Start Time] to [End Time] on [Date]. Some customers may have been unable to complete purchases during this time.
+    **What happened**: A technical glitch disrupted our checkout process.
+    **Impact**: Transactions may have failed or been delayed.
+    **What we’re doing**: Our team is actively resolving the issue and implementing fixes to prevent recurrence.
+    We apologize for the inconvenience. For real-time updates, visit [Status Page Link], or contact [Support Email/Link] if you need assistance with an order.
+    Thank you for your patience.
     [Your Company Name]
 
 

@@ -314,7 +314,7 @@ else:
     def real_critic(artifact: Artifact) -> Critique:
         response = model.invoke([
             SystemMessage(content=CRITIC_SYSTEM_PROMPT),
-            HumanMessage(content=artifact.content),
+            HumanMessage(content=f"Artifact under review:\n{artifact.content}"),
         ])
         return parse_critique_json(str(response.content))
 
@@ -336,14 +336,13 @@ else:
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision
     score: 0.3
-    issues: ['blocker:Template completeness check:Subject and body (start time, end time, support contact, company name):Unfilled placeholders for critical information', 'blocker:Incident communication best practices:Body paragraph 1:Missing specific incident details (root cause, impact scope)', 'warning:Clarity check:First paragraph:Vague impact language', 'warning:Time formatting check:First paragraph:Missing timezone for incident times']
+    issues: ['blocker:Template completeness check:Subject line:Subject line contains unresolved [Date] placeholder', 'blocker:Template completeness check:Contact information section:Contact information section contains unresolved [contact info] placeholder', 'blocker:Template completeness check:Signature:Signature contains unresolved [Your Company Name] placeholder', "warning:Clarity check:Body text:Vague time references ('earlier today', 'now', 'shortly') reduce clarity", "warning:Precision check:Body text:Weak impact language ('potentially disrupting') lacks precision"]
     dropped: none
-    artifact: **Subject: Checkout System Update – Resolved**
-    Dear Customers,
-    We experienced a technical issue affecting our checkout process from [start time] to [end time] today. This may have caused failed transactions or delays.
-    Our team has resolved the issue, and checkout is now fully operational. Orders placed during the disruption are being processed. If you encountered an error, please retry your purchase or contact support at [support link/email] for assistance.
-    We apologize for the inconvenience and appreciate your patience.
-    Best regards,
+    artifact: **Subject**: Checkout System Update – [Date]
+    Dear Valued Customer,
+    A temporary technical issue affected our checkout system earlier today, potentially disrupting some purchases. Our team is resolving this now, and we expect normal service to resume shortly.
+    If you encountered problems, please try again or contact support at [contact info]. We apologize for the inconvenience.
+    Sincerely,
     [Your Company Name]
 
 

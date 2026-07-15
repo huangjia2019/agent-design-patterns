@@ -34,7 +34,7 @@ result is still `NEEDS_REVISION`; this pattern does not automatically accept the
 revision without another critique. That keeps Generator-Critic distinct from
 Self-Heal Loop, where the critique/revise cycle repeats until a stop condition.
 
-The implementation has three named pieces:
+The implementation has four named pieces:
 
 - **Artifact** — the generated object under review.
 - **Issue** — one finding with severity, message, location, named source, and

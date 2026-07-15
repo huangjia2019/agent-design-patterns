@@ -82,8 +82,10 @@ def default_policy() -> AcceptancePolicy:
 def parse_critique_json(raw: str) -> Critique:
     """Parse the notebook critique JSON format into the core Critique type.
 
-    Fail closed: malformed JSON, unknown severities, missing fields, or invalid
-    scores become a blocker critique rather than an accidental pass.
+    Fail closed: malformed JSON, unknown severities, missing required fields, or
+    invalid scores become a blocker critique rather than an accidental pass.
+    Missing, null, or blank support fields mark an issue as an unsupported
+    opinion, which ``Critique`` retains in ``dropped_issues``.
     """
     try:
         payload = json.loads(raw)
@@ -100,8 +102,8 @@ def parse_critique_json(raw: str) -> Critique:
                 severity=Severity(item["severity"]),
                 message=str(item["message"]),
                 location=str(item["location"]),
-                source=str(item["source"]),
-                evidence=str(item["evidence"]),
+                source=str(item.get("source") or ""),
+                evidence=str(item.get("evidence") or ""),
             )
             for item in payload["issues"]
         ]

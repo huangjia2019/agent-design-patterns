@@ -212,10 +212,6 @@ def test_shared_low_score_fixture_stays_below_default_policy_threshold() -> None
         '{"score": 0.95, "issues": []}',
         '{"score": 0.95, "summary": "ready", "issues": [{}]}',
         '{"score": 0.95, "summary": "ready", "issues": [{"severity": "warning"}]}',
-        (
-            '{"score": 0.95, "summary": "ready", "issues": ['
-            '{"severity": "warning", "message": "thin", "location": "body"}]}'
-        ),
     ],
 )
 def test_shared_parser_fails_closed_when_critique_schema_is_incomplete(raw_json: str) -> None:
@@ -224,6 +220,34 @@ def test_shared_parser_fails_closed_when_critique_schema_is_incomplete(raw_json:
     assert critique.score == 0.0
     assert critique.blockers()
     assert shared.default_policy().decide(critique) is Decision.NEEDS_REVISION
+
+
+@pytest.mark.parametrize(
+    "raw_json",
+    [
+        (
+            '{"score": 0.95, "summary": "ready", "issues": ['
+            '{"severity": "warning", "message": "thin", "location": "body"}]}'
+        ),
+        (
+            '{"score": 0.95, "summary": "ready", "issues": ['
+            '{"severity": "warning", "message": "thin", "location": "body", '
+            '"source": null, "evidence": null}]}'
+        ),
+        (
+            '{"score": 0.95, "summary": "ready", "issues": ['
+            '{"severity": "warning", "message": "thin", "location": "body", '
+            '"source": "", "evidence": "   "}]}'
+        ),
+    ],
+)
+def test_shared_parser_drops_unsupported_opinions(raw_json: str) -> None:
+    critique = shared.parse_critique_json(raw_json)
+
+    assert critique.score == 0.95
+    assert critique.issues == []
+    assert len(critique.dropped_issues) == 1
+    assert shared.default_policy().decide(critique) is Decision.ACCEPTED
 
 
 def test_model_loader_can_be_forced_off_for_deterministic_notebook_runs(tmp_path, monkeypatch) -> None:
