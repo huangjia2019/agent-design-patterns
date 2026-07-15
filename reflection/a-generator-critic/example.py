@@ -30,11 +30,35 @@ def draft_incident_update(prompt: str) -> Artifact:
 def critique_update(artifact: Artifact) -> Critique:
     issues: list[Issue] = []
     if "Impact" not in artifact.content:
-        issues.append(Issue(Severity.BLOCKER, "missing customer impact", "body"))
+        issues.append(
+            Issue(
+                Severity.BLOCKER,
+                "missing customer impact",
+                "body",
+                "incident_update_schema",
+                "customer update schema requires an impact statement",
+            )
+        )
     if "Next update" not in artifact.content:
-        issues.append(Issue(Severity.WARNING, "missing next-update promise", "body"))
+        issues.append(
+            Issue(
+                Severity.WARNING,
+                "missing next-update promise",
+                "body",
+                "support_policy",
+                "policy SUP-12 requires a next-update window",
+            )
+        )
     if "dashboard" not in artifact.content:
-        issues.append(Issue(Severity.BLOCKER, "no evidence link", "body"))
+        issues.append(
+            Issue(
+                Severity.BLOCKER,
+                "no evidence link",
+                "body",
+                "incident_policy",
+                "customer-visible impact claims require a status incident ID",
+            )
+        )
 
     score = 0.86 if not any(issue.severity is Severity.BLOCKER for issue in issues) else 0.62
     return Critique(score=score, issues=issues, summary=f"{len(issues)} issue(s) found")

@@ -55,6 +55,8 @@ def test_policy_requires_revision_when_any_blocker_exists() -> None:
                 severity=Severity.BLOCKER,
                 message="claim lacks a cited source",
                 location="paragraph 2",
+                source="citation_check",
+                evidence="paragraph 2 has no source marker",
             )
         ],
         summary="good prose, unsafe evidence",
@@ -67,11 +69,40 @@ def test_policy_can_be_configured_to_hold_warnings() -> None:
     policy = AcceptancePolicy(min_score=0.8, allow_warnings=False)
     critique = Critique(
         score=0.9,
-        issues=[Issue(Severity.WARNING, "tone is too broad", "headline")],
+        issues=[
+            Issue(
+                Severity.WARNING,
+                "tone is too broad",
+                "headline",
+                "style_guide",
+                "style guide R-7 rejects broad headlines",
+            )
+        ],
         summary="minor issue",
     )
 
     assert policy.decide(critique) is Decision.NEEDS_REVISION
+
+
+def test_policy_drops_unevidenced_blocker_opinions() -> None:
+    policy = AcceptancePolicy(min_score=0.8)
+    critique = Critique(
+        score=0.92,
+        issues=[
+            Issue(
+                Severity.BLOCKER,
+                "this feels risky",
+                "body",
+                "vibe_check",
+                "",
+            )
+        ],
+        summary="one opinion with no evidence",
+    )
+
+    assert critique.issues == []
+    assert len(critique.dropped_issues) == 1
+    assert policy.decide(critique) is Decision.ACCEPTED
 
 
 def test_critique_score_must_be_unit_interval() -> None:
@@ -110,7 +141,15 @@ def test_chain_with_reviser_drafts_revision_but_does_not_auto_accept_it() -> Non
     def critic(_artifact: Artifact) -> Critique:
         return Critique(
             score=0.6,
-            issues=[Issue(Severity.BLOCKER, "missing citation", "sentence 1")],
+            issues=[
+                Issue(
+                    Severity.BLOCKER,
+                    "missing citation",
+                    "sentence 1",
+                    "citation_check",
+                    "sentence 1 contains no source marker",
+                )
+            ],
             summary="needs evidence",
         )
 
@@ -173,6 +212,10 @@ def test_shared_low_score_fixture_stays_below_default_policy_threshold() -> None
         '{"score": 0.95, "issues": []}',
         '{"score": 0.95, "summary": "ready", "issues": [{}]}',
         '{"score": 0.95, "summary": "ready", "issues": [{"severity": "warning"}]}',
+        (
+            '{"score": 0.95, "summary": "ready", "issues": ['
+            '{"severity": "warning", "message": "thin", "location": "body"}]}'
+        ),
     ],
 )
 def test_shared_parser_fails_closed_when_critique_schema_is_incomplete(raw_json: str) -> None:

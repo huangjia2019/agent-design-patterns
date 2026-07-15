@@ -1,16 +1,22 @@
 """Generator-Critic pattern.
 
-Minimal, framework-agnostic reference implementation of the Reflect x Chain
-pattern. One role generates an artifact. A separate role critiques it. A
-deterministic gate decides whether the artifact is accepted or needs revision.
+Framework-agnostic reference implementation of the Reflection x Chain pattern.
+One role generates an artifact. A separate role critiques it. A deterministic
+gate decides whether the artifact is accepted or needs revision.
 
-The topology is intentionally a chain:
+The topology is intentionally one pass:
 
     generate -> critique -> gate -> optional revision draft
 
 There is no re-critique loop here. If a revision draft is produced, it is still
-marked ``NEEDS_REVISION`` until another pass critiques it. That boundary keeps
+marked ``NEEDS_REVISION`` until another explicit pass critiques it. That keeps
 Generator-Critic distinct from the sibling Self-Heal Loop pattern.
+
+The critic's useful power comes from external signals. Every actionable issue
+names the check or source that produced it and carries evidence such as a schema
+key, policy clause, test failure, ledger count, or database observation. Issues
+without evidence are retained as dropped opinions, but they cannot trigger a
+revision.
 """
 from __future__ import annotations
 
@@ -20,7 +26,7 @@ from typing import Callable
 
 
 class Severity(str, Enum):
-    """How strongly a critic issue should affect the gate."""
+    """How strongly an evidence-backed critic issue should affect the gate."""
 
     BLOCKER = "blocker"
     WARNING = "warning"
@@ -36,11 +42,22 @@ class Decision(str, Enum):
 
 @dataclass(frozen=True)
 class Issue:
-    """One concrete fault or note from the critic."""
+    """One concrete critic finding.
+
+    `source` names the check that produced the finding. `evidence` records what
+    the check actually saw. Empty source/evidence means the finding is only an
+    opinion; `Critique` keeps it in `dropped_issues` so the trace is auditable,
+    but acceptance policy ignores it.
+    """
 
     severity: Severity
     message: str
     location: str = ""
+    source: str = ""
+    evidence: str = ""
+
+    def is_evidence_backed(self) -> bool:
+        return bool(self.source.strip() and self.evidence.strip())
 
 
 @dataclass(frozen=True)
@@ -65,10 +82,22 @@ class Critique:
     score: float
     issues: list[Issue]
     summary: str
+    dropped_issues: list[Issue] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.score <= 1.0:
             raise ValueError("score must be between 0.0 and 1.0")
+
+        evidence_backed: list[Issue] = []
+        dropped = list(self.dropped_issues)
+        for issue in self.issues:
+            if issue.is_evidence_backed():
+                evidence_backed.append(issue)
+            else:
+                dropped.append(issue)
+
+        object.__setattr__(self, "issues", evidence_backed)
+        object.__setattr__(self, "dropped_issues", dropped)
 
     def blockers(self) -> list[Issue]:
         return [issue for issue in self.issues if issue.severity is Severity.BLOCKER]
@@ -139,6 +168,8 @@ class GeneratorCriticChain:
 
         critique = self.critic(artifact)
         trace.append("critiqued")
+        if critique.dropped_issues:
+            trace.append(f"dropped_opinions:{len(critique.dropped_issues)}")
 
         decision = self.policy.decide(critique)
         trace.append(decision.value)

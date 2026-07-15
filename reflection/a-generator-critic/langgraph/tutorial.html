@@ -8136,6 +8136,7 @@ a.anchor-link {
 trace: generated -&gt; critiqued -&gt; accepted
 score: 0.9
 issues: none
+dropped: none
 artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
 </pre>
 </div>
@@ -8183,7 +8184,8 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <pre>decision: needs_revision
 trace: generated -&gt; critiqued -&gt; needs_revision -&gt; revision_drafted
 score: 0.74
-issues: ['blocker:sentence 2:impact claim lacks a cited source']
+issues: ['blocker:incident_policy:sentence 2:impact claim lacks a cited source']
+dropped: none
 artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 </pre>
 </div>
@@ -8231,7 +8233,8 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <pre>decision: needs_revision
 trace: generated -&gt; critiqued -&gt; needs_revision -&gt; revision_drafted
 score: 0.62
-issues: ['warning:sentence 3:next update timing is too vague']
+issues: ['warning:support_style_guide:sentence 3:next update timing is too vague']
+dropped: none
 artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 </pre>
 </div>
@@ -8279,7 +8282,8 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <pre>decision: needs_revision
 trace: generated -&gt; critiqued -&gt; needs_revision -&gt; revision_drafted
 score: 0.0
-issues: ['blocker:critic:critic output could not be parsed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)']
+issues: ['blocker:parser:critic:critic output could not be parsed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)']
+dropped: none
 artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 </pre>
 </div>
@@ -8360,10 +8364,15 @@ artifact: We identified elevated checkout errors. Impact is limited to card paym
 <pre>decision: needs_revision
 trace: generated -&gt; critiqued -&gt; needs_revision
 score: 0.3
-issues: ['blocker:Body of the update:No specific description of the checkout issue (e.g., payment processing, cart errors).', 'blocker:Body of the update:No estimated time of resolution (ETR) or timeline provided.']
-artifact: **Subject: Checkout Issue Update**
+issues: ['blocker:Template completeness check:Subject and body (start time, end time, support contact, company name):Unfilled placeholders for critical information', 'blocker:Incident communication best practices:Body paragraph 1:Missing specific incident details (root cause, impact scope)', 'warning:Clarity check:First paragraph:Vague impact language', 'warning:Time formatting check:First paragraph:Missing timezone for incident times']
+dropped: none
+artifact: **Subject: Checkout System Update – Resolved**
 Dear Customers,
-We are experiencing a checkout issue and are working to fix it. Please try again later. We apologize for the inconvenience and thank you for your patience.
+We experienced a technical issue affecting our checkout process from [start time] to [end time] today. This may have caused failed transactions or delays.
+Our team has resolved the issue, and checkout is now fully operational. Orders placed during the disruption are being processed. If you encountered an error, please retry your purchase or contact support at [support link/email] for assistance.
+We apologize for the inconvenience and appreciate your patience.
+Best regards,
+[Your Company Name]
 </pre>
 </div>
 </div>

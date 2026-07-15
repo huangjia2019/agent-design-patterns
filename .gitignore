@@ -21,3 +21,6 @@ checkpoints.db
 .vscode/
 LANGGRAPH_PLAN.md
 docs/superpowers/
+
+# payroll-lab generated databases
+action/payroll-lab/*.db

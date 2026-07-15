@@ -20,6 +20,9 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+ui = [
+  "fastapi[standard]>=0.115,<1",
+]
 langgraph = [
   "langchain>=1.0,<2",
   "langchain-core>=1.0,<2",

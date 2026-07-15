@@ -1,19 +1,16 @@
 """Prompt Chaining pattern.
 
 Reference implementation from column lecture 05-04. The claim:
-**Unix pipes, ported to LLMs.** A pipeline of single-purpose steps,
-each running its own prompt against a model picked for that step,
-with a cheap programmatic *gate* between consecutive steps. The
-opening story:
+**Unix pipes, ported to LLMs.** A linear runtime executes
+single-purpose model calls in a fixed order, with a cheap
+programmatic *gate* between consecutive steps. It has a central
+runner, but no global DAG or model-directed path selection.
 
-A content-editing agent for a financial-news outlet tried to do
-seven things in one prompt (proofread, rewrite, restyle, fact-check,
-title, summary, image suggestions). It published a piece where the
-original "GMV up 35%" became "GMV up 53%" — the rewrite step had
-already mutated the source the fact-check step needed. Splitting
-the pipeline into seven independent steps + a fact-check gate that
-goes back to the *original* source moved the number-check accuracy
-from 87% to 99.4%.
+The payroll lab demonstrates the failure mechanism with synthetic
+data: one step transposes two digits in a payroll total. A checksum
+gate stops the corrupted artifact before it reaches the payment
+request; a non-empty gate lets it propagate. The example is
+deterministic and makes no empirical accuracy claim.
 
 The pattern is two classes and one named function:
 
@@ -54,6 +51,7 @@ class StepResult(Enum):
     SUCCESS = "success"
     GATE_FAILED = "gate_failed"
     LLM_ERROR = "llm_error"
+    TEMPLATE_ERROR = "template_error"
     RETRY_EXHAUSTED = "retry_exhausted"
 
 
@@ -155,6 +153,11 @@ class PromptChain:
                     # retry pattern's job. Fail fast here.
                     trace.failure_reason = f"step {step.step_id!r} LLM error: {run.error}"
                     return trace
+                if run.result == StepResult.TEMPLATE_ERROR:
+                    trace.failure_reason = (
+                        f"step {step.step_id!r} template error: {run.error}"
+                    )
+                    return trace
             if not success:
                 trace.failure_reason = (
                     f"step {step.step_id!r} gate {step.gate_description!r} "
@@ -169,7 +172,15 @@ class PromptChain:
         return trace
 
     def _run_step(self, step: ChainStep, prior: dict[str, str], attempt: int) -> StepRun:
-        prompt = self._render(step, prior)
+        try:
+            prompt = self._render(step, prior)
+        except ValueError as e:
+            return StepRun(
+                step_id=step.step_id, attempt=attempt, output="",
+                result=StepResult.TEMPLATE_ERROR,
+                gate_description=step.gate_description,
+                error=str(e),
+            )
         try:
             output = self.llm_call(prompt, step.system_prompt, step.model)
         except Exception as e:
@@ -190,15 +201,21 @@ class PromptChain:
 
     @staticmethod
     def _render(step: ChainStep, prior: dict[str, str]) -> str:
+        # Artifact names are provenance handles. Static configuration must not
+        # silently replace user input or a prior step's output.
+        collisions = set(prior).intersection(step.static_args)
+        if collisions:
+            names = ", ".join(sorted(collisions))
+            raise ValueError(f"static_args shadow protected artifacts: {names}")
+
         # Templates use {step_id} placeholders + {user_input} +
-        # any static_args by name. Missing keys are left as literal
-        # placeholders so a debug pass can see exactly what was
-        # missing — better than KeyError surprise.
+        # any static_args by name. Broken wiring is a configuration failure,
+        # so the chain stops before asking the model to guess missing input.
         merged = {**prior, **step.static_args}
         try:
             return step.prompt_template.format(**merged)
         except KeyError as missing:
-            return step.prompt_template + f"\n\n[chain: missing template key: {missing}]"
+            raise ValueError(f"missing template key: {missing}") from missing
 
 
 # ---- Common gate factories -------------------------------------------------

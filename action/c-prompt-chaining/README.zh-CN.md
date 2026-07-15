@@ -6,25 +6,18 @@
 
 ## 故事
 
-一家中型财经媒体的内容编辑 Agent。第一版把 7 件事写在一段 prompt 里
-一次干完——校对错别字、改写句式、统一风格、核查数字、生成标题、写
-摘要、给配图建议。一个 prompt，一次模型调用。
+Payroll Lab 把结算、对账、生成指令和打款申请书拆成四段。mock model
+第一次生成指令时把总账的两位数字抄反。严格 checksum gate 当场拒绝，
+把 gate 放松成“非空即通过”后，27 万元差额会进入最终申请书，而后续
+步骤仍然显示 SUCCESS。
 
-一周后出事了。一篇放出去的稿原稿写"GMV 增长 35%"，agent 改成了
-"GMV 增长 53%"。3 和 5 两个数字它都看到了——但到第 4 步（数字核查）
-时它已经不在看原稿了，它在看自己第 2 步改写后的版本，而改写已经把
-数字写颠倒了。
+这组数据来自可重复的课程实验，不代表任何真实模型的固定准确率。它要
+说明的是传播机制：拆段能降低单步复杂度，**段间契约**才能阻止错误产物
+继续下传。
 
-修法不是写一个更聪明的 prompt，是**把 7 件事拆成 7 个独立 step**，
-每步一个适合它的模型（Haiku 校对 / Sonnet 改写 / Opus + thinking 核查），
-每两步之间挂一个**程序化 gate**（数字保留 / 长度范围 / 必填字段）。
-**关键改动**：核查步骤明确读**原稿**，不读改写版本。数字准确率从
-87% 飙到 99.4%，编辑信任度 42% → 91%。成本 +30%，延迟 12s → 38s，
-在内容场景这账算得过来。
-
-讲义的判断：**Prompt Chaining 是 Unix 管道在 LLM 上的复刻**。每步只
-干一件事，两步之间挂便宜的 gate，按需选模型，让一步的错在污染下一步
-之前就被挡住。
+Prompt Chaining 可以借用 Unix 管道来理解，但实现并非没有中心。这里由
+`PromptChain` 统一控制顺序、重试和 Trace。它与 Plan-and-Execute 的区别
+在于没有全局 DAG，也不做动态路径选择。
 
 ## 模式骨架
 
@@ -34,7 +27,7 @@
 |---|---|
 | `ChainStep` | 一个 prompt step。带 `system_prompt` / `prompt_template` / `model` / 一个 `gate` callable / `max_retries`。模板用 user input + 所有 prior step 输出（按 `step_id` 索引）插值 |
 | `PromptChain` | 顺序跑 step。把输出传给下一个，gate 失败时 bounded retry，每次 attempt 都进 `ChainTrace` |
-| `length_gate` / `keys_gate` / `regex_gate` / `any_gate` / `all_gate` | gate 工厂函数。**Gate 是程序化检查，不是 LLM 调用**。如果你的 gate 要调 LLM，那它其实是另一个 step |
+| `length_gate` / `keys_gate` / `regex_gate` / `any_gate` / `all_gate` | gate 工厂函数。参考实现使用便宜的程序化检查；语义判断可升级成独立 evaluator step，并保留确定性外层契约 |
 
 讲义命名的两个失败模式，pattern 分别解决：
 
@@ -47,9 +40,9 @@
 
 1. **Gate 失败 retry，LLM 错误 fail-fast**。Gate 没过会重提示直到
    `max_retries`，LLM 异常立即终止 step。不同异常不同处理。
-2. **模板缺 key 不崩**。`{nonexistent}` 替换成 `[chain: missing
-   template key: …]` 标记。Chain 继续跑到底，标记进 trace 让 debug
-   pass 找到接错的线。**契约：暴露问题，不掩盖**。
+2. **模板接线错误 fail-closed**。缺少 `{step_id}` 或 `static_args`
+   覆盖 `user_input`、前序产物时，Chain 在模型调用前终止。模型不负责
+   猜测丢失的业务输入。
 3. **Step id 稳定**。它是 prior_outputs 的 key、模板的引用名、trace
    的 audit handle。**改名 = 破坏 chain**。
 
@@ -71,33 +64,25 @@ title。factcheck 步显式同时引用**原稿 `user_input`** 和最近的
 |---|---|
 | `pattern.py` | `StepResult` + `ChainStep` + `StepRun` + `ChainTrace` + `PromptChain` + 5 个 gate 工厂（~200 行） |
 | `example.py` | 5 步内容编辑流水线，复刻讲义开篇的修法 |
-| `test_pattern.py` | 15 条不变式：每个 gate 工厂 / chain 构造守卫（空 / 重 id）/ 顺利路径 / 按 id 拿 prior outputs / gate 失败有 cap retry / retry 成功完成 / LLM 错误 fail-fast / 缺模板 key 不崩 / trace 记账 |
+| `test_pattern.py` | 16 条不变式：每个 gate 工厂 / chain 构造守卫（空 / 重 id）/ 顺利路径 / 按 id 拿 prior outputs / gate 失败有 cap retry / retry 成功完成 / LLM 错误 fail-fast / 模板缺 key 与产物名覆盖 fail-closed / trace 记账 |
 
 ## 工程引用（都核过源码）
 
 * **Aider** [`aider/history.py`](https://github.com/Aider-AI/aider/blob/main/aider/history.py)
-  —— 49 行递归 summary chain。`depth=0` 是递归硬上限（防无限链），
-  内部 `summarize_all` 自带 fallback-model chain，**partial summary
-  是错误，不是返回值**。这个 pattern 的最小诚实形态。
-* **Claude Code** PRA loop —— Read / Grep / Edit / Bash 每次返回都
-  是下一步 reasoning 的输入。这个 loop 是**隐式** prompt chain，
-  把它显式化（加 gate）就是这个 pattern。Slash command `/commit` /
-  `/review` 是 pre-built chain。
-* **Claude Code Skills** —— 声明式 chain 段。`.claude/skills/` 下
-  `SKILL.md` 是 model 按需组合的 chain 段。同 pattern 不同 surface。
+  —— `ChatSummary.summarize_real()` 会在摘要与尾部仍超预算时递归压缩，
+  并设置递归深度上限。这里借鉴的是“固定变换 + 预算 + 递归终止条件”，
+  不把整个文件的行数当作模式结论。
+* **Claude Code Skills** —— Skill 是可复用的提示与工作流能力包。它
+  可以写成固定链，也可以调工具、启动子 Agent 或运行循环，因此不能把
+  Skill 与 Prompt Chaining 直接画等号。
 * **Anthropic** [*Building Effective
   Agents*](https://www.anthropic.com/research/building-effective-agents)
   —— prompt chaining 列为最简单也最被低估的 agent pattern。参考形态
   "数量不多但定义清楚的 step + 步骤间 gate"。
 * **Anthropic** [*Prompt engineering best
   practices*](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)
-  —— 每个 step 的 prompt 用 5 段 XML 结构（role / task / context /
-  format / constraints）。chain 上实测比 unwrapped paragraph 提升
-  8-15% 可靠性。
-* **Anthropic** self-check block 推荐 —— 每个 step prompt 末尾加
-  "answer 之前先 check X / Y / Z"。每 step 多 200-500 token，能抓
-  大部分"小错沿 chain 下传"问题。这个 pattern 的 gate 是这条建议
-  的**out-of-band 版本**（Python `if`，不靠 LLM 自查），两个都有用。
+  —— 可用清晰结构分开指令、上下文和输出格式。具体收益需要在自己的
+  数据集上评测，本文不引用无来源的固定提升比例。
 * **Doug McIlroy** —— "Do one thing and do it well."。这个 pattern
   port 到 LLM 的 Unix pipe 哲学源头。
 
@@ -119,10 +104,8 @@ overhead**——折成一步。
 DAG 语义，需要的话那就是 [Plan-and-Execute](../b-plan-and-execute/)。
 升级，不要硬塞。
 
-默认缺模板 key 的行为——在 prompt 里留 marker——是有意但不常见的选择。
-Code review 有时候会要求改成 raise。两种都站得住，参考实现选"保活
-trace 暴露问题"是因为内容编辑流水线常有一次性模板手误，不该 kill
-整批。**支付 / 医疗 chain 应该 override renderer 改 raise**。
+缺模板 key 和产物名覆盖现在都会 fail-closed。调试工具仍可把错误写入
+Trace，但不能把带缺口的 prompt 交给模型继续猜。
 
 Gate 失败的 retry 是简单的——同模板重提示。真实 chain 经常想**把
 gate 的描述塞进 retry prompt** 让模型知道它失败在哪。钩子已经有了

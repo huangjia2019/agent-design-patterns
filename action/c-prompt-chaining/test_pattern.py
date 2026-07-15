@@ -202,15 +202,27 @@ def test_llm_error_fails_fast_no_retry() -> None:
 # ---- Missing template keys -----------------------------------------------
 
 
-def test_missing_template_key_does_not_crash() -> None:
-    # The chain stays alive but the model sees a missing-key marker
-    # — that's how a downstream debug pass finds the broken wiring.
+def test_missing_template_key_fails_closed() -> None:
+    calls = []
     s1 = ChainStep("first", "first", "sys", "uses {nonexistent}")
-    chain = PromptChain([s1], llm_call=lambda p, s, m: p)
+    chain = PromptChain([s1], llm_call=lambda p, s, m: calls.append(p) or p)
     trace = chain.run("input")
-    assert trace.completed
-    # The output should carry the missing-key marker.
-    assert "missing template key" in trace.final_output
+    assert trace.completed is False
+    assert trace.runs[-1].result == StepResult.TEMPLATE_ERROR
+    assert trace.failure_reason and "missing template key" in trace.failure_reason
+    assert calls == []
+
+
+def test_static_args_cannot_shadow_artifacts() -> None:
+    s1 = ChainStep(
+        "first", "first", "sys", "{user_input}",
+        static_args={"user_input": "forged"},
+    )
+    chain = PromptChain([s1], llm_call=lambda p, s, m: p)
+    trace = chain.run("trusted")
+    assert trace.completed is False
+    assert trace.runs[-1].result == StepResult.TEMPLATE_ERROR
+    assert trace.failure_reason and "shadow protected artifacts" in trace.failure_reason
 
 
 # ---- Trace bookkeeping ---------------------------------------------------

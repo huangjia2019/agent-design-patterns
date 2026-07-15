@@ -278,6 +278,25 @@ def test_trace_records_started_and_completed_timestamps() -> None:
     assert trace.completed_at
 
 
+def test_trace_carries_policy_owner_and_version() -> None:
+    s = _make_sandwich_with_simple_tool()
+
+    def policy_hook(name, args, output):
+        return HookResult.WARN, "observed"
+
+    s.add_hook(HookSpec(
+        name="versioned-policy",
+        phase=HookPhase.PRE,
+        fn=policy_hook,
+        policy_owner="risk-team",
+        policy_version="2026-07",
+    ))
+    trace = s.run("echo", {})
+    outcome = trace.pre_outcomes[0]
+    assert outcome.policy_owner == "risk-team"
+    assert outcome.policy_version == "2026-07"
+
+
 def test_guardrail_violation_carries_hook_name_and_reason() -> None:
     err = GuardrailViolation(hook_name="x", reason="y", phase=HookPhase.PRE)
     assert err.hook_name == "x"

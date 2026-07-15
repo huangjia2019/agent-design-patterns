@@ -7,38 +7,40 @@ high-risk tool call is wrapped in two layers of programmatic checks
 for rollback. Both layers are owned by the harness, not the agent;
 the agent does not get to bypass them by being clever.
 
-The opening story: a corporate-banking agent transferred ¥3.2M to
-the wrong account because two digits were transposed in the LLM's
-parse of an email. No pre-check on account number format / whitelist
-/ AML rules. No post-check that the funds went where intended.
-Twelve hours to discover; partially un-recoverable. With sandwich:
-**0.3% mis-transfer rate → 0.001%, latency +2–3s.** In banking,
-absolutely worth it.
+The payroll lab uses deterministic synthetic scenarios: an approved
+but implausible amount, a frozen account, a missing receipt, and an
+output that carries bank-account data. The examples demonstrate
+control flow and state transitions; they make no empirical incident-
+rate or latency claim.
 
 The pattern is two classes and one decorator:
 
 * `HookSpec` — one hook. `name`, `phase` (pre or post), `priority`,
-  whether failure `blocks`, and a callable. Pre-hooks that block
-  raise `GuardrailViolation`. Post-hooks that block trigger rollback.
+  whether failure `blocks`, policy provenance, and a callable.
+  Pre-hooks that block stop execution. Post-hooks that block mark
+  the trace as requiring compensation.
 * `GuardrailSandwich` — runs the pre-hook chain, the tool, the
   post-hook chain. Records the full trace. On a pre-hook violation,
-  the tool never runs. On a post-hook violation, the tool's
-  rollback action (if any) is recorded for the saga.
-* `GuardrailViolation` — typed exception with the offending hook's
-  name. Easy to catch, easy to log, distinct from random tool errors.
+  the tool never runs. On a post-hook violation, the trace is marked
+  as requiring compensation; this class does not execute a saga.
+* `GuardrailViolation` — an optional typed exception for adapters that
+  prefer exception-based control flow. The reference `run` method
+  records blocks in `SandwichTrace` instead of raising it.
 
 Three named failure modes from the lecture:
 
 * **Composition bypass** — the agent finds a way to call the tool
   *without* going through the sandwich (a sub-tool that wraps it, a
-  raw API call). Closed here by making the sandwich the only callable
-  entry point; bare handlers are not exposed.
+  raw API call). The reference class still exposes handlers through
+  its public registry; production deployments must close this at the
+  service or capability boundary.
 * **Sandwich overhead tax** — sandwich every tool, even reads, and
-  latency triples. Closed by tagging hooks with an `applies_to_phase`
-  flag; reads skip the destructive sandwich.
+  adds avoidable work. The `applies_to` field scopes each hook to the
+  tools it governs.
 * **Schema drift** — pre-hook validates against schema v1, the LLM
-  starts emitting v2, hook lets bad payload through. Closed by
-  versioning the schema validation and failing-closed on mismatch.
+  starts emitting v2, hook lets bad payload through. `policy_version`
+  records which rule ran; production still needs schema-version
+  matching and fail-closed handling for unknown versions.
 """
 from __future__ import annotations
 
@@ -98,6 +100,8 @@ class HookSpec:
     priority: int = 100
     blocks: bool = True
     applies_to: set[str] | None = None     # None = all tools
+    policy_owner: str = "unassigned"
+    policy_version: str = "v1"
 
 
 @dataclass
@@ -107,6 +111,8 @@ class HookOutcome:
     result: HookResult
     reason: str
     elapsed_ms: int = 0
+    policy_owner: str = "unassigned"
+    policy_version: str = "v1"
 
 
 @dataclass
@@ -132,9 +138,10 @@ ToolFn = Callable[..., Any]
 class GuardrailSandwich:
     """Wrap a tool call in pre + post hook chains.
 
-    Tools registered here cannot be invoked except via `run`. The
-    handler signature stays unchanged; the sandwich is transparent
-    to the tool author.
+    The handler signature stays unchanged, so the sandwich is
+    transparent to the tool author. The reference registry is public;
+    production deployments must expose only a controlled proxy if
+    `run` is meant to be the sole entry point.
     """
 
     def __init__(self) -> None:
@@ -220,6 +227,8 @@ class GuardrailSandwich:
                 result=HookResult.BLOCK,
                 reason=f"hook crashed: {type(e).__name__}: {e}",
                 elapsed_ms=int((time.monotonic() - start) * 1000),
+                policy_owner=hook.policy_owner,
+                policy_version=hook.policy_version,
             )
 
         # If the hook is in shadow mode (`blocks=False`), downgrade BLOCK to WARN
@@ -231,12 +240,16 @@ class GuardrailSandwich:
                 result=HookResult.WARN,
                 reason=f"[shadow] {reason}",
                 elapsed_ms=int((time.monotonic() - start) * 1000),
+                policy_owner=hook.policy_owner,
+                policy_version=hook.policy_version,
             )
 
         return HookOutcome(
             hook_name=hook.name, phase=hook.phase,
             result=result, reason=reason,
             elapsed_ms=int((time.monotonic() - start) * 1000),
+            policy_owner=hook.policy_owner,
+            policy_version=hook.policy_version,
         )
 
 
@@ -250,6 +263,8 @@ def amount_threshold_hook(
     name: str = "amount_threshold",
     priority: int = 100,
     blocks: bool = True,
+    policy_owner: str = "unassigned",
+    policy_version: str = "v1",
 ) -> HookSpec:
     """Block when args[field] exceeds the threshold."""
     def fn(tool_name, args, _output):
@@ -260,7 +275,8 @@ def amount_threshold_hook(
             return HookResult.BLOCK, f"{field}={amount} exceeds {max_amount}"
         return HookResult.PASS, f"{field}={amount} within limit"
     return HookSpec(name=name, phase=HookPhase.PRE, fn=fn,
-                    priority=priority, blocks=blocks)
+                    priority=priority, blocks=blocks,
+                    policy_owner=policy_owner, policy_version=policy_version)
 
 
 def blocklist_hook(
@@ -270,6 +286,8 @@ def blocklist_hook(
     name: str = "blocklist",
     priority: int = 100,
     blocks: bool = True,
+    policy_owner: str = "unassigned",
+    policy_version: str = "v1",
 ) -> HookSpec:
     """Block when args[field] is on the blocklist (e.g. OFAC sanctions)."""
     def fn(tool_name, args, _output):
@@ -278,7 +296,8 @@ def blocklist_hook(
             return HookResult.BLOCK, f"{field}={value!r} on blocklist"
         return HookResult.PASS, f"{field} clear"
     return HookSpec(name=name, phase=HookPhase.PRE, fn=fn,
-                    priority=priority, blocks=blocks)
+                    priority=priority, blocks=blocks,
+                    policy_owner=policy_owner, policy_version=policy_version)
 
 
 def output_schema_hook(
@@ -287,6 +306,8 @@ def output_schema_hook(
     name: str = "output_schema",
     priority: int = 100,
     blocks: bool = True,
+    policy_owner: str = "unassigned",
+    policy_version: str = "v1",
 ) -> HookSpec:
     """Post-hook: tool output must be a dict containing required keys."""
     def fn(tool_name, args, output):
@@ -297,7 +318,8 @@ def output_schema_hook(
             return HookResult.BLOCK, f"output missing keys: {missing}"
         return HookResult.PASS, "output schema valid"
     return HookSpec(name=name, phase=HookPhase.POST, fn=fn,
-                    priority=priority, blocks=blocks)
+                    priority=priority, blocks=blocks,
+                    policy_owner=policy_owner, policy_version=policy_version)
 
 
 def pii_redaction_hook(
@@ -306,6 +328,8 @@ def pii_redaction_hook(
     name: str = "pii_redaction",
     priority: int = 200,
     blocks: bool = True,
+    policy_owner: str = "unassigned",
+    policy_version: str = "v1",
 ) -> HookSpec:
     """Post-hook: scan tool output string representation for PII patterns."""
     import re
@@ -318,4 +342,5 @@ def pii_redaction_hook(
                 return HookResult.BLOCK, f"PII pattern {pat.pattern!r} found in output"
         return HookResult.PASS, "no PII detected"
     return HookSpec(name=name, phase=HookPhase.POST, fn=fn,
-                    priority=priority, blocks=blocks)
+                    priority=priority, blocks=blocks,
+                    policy_owner=policy_owner, policy_version=policy_version)

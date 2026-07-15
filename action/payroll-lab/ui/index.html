@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Payroll Action Lab</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">A</span>
+        <div>
+          <strong>Payroll Action Lab</strong>
+          <span>行动模块教学控制台</span>
+        </div>
+      </div>
+      <nav class="lecture-nav" aria-label="课程讲次">
+        <p class="nav-label">课程实验</p>
+        <div id="lecture-list"></div>
+      </nav>
+      <button class="full-run-button" id="run-all" type="button">
+        <span aria-hidden="true">&#9654;</span>
+        运行完整模块
+      </button>
+      <div class="sidebar-status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <strong>SQLite 本地实验库</strong>
+          <span id="sidebar-db-status">正在读取状态</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="view-tabs" role="tablist" aria-label="控制台视图">
+          <button class="view-tab active" data-view="experiment" role="tab" type="button">实验</button>
+          <button class="view-tab" data-view="database" role="tab" type="button">数据库</button>
+          <button class="view-tab" data-view="structure" role="tab" type="button">系统结构</button>
+        </div>
+        <div class="topbar-actions">
+          <button class="button secondary" id="inject-typo" type="button" title="注入 E0099 错误审批">
+            <span aria-hidden="true">+</span>
+            注入 999999
+          </button>
+          <button class="button secondary" id="reset-db" type="button" title="恢复数据库基线">
+            <span aria-hidden="true">&#8635;</span>
+            重置数据库
+          </button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-experiment">
+        <div class="lesson-heading">
+          <div>
+            <span class="coordinate" id="lesson-coordinate">Action baseline</span>
+            <h1 id="lesson-title">21 · 行动模块导论</h1>
+            <p id="lesson-question">没有执行边界时，Agent 到底会多做多少事？</p>
+          </div>
+          <button class="button primary run-button" id="run-lecture" type="button">
+            <span aria-hidden="true">&#9654;</span>
+            运行本讲
+          </button>
+        </div>
+        <div class="stage-strip" id="stage-strip" aria-label="模式执行阶段"></div>
+
+        <section class="state-band" aria-labelledby="state-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Current state</p>
+              <h2 id="state-title">实验库状态</h2>
+            </div>
+            <span class="updated-at" id="updated-at"></span>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>员工</span><strong id="metric-employees">--</strong><small>employees</small></article>
+            <article class="metric"><span>工资总额</span><strong id="metric-total">--</strong><small>2026-06</small></article>
+            <article class="metric"><span>审批单</span><strong id="metric-approvals">--</strong><small>all statuses</small></article>
+            <article class="metric"><span>相对基线变更</span><strong id="metric-changes">--</strong><small>rows changed</small></article>
+          </div>
+          <div class="state-details">
+            <div class="distribution">
+              <div class="subsection-title">
+                <h3>工资单状态</h3>
+                <span id="payroll-status-label"></span>
+              </div>
+              <div class="status-bar" id="payroll-status-bar"></div>
+              <div class="legend" id="payroll-legend"></div>
+            </div>
+            <div class="e0099-panel" id="e0099-panel">
+              <div><span class="record-label">E0099 evidence</span><strong id="e0099-title">尚未注入错误审批</strong></div>
+              <dl id="e0099-details"></dl>
+            </div>
+          </div>
+        </section>
+
+        <section class="run-panel" aria-labelledby="run-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Execution</p><h2 id="run-title">运行证据</h2></div>
+            <span class="run-meta" id="run-meta">等待运行</span>
+          </div>
+          <div class="empty-state" id="run-empty">
+            <strong id="empty-pattern">裸 PRA 循环</strong>
+            <p id="empty-summary">观察范围漂移、批量副作用，以及已批准的 999999 如何穿透裸循环。</p>
+          </div>
+          <div class="run-result hidden" id="run-result">
+            <div class="result-summary">
+              <div><span class="result-status" id="result-status">COMPLETED</span><strong id="result-title"></strong></div>
+              <code id="result-command"></code>
+            </div>
+            <div class="event-list" id="event-list"></div>
+            <details class="raw-output">
+              <summary>原始 CLI 输出</summary>
+              <pre id="raw-output"></pre>
+            </details>
+          </div>
+        </section>
+
+        <section class="changes-panel" aria-labelledby="changes-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Database diff</p><h2 id="changes-title">相对基线的变更</h2></div>
+          </div>
+          <div class="change-list" id="change-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-database">
+        <div class="page-heading">
+          <div><p class="eyebrow">SQLite inspector</p><h1>数据库</h1><p id="database-path"></p></div>
+          <div class="table-search">
+            <label for="table-search">搜索当前表</label>
+            <input id="table-search" type="search" placeholder="员工编号、状态、备注" autocomplete="off">
+          </div>
+        </div>
+        <div class="table-tabs" id="table-tabs" role="tablist" aria-label="数据表"></div>
+        <div class="schema-line" id="schema-line"></div>
+        <div class="data-table-wrap">
+          <table class="data-table"><thead id="data-head"></thead><tbody id="data-body"></tbody></table>
+        </div>
+        <div class="pagination">
+          <span id="table-count"></span>
+          <div>
+            <button class="icon-button" id="page-prev" type="button" title="上一页" aria-label="上一页">&#8592;</button>
+            <span id="page-label">1 / 1</span>
+            <button class="icon-button" id="page-next" type="button" title="下一页" aria-label="下一页">&#8594;</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-structure">
+        <div class="page-heading">
+          <div><p class="eyebrow">Teaching architecture</p><h1>系统结构</h1><p>CLI 保留原始实验，Web 层负责受控触发与结构化呈现。</p></div>
+        </div>
+        <div class="architecture-flow" aria-label="教学控制台架构">
+          <div class="architecture-node"><span>01</span><strong>Browser UI</strong><small>实验、数据库、结构</small></div>
+          <span class="flow-arrow" aria-hidden="true">&#8594;</span>
+          <div class="architecture-node"><span>02</span><strong>FastAPI</strong><small>固定 API 与白名单</small></div>
+          <span class="flow-arrow" aria-hidden="true">&#8594;</span>
+          <div class="architecture-node"><span>03</span><strong>Controlled Runner</strong><small>21—25 CLI 实验</small></div>
+          <span class="flow-arrow" aria-hidden="true">&#8594;</span>
+          <div class="architecture-node"><span>04</span><strong>SQLite</strong><small>状态、证据、副作用</small></div>
+        </div>
+        <div class="structure-grid">
+          <section>
+            <h2>四个模式目录</h2>
+            <div class="pattern-table">
+              <div><span>22</span><strong>Tool Dispatch</strong><small>选择与准入</small></div>
+              <div><span>23</span><strong>Plan-and-Execute</strong><small>全局计划</small></div>
+              <div><span>24</span><strong>Prompt Chaining</strong><small>段间契约</small></div>
+              <div><span>25</span><strong>Guardrail Sandwich</strong><small>前中后防线</small></div>
+            </div>
+          </section>
+          <section>
+            <h2>Payroll 数据关系</h2>
+            <div class="relation-list">
+              <div><code>employees.emp_id</code><span>&#8594;</span><code>payroll.emp_id</code></div>
+              <div><code>employees.emp_id</code><span>&#8594;</span><code>approvals.emp_id</code></div>
+              <div><code>policies.key</code><span>&#8594;</span><code>runtime checks</code></div>
+            </div>
+          </section>
+        </div>
+        <section class="boundary-band">
+          <h2>当前边界</h2>
+          <div>
+            <p><strong>已经证明</strong><span>四个模式的独立控制行为、SQLite 副作用和对应 Trace。</span></p>
+            <p><strong>尚未声称</strong><span>四个模式已经装入同一个生产执行事务。</span></p>
+            <p><strong>下一步结构</strong><span>共享 Action Contract、Artifact、Approval、Checkpoint 与 ActionEvent。</span></p>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <div class="busy-overlay hidden" id="busy-overlay" aria-live="polite"><div class="busy-indicator"></div><strong id="busy-label">正在运行实验</strong></div>
+  <div class="toast hidden" id="toast" role="status"></div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

@@ -26,9 +26,10 @@ CRITIC_SYSTEM_PROMPT = (
     "Critique the incident update. Return only valid JSON, no markdown. "
     'Use this schema: {"score": number from 0 to 1, "summary": string, '
     '"issues": [{"severity": "blocker" or "warning", "message": string, '
-    '"location": string}]}. '
-    'Use severity "blocker" only for facts that must be fixed before '
-    'publishing; use "warning" for polish issues.'
+    '"location": string, "source": string, "evidence": string}]}. '
+    '"source" names the check or external signal. "evidence" records what '
+    'that check saw. Use severity "blocker" only for evidence-backed facts '
+    'that must be fixed before publishing; use "warning" for polish issues.'
 )
 
 GOOD_CRITIQUE_JSON = json.dumps(
@@ -48,6 +49,8 @@ NEEDS_REVISION_CRITIQUE_JSON = json.dumps(
                 "severity": "blocker",
                 "message": "impact claim lacks a cited source",
                 "location": "sentence 2",
+                "source": "incident_policy",
+                "evidence": "customer-visible impact claims require a status incident ID",
             }
         ],
     }
@@ -62,6 +65,8 @@ LOW_SCORE_CRITIQUE_JSON = json.dumps(
                 "severity": "warning",
                 "message": "next update timing is too vague",
                 "location": "sentence 3",
+                "source": "support_style_guide",
+                "evidence": "status updates must include a concrete next-update window",
             }
         ],
     }
@@ -95,6 +100,8 @@ def parse_critique_json(raw: str) -> Critique:
                 severity=Severity(item["severity"]),
                 message=str(item["message"]),
                 location=str(item["location"]),
+                source=str(item["source"]),
+                evidence=str(item["evidence"]),
             )
             for item in payload["issues"]
         ]
@@ -111,6 +118,8 @@ def parse_critique_json(raw: str) -> Critique:
                     Severity.BLOCKER,
                     f"critic output could not be parsed: {type(exc).__name__}: {exc}",
                     "critic",
+                    "parser",
+                    raw,
                 )
             ],
             summary="critic output parse failed",
@@ -126,8 +135,20 @@ def critique_to_dict(critique: Critique) -> dict[str, Any]:
                 "severity": issue.severity.value,
                 "message": issue.message,
                 "location": issue.location,
+                "source": issue.source,
+                "evidence": issue.evidence,
             }
             for issue in critique.issues
+        ],
+        "dropped_issues": [
+            {
+                "severity": issue.severity.value,
+                "message": issue.message,
+                "location": issue.location,
+                "source": issue.source,
+                "evidence": issue.evidence,
+            }
+            for issue in critique.dropped_issues
         ],
     }
 
@@ -155,8 +176,12 @@ def scripted_critic(raw_json: str) -> Callable[[Artifact], Critique]:
 
 def print_trace(result: ChainResult) -> None:
     issues = [
-        f"{issue.severity.value}:{issue.location}:{issue.message}"
+        f"{issue.severity.value}:{issue.source}:{issue.location}:{issue.message}"
         for issue in result.critique.issues
+    ]
+    dropped = [
+        f"{issue.severity.value}:{issue.source or 'unknown'}:{issue.location}:{issue.message}"
+        for issue in result.critique.dropped_issues
     ]
     artifact = "\n".join(
         line.rstrip()
@@ -167,4 +192,5 @@ def print_trace(result: ChainResult) -> None:
     print("trace:", " -> ".join(result.trace))
     print("score:", result.critique.score)
     print("issues:", issues or "none")
+    print("dropped:", dropped or "none")
     print("artifact:", artifact)
