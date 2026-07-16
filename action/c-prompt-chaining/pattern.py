@@ -83,6 +83,7 @@ class ChainStep:
     gate_description: str = "non-empty"
     max_retries: int = 2
     static_args: dict[str, Any] = field(default_factory=dict)
+    retry_prompt_suffix: str = ""
 
 
 @dataclass
@@ -174,6 +175,8 @@ class PromptChain:
     def _run_step(self, step: ChainStep, prior: dict[str, str], attempt: int) -> StepRun:
         try:
             prompt = self._render(step, prior)
+            if attempt > 1 and step.retry_prompt_suffix:
+                prompt = f"{prompt}\n{step.retry_prompt_suffix}"
         except ValueError as e:
             return StepRun(
                 step_id=step.step_id, attempt=attempt, output="",

@@ -125,14 +125,14 @@ function renderStressControls() {
     byId("stress-subtitle").textContent = "状态账与动作账同时核对，再把教学版放进四种生产压力";
     actions = stress.worked_levels.map(levelButton).join("") + `
       <button class="scenario-button pressure-button" id="stress-gaps-button" type="button">
-        S1-S4 生产压力
+        四种生产压力
       </button>`;
     primary.textContent = "运行三层对照";
     primary.onclick = runStressLadder;
   } else {
     const vector = stress.vectors.find((item) => item.lecture === lecture);
-    byId("stress-title").textContent = `${vector.id} ${vector.title}`;
-    byId("stress-subtitle").textContent = `同一刺激分别运行无模式与装上${vector.pattern}两种配置`;
+    byId("stress-title").textContent = `${vector.id}-${vector.title}`;
+    byId("stress-subtitle").textContent = `同一刺激运行两种配置，以业务证据判断${vector.pattern}守住了什么`;
     actions = `
       <button class="scenario-button stress-vector-button" data-vector="${escapeHtml(vector.id)}" type="button">
         运行${escapeHtml(vector.pattern)}前后对照
@@ -265,7 +265,7 @@ async function runStressVector(vectorId) {
         <tr><th>配置</th><th>判定</th><th>业务证据</th></tr>
         ${rows.map((row) => `
           <tr class="ladder-${row.safe ? "clean" : "bad"}">
-            <td>${row.defended ? `装上${escapeHtml(row.pattern)}` : "无目标模式"}</td>
+            <td>${escapeHtml(row.configuration || (row.defended ? `装上${row.pattern}` : "未装该模式"))}</td>
             <td><span class="verdict ${row.safe ? "safe" : "exposed"}">${row.safe ? "守住" : "暴露"}</span></td>
             <td>${escapeHtml(row.evidence)}</td>
           </tr>`).join("")}
@@ -289,7 +289,7 @@ async function runStressGaps() {
         <tr><th>压力</th><th>缺口</th><th>结果</th><th>结构化证据</th></tr>
         ${result.gaps.map((gap) => `
           <tr class="ladder-${gap.leaked ? "bad" : "clean"}">
-            <td><strong>${escapeHtml(gap.id)} ${escapeHtml(gap.name)}</strong></td>
+            <td><strong>${escapeHtml(gap.id)}-${escapeHtml(gap.name)}</strong></td>
             <td>${escapeHtml(gap.gap)}</td>
             <td><span class="verdict ${gap.leaked ? "exposed" : "safe"}">${gap.leaked ? "暴露" : "守住"}</span></td>
             <td><code>${escapeHtml(JSON.stringify(gap.evidence))}</code></td>
@@ -313,7 +313,7 @@ async function runStressMatrix() {
     node.classList.remove("hidden");
     node.innerHTML = `
       <div class="matrix-wrap"><table class="ladder-table matrix-table">
-        <tr><th>配置</th>${vectorIds.map((id) => `<th>${escapeHtml(id)} ${escapeHtml(matrix.vectors[id])}</th>`).join("")}<th>终态</th></tr>
+        <tr><th>配置</th>${vectorIds.map((id) => `<th>${escapeHtml(id)}-${escapeHtml(matrix.vectors[id])}</th>`).join("")}<th>终态</th></tr>
         ${matrix.levels.map((level) => `
           <tr>
             <td><strong>${escapeHtml(level.id)}</strong> ${escapeHtml(level.title)}</td>
@@ -321,7 +321,7 @@ async function runStressMatrix() {
             <td>${level.safe ? "全守住" : `${level.exposed.length} 类暴露`}</td>
           </tr>`).join("")}
       </table></div>
-      <p class="ladder-note">V1/V2 共用薪酬备注注入；V3/V4/V5 是边界不同的独立刺激。矩阵表示评测套件，不把它们伪装成一条万能提示词。</p>`;
+      <p class="ladder-note">V1/V2 共用薪酬备注注入；V3-中途超时后整批重跑、V4-污染工件向后传递和 V5-高风险输入输出是边界不同的独立刺激。矩阵表示评测套件，不把它们伪装成一条万能提示词。</p>`;
     toast("全模块矩阵运行完成");
   } catch (error) {
     toast(error.message, true);

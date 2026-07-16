@@ -41,8 +41,7 @@ Two named failure modes from the lecture:
 """
 from __future__ import annotations
 
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable
@@ -256,29 +255,72 @@ def replan_local(
     Production deployments call the LLM Planner here with the failed
     step + its descendants as context. This reference re-invokes the
     Planner on the original goal and grafts new steps in place of the
-    skipped subtree. The cap limits how many new steps the replan may
-    add — Anthropic's guidance: replan budget < 10% of total plan budget.
+    skipped subtree. ``cap`` is a policy limit on the number of steps in
+    one patch. Completed steps and unrelated branches are immutable.
     """
     failed = plan.steps.get(failed_step_id)
     if failed is None:
         raise PlanError(f"unknown failed step {failed_step_id!r}")
+    if failed.status != StepStatus.FAILED:
+        raise PlanError(f"step {failed_step_id!r} is not FAILED")
+
+    affected = {failed_step_id}
+    changed = True
+    while changed:
+        changed = False
+        for step in plan.steps.values():
+            if step.step_id not in affected and any(dep in affected for dep in step.deps):
+                affected.add(step.step_id)
+                changed = True
 
     new_plan = planner(plan.goal)
     if len(new_plan.steps) > cap:
         raise PlanError(f"replan added {len(new_plan.steps)} steps, exceeds cap {cap}")
 
-    # Mark the failed step and its skipped descendants as cleared; graft
-    # the new steps in. Validation runs on the merged plan, because the
-    # new fragment may reference existing step ids as its deps.
-    for step in plan.steps.values():
-        if step.status in (StepStatus.SKIPPED, StepStatus.FAILED):
-            step.status = StepStatus.TODO
-            step.error = None
     for new_step in new_plan.steps.values():
-        if new_step.step_id in plan.steps:
-            # New plan re-proposes a step — replace.
-            plan.steps[new_step.step_id] = new_step
-        else:
-            plan.add(new_step)
-    plan.validate()
+        current = plan.steps.get(new_step.step_id)
+        if current is None:
+            continue
+        if new_step.step_id not in affected:
+            raise PlanError(f"replan cannot replace unrelated step {new_step.step_id!r}")
+        if current.status == StepStatus.DONE:
+            raise PlanError(f"replan cannot replace completed step {new_step.step_id!r}")
+        required_external_deps = {dep for dep in current.deps if dep not in affected}
+        if not required_external_deps.issubset(new_step.deps):
+            missing = sorted(required_external_deps - set(new_step.deps))
+            raise PlanError(
+                f"replan step {new_step.step_id!r} dropped external dependencies {missing}"
+            )
+
+    merged = dict(plan.steps)
+    for step_id in affected:
+        step = merged[step_id]
+        if step.status in (StepStatus.SKIPPED, StepStatus.FAILED):
+            merged[step_id] = replace(step, status=StepStatus.TODO, error=None)
+    for new_step in new_plan.steps.values():
+        merged[new_step.step_id] = new_step
+
+    # A brand-new step must be structurally connected to the failed sub-DAG.
+    # Dependencies on an unrelated completed branch do not make a patch local.
+    scope_nodes = affected | set(new_plan.steps)
+    adjacency = {step_id: set() for step_id in scope_nodes}
+    for step_id in scope_nodes:
+        for dep in merged[step_id].deps:
+            if dep in scope_nodes:
+                adjacency[step_id].add(dep)
+                adjacency[dep].add(step_id)
+    reachable = set(affected)
+    frontier = list(affected)
+    while frontier:
+        current_id = frontier.pop()
+        for neighbor in adjacency[current_id] - reachable:
+            reachable.add(neighbor)
+            frontier.append(neighbor)
+    detached = sorted(set(new_plan.steps) - reachable)
+    if detached:
+        raise PlanError(f"replan steps are outside failed sub-DAG: {detached}")
+
+    candidate = Plan(goal=plan.goal, steps=merged)
+    candidate.validate()
+    plan.steps = merged
     return plan

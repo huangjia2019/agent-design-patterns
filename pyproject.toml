@@ -60,3 +60,8 @@ addopts = "--import-mode=importlib"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint.per-file-ignores]
+# Tutorial cells add their local directory to sys.path before importing shared helpers.
+"action/c-prompt-chaining/*/tutorial.ipynb" = ["E402"]
+"action/d-guardrail-sandwich/*/tutorial.ipynb" = ["E402"]

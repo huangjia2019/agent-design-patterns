@@ -11,7 +11,6 @@ sys.modules.pop("pattern", None)
 
 from pattern import (   # noqa: E402
     ChainStep,
-    ChainTrace,
     PromptChain,
     StepResult,
     all_gate,
@@ -178,6 +177,27 @@ def test_gate_success_on_retry_finishes_chain() -> None:
     trace = chain.run("anything")
     assert trace.completed
     assert call_count[0] == 2
+
+
+def test_retry_prompt_suffix_is_only_added_after_gate_failure() -> None:
+    prompts: list[str] = []
+
+    def llm(prompt, system, model):
+        prompts.append(prompt)
+        return "ok" if "[REPAIR]" in prompt else "bad"
+
+    step = ChainStep(
+        step_id="repairable",
+        description="repair from trusted truth",
+        system_prompt="sys",
+        prompt_template="{user_input}",
+        gate=keys_gate(["ok"]),
+        retry_prompt_suffix="[REPAIR] use the authoritative ledger",
+    )
+    trace = PromptChain([step], llm_call=llm).run("draft")
+
+    assert trace.completed
+    assert prompts == ["draft", "draft\n[REPAIR] use the authoritative ledger"]
 
 
 # ---- LLM errors fail fast -------------------------------------------------

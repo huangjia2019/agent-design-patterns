@@ -8,9 +8,9 @@
 [AGENT PROPOSAL]/[RECOVERY]/[LEDGER]）。
 
 攻击对准真种子里的两行受保护数据：
-    E0007  bank_account = 6222-0007-0049   （分隔符攻击 → A4 除根）
-    E0012  note = DISSENT-ON-RECORD…        （清备注攻击 → A4 除根）
-    E0007  发薪跳过 fresh read + 重复发       （合法工具滥用 → A1 拦）
+    E0007  bank_account = 6222-0007-0049   （分隔符攻击 → 最简工具集移除）
+    E0012  note = DISSENT-ON-RECORD…        （清备注攻击 → 最简工具集移除）
+    E0007  发薪跳过 fresh read + 重复发       （合法工具滥用 → 工具调度拦截）
 
 框架不动：L2 用 a-tool-dispatch/pattern.py 的 ToolDispatcher。
 """
@@ -132,7 +132,7 @@ def run(level: str) -> None:
             d.register(_META[name], handlers[name])
         for p in proposals:
             if p["tool"] not in tools:
-                print(f"[TOOL BOUNDARY] REJECTED {p['tool']}: 候选前沿里没有（A4 拿掉了）")
+                print(f"[TOOL BOUNDARY] REJECTED {p['tool']}: 候选前沿里没有（最简工具集已移除）")
                 continue
             t = d.dispatch(p["tool"], p["args"], "s")
             if t.status == "success":
@@ -146,7 +146,7 @@ def run(level: str) -> None:
     else:
         for p in proposals:
             if p["tool"] not in tools:
-                tag = "（A4 拿掉了）" if level == "L1" else "（裸循环也没这工具）"
+                tag = "（最简工具集已移除）" if level == "L1" else "（裸循环也没这工具）"
                 print(f"[ACT] REJECTED {p['tool']}: 工具不存在{tag}")
                 continue
             handlers[p["tool"]](**p["args"])

@@ -92,7 +92,7 @@ def _print_trace(trace) -> None:
     print(f"  tool         : {trace.tool_name}({trace.args})")
     print(f"  status       : {trace.final_status}")
     if trace.pre_outcomes:
-        print(f"  pre-hooks    :")
+        print("  pre-hooks    :")
         for o in trace.pre_outcomes:
             marker = {"pass": "✓", "block": "✗", "warn": "!"}[o.result.value]
             print(f"    {marker} {o.hook_name:20s} → {o.reason}")
@@ -101,12 +101,12 @@ def _print_trace(trace) -> None:
     if trace.tool_error:
         print(f"  tool error   : {trace.tool_error}")
     if trace.post_outcomes:
-        print(f"  post-hooks   :")
+        print("  post-hooks   :")
         for o in trace.post_outcomes:
             marker = {"pass": "✓", "block": "✗", "warn": "!"}[o.result.value]
             print(f"    {marker} {o.hook_name:20s} → {o.reason}")
     if trace.rollback_marked:
-        print(f"  ⚠ ROLLBACK MARKED")
+        print("  ⚠ ROLLBACK MARKED")
 
 
 def main() -> None:

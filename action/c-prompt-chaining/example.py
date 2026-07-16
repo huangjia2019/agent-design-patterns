@@ -41,7 +41,6 @@ sys.modules.pop("pattern", None)
 from pattern import (   # noqa: E402
     ChainStep,
     PromptChain,
-    StepResult,
     any_gate,
     keys_gate,
     length_gate,

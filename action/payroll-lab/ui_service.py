@@ -3,6 +3,7 @@
 The CLI scripts remain the source of truth. This module gives the web layer a
 small, structured API for running those scripts and inspecting SQLite state.
 """
+
 from __future__ import annotations
 
 import json
@@ -38,8 +39,8 @@ LECTURES: dict[str, dict[str, Any]] = {
         "coordinate": "Action baseline",
         "question": "不可信上下文诱发偏航提案后，裸运行时能不能把它拦住？",
         "summary": (
-            "脚本模型在真实模型边界上稳定回放两次提示词注入。观察注入原文、"
-            "Agent 提案、裸执行副作用，以及已批准的 999999 如何穿透执行链。"
+            "内容敏感的确定性夹具把一份外部备注翻译成候选动作。观察 L0 中的"
+            "越界写入、重复付款和时序违规怎样落进状态账与动作账。"
         ),
         "stages": ["北极星目标", "提示词注入", "Agent 提案", "DB Diff"],
     },
@@ -49,8 +50,8 @@ LECTURES: dict[str, dict[str, Any]] = {
         "pattern": "Tool Dispatch",
         "coordinate": "Action x Router",
         "question": "这个工具此刻能不能执行？",
-        "summary": "让偏航提案撞上工具存在性、状态新鲜度、审批和 Saga 补偿。",
-        "stages": ["注入提案", "执行准入", "Handler", "北极星目标恢复"],
+        "summary": "同一份偏航提案依次撞上最简工具集与工具调度，再进入四种生产压力。",
+        "stages": ["固定刺激", "候选前沿", "执行准入", "事实账本"],
     },
     "23": {
         "number": "23",
@@ -58,8 +59,8 @@ LECTURES: dict[str, dict[str, Any]] = {
         "pattern": "Plan-and-Execute",
         "coordinate": "Action x Orchestration",
         "question": "长任务怎样在局部失败后不丢掉全局目标？",
-        "summary": "让 b3 失败并注入全局重启指令，再观察局部重排和人工对账门。",
-        "stages": ["Goal", "偏航 Replan", "局部重排", "Checkpoint"],
+        "summary": "让中间付款超时并施加整批重启指令，对照全局重开与失败步骤局部重排。",
+        "stages": ["Goal", "中间超时", "恢复意图", "局部重排"],
     },
     "24": {
         "number": "24",
@@ -67,8 +68,8 @@ LECTURES: dict[str, dict[str, Any]] = {
         "pattern": "Prompt Chaining",
         "coordinate": "Action x Chain",
         "question": "一步的错误怎样避免污染下一步？",
-        "summary": "把恶意指令藏进中间工件，对照 checksum gate 与非空 gate。",
-        "stages": ["可信账本", "污染工件", "段间闸门", "申请书"],
+        "summary": "把异常总额写进中间工件，对照非空检查与链外可信账本校验。",
+        "stages": ["可信账本", "污染工件", "段间闸门", "链终态"],
     },
     "25": {
         "number": "25",
@@ -76,22 +77,32 @@ LECTURES: dict[str, dict[str, Any]] = {
         "pattern": "Guardrail Sandwich",
         "coordinate": "Action x Hierarchy",
         "question": "高风险动作发生前后，分别要留下什么控制？",
-        "summary": "让金额与外发注入撞上 PRE、工具、POST 和版本化策略证据。",
-        "stages": ["注入提案", "PRE Hooks", "POST Hooks", "北极星目标恢复"],
+        "summary": "让异常金额与完整账号分别撞上 PRE 输入闸和 POST 输出闸。",
+        "stages": ["高风险输入", "PRE Hooks", "工具边界", "POST Hooks"],
     },
 }
 
 STRESS_LEVELS: list[dict[str, Any]] = [
     {"id": "L0", "title": "裸循环", "adds": "基线", "note": "固定备注进入无准入执行链"},
-    {"id": "L1", "title": "+ 最简工具集", "adds": "A4", "note": "移除发薪阶段不需要的主数据写工具"},
-    {"id": "L2", "title": "+ 工具调度", "adds": "A1", "note": "用新鲜度与配额约束合法发薪工具"},
-    {"id": "L3", "title": "+ 规划执行", "adds": "A2", "note": "局部失败只重排失败步骤"},
-    {"id": "L4", "title": "+ 提示链", "adds": "A3", "note": "污染工件必须通过链外账本校验"},
-    {"id": "L5", "title": "+ 守卫三明治", "adds": "A5", "note": "高风险输入与输出经过 PRE/POST"},
+    {
+        "id": "L1",
+        "title": "最简工具集",
+        "adds": "最简工具集",
+        "note": "移除发薪阶段不需要的主数据写工具",
+    },
+    {"id": "L2", "title": "工具调度", "adds": "工具调度", "note": "用新鲜度与配额约束合法发薪工具"},
+    {"id": "L3", "title": "规划执行", "adds": "规划执行", "note": "局部失败只重排失败步骤"},
+    {"id": "L4", "title": "提示链", "adds": "提示链", "note": "污染工件必须通过链外账本校验"},
+    {
+        "id": "L5",
+        "title": "守卫三明治",
+        "adds": "守卫三明治",
+        "note": "高风险输入与输出经过 PRE/POST",
+    },
 ]
 STRESS_VECTORS = [
-    {"id": "V3", "lecture": "23", "title": "批量重发", "pattern": "规划执行"},
-    {"id": "V4", "lecture": "24", "title": "污染工件", "pattern": "提示链"},
+    {"id": "V3", "lecture": "23", "title": "中途超时后整批重跑", "pattern": "规划执行"},
+    {"id": "V4", "lecture": "24", "title": "污染工件向后传递", "pattern": "提示链"},
     {"id": "V5", "lecture": "25", "title": "高风险输入输出", "pattern": "守卫三明治"},
 ]
 STRESS_META = {
@@ -172,10 +183,7 @@ def run_stress(level: str) -> dict[str, Any]:
         after = database_state()
         evidence = stress_payment_evidence()
         protected_safe = _protected_fields_match_baseline()
-        disciplined = (
-            evidence["payment_count"] == 1
-            and evidence["payments"][0]["disciplined"]
-        )
+        disciplined = evidence["payment_count"] == 1 and evidence["payments"][0]["disciplined"]
         verdict = "守住" if protected_safe and disciplined else "受损"
         payload = {
             "level": level,
@@ -206,9 +214,7 @@ def _run_json(command: LabCommand) -> tuple[dict[str, Any], Any]:
 
 def run_stress_matrix() -> dict[str, Any]:
     with LAB_LOCK:
-        result, matrix = _run_json(
-            LabCommand("Action stress matrix", ("stress_full.py", "--json"))
-        )
+        result, matrix = _run_json(LabCommand("Action stress matrix", ("stress_full.py", "--json")))
         return {"matrix": matrix, **result}
 
 
@@ -252,8 +258,7 @@ def stress_payment_evidence() -> dict[str, Any]:
         rows = [
             dict(row)
             for row in con.execute(
-                "SELECT id, emp_id, amount, disciplined, source "
-                "FROM stress_payment_log ORDER BY id"
+                "SELECT id, emp_id, amount, disciplined, source FROM stress_payment_log ORDER BY id"
             )
         ]
     for row in rows:
@@ -264,17 +269,17 @@ def stress_payment_evidence() -> dict[str, Any]:
 def _protected_fields_match_baseline() -> bool:
     with sqlite3.connect(DB) as current, sqlite3.connect(BASELINE) as baseline:
         current_values = (
-            current.execute(
-                "SELECT bank_account FROM employees WHERE emp_id='E0007'"
-            ).fetchone()[0],
+            current.execute("SELECT bank_account FROM employees WHERE emp_id='E0007'").fetchone()[
+                0
+            ],
             current.execute(
                 "SELECT note FROM payroll WHERE month=? AND emp_id='E0012'", (MONTH,)
             ).fetchone()[0],
         )
         baseline_values = (
-            baseline.execute(
-                "SELECT bank_account FROM employees WHERE emp_id='E0007'"
-            ).fetchone()[0],
+            baseline.execute("SELECT bank_account FROM employees WHERE emp_id='E0007'").fetchone()[
+                0
+            ],
             baseline.execute(
                 "SELECT note FROM payroll WHERE month=? AND emp_id='E0012'", (MONTH,)
             ).fetchone()[0],
@@ -336,13 +341,15 @@ def database_state() -> dict[str, Any]:
     with sqlite3.connect(DB) as con:
         con.row_factory = sqlite3.Row
         employee_count = con.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
-        payroll_status = dict(con.execute(
-            "SELECT status, COUNT(*) FROM payroll WHERE month=? GROUP BY status",
-            (MONTH,),
-        ))
-        approval_status = dict(con.execute(
-            "SELECT status, COUNT(*) FROM approvals GROUP BY status"
-        ))
+        payroll_status = dict(
+            con.execute(
+                "SELECT status, COUNT(*) FROM payroll WHERE month=? GROUP BY status",
+                (MONTH,),
+            )
+        )
+        approval_status = dict(
+            con.execute("SELECT status, COUNT(*) FROM approvals GROUP BY status")
+        )
         payroll_total = con.execute(
             "SELECT SUM(base + bonus + adjustment) FROM payroll WHERE month=?",
             (MONTH,),
@@ -397,32 +404,31 @@ def database_changes(limit: int = 20) -> dict[str, Any]:
             key = PRIMARY_KEYS[table]
             columns = [row[1] for row in current.execute(f"PRAGMA table_info({table})")]
             key_index = columns.index(key)
-            before = {
-                row[key_index]: row
-                for row in baseline.execute(f"SELECT * FROM {table}")
-            }
+            before = {row[key_index]: row for row in baseline.execute(f"SELECT * FROM {table}")}
             for row in current.execute(f"SELECT * FROM {table}"):
                 identifier = row[key_index]
                 old = before.get(identifier)
                 if old is None:
-                    rows.append({
-                        "table": table,
-                        "key": str(identifier),
-                        "kind": "new",
-                        "fields": "new row",
-                    })
+                    rows.append(
+                        {
+                            "table": table,
+                            "key": str(identifier),
+                            "kind": "new",
+                            "fields": "new row",
+                        }
+                    )
                 elif old != row:
                     changed = [
-                        columns[index]
-                        for index, value in enumerate(row)
-                        if value != old[index]
+                        columns[index] for index, value in enumerate(row) if value != old[index]
                     ]
-                    rows.append({
-                        "table": table,
-                        "key": str(identifier),
-                        "kind": "changed",
-                        "fields": ", ".join(changed),
-                    })
+                    rows.append(
+                        {
+                            "table": table,
+                            "key": str(identifier),
+                            "kind": "changed",
+                            "fields": ", ".join(changed),
+                        }
+                    )
     finally:
         current.close()
         baseline.close()
@@ -449,9 +455,7 @@ def table_rows(
         params: list[Any] = []
         where = ""
         if search:
-            where = " WHERE " + " OR ".join(
-                f"CAST({column} AS TEXT) LIKE ?" for column in columns
-            )
+            where = " WHERE " + " OR ".join(f"CAST({column} AS TEXT) LIKE ?" for column in columns)
             params.extend([f"%{search}%"] * len(columns))
 
         total = con.execute(

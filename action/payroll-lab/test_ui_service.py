@@ -1,6 +1,7 @@
 """Focused tests for the Payroll teaching UI service layer."""
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -29,6 +30,12 @@ def test_single_engine_no_legacy_runners() -> None:
     # per-lecture runners (naked_loop / run_action_module / SCENARIOS) are gone.
     for gone in ("SCENARIOS", "run_scenario", "run_lecture"):
         assert not hasattr(ui_service, gone), f"legacy runner {gone} should be removed"
+
+
+def test_console_copy_does_not_reference_retired_labs() -> None:
+    console_copy = json.dumps(LECTURES, ensure_ascii=False) + (HERE / "ui" / "index.html").read_text()
+    for retired in ("ScriptedModelAdapter", "naked_loop", "run_action_module", "原始实验"):
+        assert retired not in console_copy
 
 
 def test_parse_output_promotes_evidence_and_blocks() -> None:

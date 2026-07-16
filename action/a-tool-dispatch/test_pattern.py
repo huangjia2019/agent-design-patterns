@@ -12,7 +12,6 @@ sys.modules.pop("pattern", None)
 
 from pattern import (   # noqa: E402
     DispatchTrace,
-    RiskLevel,
     ToolDispatchError,
     ToolDispatcher,
     ToolMetadata,

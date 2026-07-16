@@ -152,16 +152,16 @@
 
       <section class="view" id="view-structure">
         <div class="page-heading">
-          <div><p class="eyebrow">Teaching architecture</p><h1>系统结构</h1><p>CLI 保留原始实验，Web 层负责受控触发与结构化呈现。</p></div>
+          <div><p class="eyebrow">Teaching architecture</p><h1>系统结构</h1><p>一套压力工作台，共用白名单入口、受控 Runner 与事实判定协议。</p></div>
         </div>
         <div class="architecture-flow" aria-label="教学控制台架构">
           <div class="architecture-node"><span>01</span><strong>Browser UI</strong><small>实验、数据库、结构</small></div>
           <span class="flow-arrow" aria-hidden="true">&#8594;</span>
           <div class="architecture-node"><span>02</span><strong>FastAPI</strong><small>固定 API 与白名单</small></div>
           <span class="flow-arrow" aria-hidden="true">&#8594;</span>
-          <div class="architecture-node"><span>03</span><strong>Controlled Runner</strong><small>21—25 CLI 实验</small></div>
+          <div class="architecture-node"><span>03</span><strong>Stress Runners</strong><small>消融阶梯 / 模式对照 / 生产压力</small></div>
           <span class="flow-arrow" aria-hidden="true">&#8594;</span>
-          <div class="architecture-node"><span>04</span><strong>SQLite</strong><small>状态、证据、副作用</small></div>
+          <div class="architecture-node"><span>04</span><strong>Evidence</strong><small>SQLite、动作账、模式 Trace</small></div>
         </div>
         <div class="structure-grid">
           <section>

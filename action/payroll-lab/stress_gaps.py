@@ -8,12 +8,12 @@
 四个场景，每个对应一类真实工程失败。模式代码不做 Demo 专用修改；并发场景
 用 Barrier 固定竞态调度，补偿场景注入外部通道失败，让课堂结果可重复：
 
-    S1 并发        两个 worker 同时转账 → quota 的 read-then-write 竞态 → 双付
-    S2 TOCTOU     读完 E0007 之后有人改了它 → 会话级新鲜度照样放行 → 按陈旧真值付款
-    S3 进程重启    dispatcher 状态在内存里 → 重启即失忆 → 再付一次
-    S4 补偿失败    reverse 抛错 → saga_log 把这条 entry 丢了 → 系统忘记自己还欠一笔补偿
+    并发竞态      两个 worker 同时转账 → quota 的 read-then-write 竞态 → 双付
+    陈旧状态      读完 E0007 之后有人改了它 → 会话级新鲜度照样放行 → 按陈旧真值付款
+    进程重启      dispatcher 状态在内存里 → 重启即失忆 → 再付一次
+    补偿失败      reverse 抛错 → saga_log 把这条 entry 丢了 → 系统忘记自己还欠一笔补偿
 
-S4 是本 track 的主要发现：它是仓库现有代码里一个**没被植入、也没被文章发现**的真 bug。
+补偿失败场景是本 track 的主要发现：它是仓库现有代码里一个**没被植入、也没被文章发现**的真 bug。
 
 跑法：
     python3 action/payroll-lab/stress_gaps.py
@@ -225,10 +225,10 @@ def s4_compensation_forgotten() -> dict:
 # ---------------------------------------------------------------- 跑
 
 SCENARIOS = [
-    ("S1", "并发", s1_concurrency, "quota 是 read-then-write，无锁 → 双付"),
-    ("S2", "TOCTOU", s2_toctou, "会话级新鲜度不绑实体/版本 → 按陈旧真值付款"),
-    ("S3", "进程重启", s3_restart, "配额/Saga 只活在内存 → 重启即失忆"),
-    ("S4", "补偿失败", s4_compensation_forgotten, "失败 entry 被移出 saga_log → 补偿债务丢失"),
+    ("S1", "并发配额竞态", s1_concurrency, "quota 是 read-then-write，无锁 → 双付"),
+    ("S2", "读取后状态变化", s2_toctou, "会话级新鲜度不绑实体/版本 → 按陈旧真值付款"),
+    ("S3", "进程重启失忆", s3_restart, "配额/Saga 只活在内存 → 重启即失忆"),
+    ("S4", "补偿债务丢失", s4_compensation_forgotten, "失败 entry 被移出 saga_log → 补偿债务丢失"),
 ]
 
 
@@ -266,7 +266,7 @@ def main() -> None:
 
     for result in results:
         flag = "漏了" if result["leaked"] else "守住"
-        print(f"\n【{result['id']} {result['name']}】{result['gap']}")
+        print(f"\n【{result['id']}-{result['name']}】{result['gap']}")
         print(f"  {flag}   {result['evidence']}")
 
     print("\n" + "=" * 74)

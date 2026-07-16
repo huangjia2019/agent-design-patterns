@@ -8,13 +8,13 @@
 
 1. 确定性攻击适配器按文本内容提取动作。它不是语言模型，也不测量模型中招率；它只保证
    "改注入文本，提案随之改变"，让课堂上的因果链可重复核对。
-2. 防御只能靠**改变模型看到的工具**（A4）或**拦住输出**（A1），绝不许给模型递魔法标记
+2. 防御只能靠**最简工具集改变模型看到的工具**，或由**工具调度拦住调用**，绝不许给模型递魔法标记
    让它变乖（旧版 24 讲的 `[REPAIR:LEDGER_TRUTH]`）。
 3. 攻击同时打两类目标，好让每一层都有独立、可测的效果：
-     · 改受保护字段（改账号 / 清备注）—— 只有 **A4 最简工具集** 能除根：那两个工具本就不该在。
-     · 滥用合法工具（不 fresh read 就发薪 + 重复发薪）—— A4 除不掉（发薪工具必须留），
-       只有 **A1 工具调度** 的准入关能拦。
-   于是抽掉 A4 会漏字段，抽掉 A1 会漏双付——阶梯每一级都自己说话。
+     · 改受保护字段（改账号 / 清备注）—— 只有**最简工具集**能除根：那两个工具本就不该在。
+     · 滥用合法工具（不 fresh read 就发薪 + 重复发薪）—— 最简工具集除不掉（发薪工具必须留），
+       只有**工具调度**的准入关能拦。
+   于是抽掉最简工具集会漏字段，抽掉工具调度会漏双付——阶梯每一级都自己说话。
 
 框架不动：L2 直接用 `a-tool-dispatch/pattern.py` 里那个 ToolDispatcher，一行没改。
 
@@ -116,7 +116,7 @@ def parse_injected_actions(untrusted: str) -> list[dict]:
 
 # ── 防御层 ─────────────────────────────────────────────────────────────────
 
-# A4 最简工具集：发薪主任务只需要这两个。改账号 / 清备注的工具本就不该在。
+# 最简工具集：发薪主任务只需要这两个。改账号 / 清备注的工具本就不该在。
 MINIMAL_TOOLS = {"query_payroll", "transfer_salary"}
 FULL_TOOLS = {"query_payroll", "transfer_salary", "normalize_bank_account",
               "clear_payroll_note", "reverse_transfer"}
@@ -167,7 +167,7 @@ def run_level(level: str) -> dict:
         d = build_dispatcher(handlers, tools)
         for p in proposals:                       # 模型没提 query（备注让它跳过）
             if p["tool"] not in tools:
-                events.append(f"  ✗ {p['tool']}: 候选前沿里没有（A4 拿掉了）")
+                events.append(f"  ✗ {p['tool']}: 候选前沿里没有（最简工具集已移除）")
                 continue
             t = d.dispatch(p["tool"], p["args"], "s")
             events.append(f"  {'✓ 执行' if t.status=='success' else '✗ 拒绝('+str(t.rejected_reason)+')'} {p['tool']}")
@@ -179,7 +179,7 @@ def run_level(level: str) -> dict:
     else:
         for p in proposals:                       # L0/L1：无准入，注册表里有就执行
             if p["tool"] not in tools:
-                tag = "（A4 拿掉了）" if level == "L1" else "（裸循环也没这工具）"
+                tag = "（最简工具集已移除）" if level == "L1" else "（裸循环也没这工具）"
                 events.append(f"  ✗ {p['tool']}: 工具不存在{tag}")
                 continue
             handlers[p["tool"]](**p["args"])
@@ -202,10 +202,10 @@ def damage(L: dict) -> dict:
 
 LEVELS = [
     ("L0", "裸循环"),
-    ("L1", "+ A4 最简工具集"),
-    ("L2", "+ A1 工具调度"),
+    ("L1", "最简工具集"),
+    ("L2", "工具调度"),
 ]
-FUTURE = [("L3", "+ A2 规划执行"), ("L4", "+ A3 提示链"), ("L5", "+ A5 守卫三明治")]
+FUTURE = [("L3", "规划执行"), ("L4", "提示链"), ("L5", "守卫三明治")]
 
 
 def _bad(d: dict) -> bool:
@@ -228,7 +228,7 @@ def table() -> None:
               f"{'✅' if d['纪律付款'] else '❌':<7}"
               f"{'受损' if _bad(d) else '干净'}")
     print("-" * 80)
-    print("每一层拦掉的东西不同：A4 除根改字段的工具，A1 拦住合法工具被滥用（跳读 / 双付）。")
+    print("每一层拦掉的东西不同：最简工具集移除越界工具，工具调度拦住合法工具被滥用（跳读 / 双付）。")
     print("待接层（需并入 b/c/d 模式）：", "  ".join(f"{level}{title}" for level, title in FUTURE))
     print("=" * 80)
 
