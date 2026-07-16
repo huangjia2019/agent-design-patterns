@@ -66,6 +66,7 @@ class Experience:
     reuse_outcomes: list[bool] = field(default_factory=list)
     effectiveness: float = 0.5       # EMA, starts neutral
     archived: bool = False
+    hard_guard_eligible: bool = False
 
     @property
     def reuses(self) -> int:
@@ -77,6 +78,7 @@ class Heuristic:
     """One L2 entry: a cross-task rule distilled from several similar
     L1 entries. Confidence rises with the entries backing it."""
 
+    task_kind: str
     insight: str
     derived_from: list[str]
 
@@ -113,12 +115,14 @@ class ExperienceStore:
         """The context block the current task runs under. Lessons only —
         L0 steps stay in the store, referenced but not pasted."""
         lines = ["## Relevant past experience"]
+        task_kinds = {e.task_kind for e in hits}
         for e in hits:
             lines.append(f"- [{e.outcome}] {e.lesson}"
                          f" (effectiveness {e.effectiveness:.2f},"
                          f" L0 trace: {e.exp_id})")
         for h in self.heuristics:
-            lines.append(f"- [heuristic] {h.insight}")
+            if h.task_kind in task_kinds:
+                lines.append(f"- [heuristic] {h.insight}")
         lines.append("Use as background. Adapt, don't copy.")
         return "\n".join(lines)
 
@@ -149,7 +153,11 @@ class ExperienceStore:
             return None
         insight = f"[{task_kind}] recurring lesson across {len(same)} runs: " + \
             same[0].lesson
-        h = Heuristic(insight=insight, derived_from=[e.exp_id for e in same])
+        h = Heuristic(
+            task_kind=task_kind,
+            insight=insight,
+            derived_from=[e.exp_id for e in same],
+        )
         self.heuristics.append(h)
         return h
 
@@ -161,5 +169,6 @@ class ExperienceStore:
         on plausibility alone."""
         return [e for e in self.entries.values()
                 if not e.archived
+                and e.hard_guard_eligible
                 and e.effectiveness >= 0.7
                 and e.reuses >= MIN_REUSES]

@@ -2,9 +2,10 @@
 
 Uses the pattern from ../c-experience-replay/pattern.py on the payroll
 bench. June's settlement ended with a saga rollback (E0007/E0012
-REVERSED, lecture 22); the L1 lesson distilled from that trace says:
-verify an employee's CURRENT department against the HR record before
-binding them into a department batch. Three scenes:
+REVERSED, lecture 22). This lecture adds a deterministic HR fixture:
+E0012 transferred after that settlement while the payroll employee row
+still carries the old department. The seeded L1 lesson says to verify
+CURRENT membership before binding a department batch. Three scenes:
 
     scene 1  recall changes the decision: July's batch build runs twice,
              once bare (a transferred employee lands in the old
@@ -35,9 +36,9 @@ NO_FEEDBACK = "--no-feedback" in sys.argv
 
 con = bench.month_end_state()
 
-# The HR record: E0012 transferred at the end of June. The employees
-# table still carries the stale department -- exactly the mismatch that
-# broke June's batch.
+# Teaching fixture for this lecture: E0012 transferred at the end of
+# June, while the payroll employee row still carries the old department.
+# The Action module did not persist a separate HR master-data system.
 TRANSFERS = {"E0012": ("Finance", "Engineering")}
 
 
@@ -54,18 +55,19 @@ june_lesson = store.record(Experience(
     task_kind="cross-dept-batch",
     outcome="failure",
     lesson="before binding an employee into a department batch, verify "
-           "current membership against the HR record (June: stale dept "
-           "broke the batch, saga rollback, E0007/E0012 reversed)",
+           "current membership against the HR record (teaching trace: "
+           "E0012 transferred after June's rollback)",
     keywords=["batch", "department", "payment", "membership", "build"],
     steps=["build_payment_batch:Finance", "transfer_salary:E0012 -> TIMEOUT",
-           "rollback_session:2026-06"]))
+           "rollback_session:2026-06"],
+    hard_guard_eligible=True))
 
 for month in ("2026-04", "2026-05"):
     store.record(Experience(
         exp_id=f"{month}-batch-ok", task_kind="cross-dept-batch",
         outcome="success",
         lesson="department batches built after a membership pass ran clean",
-        keywords=["batch", "department", "payment", "build", "monthly"]))
+        keywords=["batch", "department", "payment", "build"]))
 
 # Enough similar L1 entries: distill the L2 heuristic.
 heuristic = store.distill("cross-dept-batch")
