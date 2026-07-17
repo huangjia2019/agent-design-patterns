@@ -7,7 +7,7 @@
 >
 > **Citation discipline**: course lectures, whitepapers, and book chapters that quote an interface must pin the commit (`pattern.py@<hash>` in the document header). Interfaces do refactor; a pinned quote stays honest, an unpinned one rots.
 
-Generated 2026-07-17 at HEAD `711afec` (working tree has uncommitted changes).
+Generated 2026-07-17 at HEAD `594304a` (working tree has uncommitted changes).
 
 ## Summary
 
@@ -33,7 +33,7 @@ Generated 2026-07-17 at HEAD `711afec` (working tree has uncommitted changes).
 | F2 技能包 Skill Package | 反思 × 路由 | `SkillLibrary` | 07-17 |
 | F3 经验回放 Experience Replay | 反思 × 层级 | `ExperienceStore` | 07-17 |
 | F4 自愈循环 Self-Heal Loop | 反思 × 循环 | `SelfHealLoop` | 07-17 |
-| C1 层级委派 Hierarchical Delegation | 协作 × 层级 | `SettlementSupervisor` | 07-01 |
+| C1 层级委派 Hierarchical Delegation | 协作 × 层级 | `SettlementSupervisor` | 07-17 |
 | C2 扇出聚合 Fan-out / Gather | 协作 × 并行 | `FanOutGather` | 07-01 |
 | C3 对抗评审 Adversarial Review | 协作 × 循环 | `AdversarialReview` | 07-01 |
 | C4 交接链 Handoff Chain | 协作 × 链式 | `HandoffChain` | 07-01 |
@@ -288,18 +288,12 @@ Generated 2026-07-17 at HEAD `711afec` (working tree has uncommitted changes).
 ### C1 层级委派 Hierarchical Delegation — `collaboration/a-hierarchical-delegation/`
 
 - **Coordinate**: 协作 × 层级
-- **State**: `pattern.py` 159 lines · last commit 5a9bfa8 2026-07-01 · clean · tests: yes
+- **State**: `pattern.py` 596 lines · last commit 594304a 2026-07-17 · clean · tests: yes
 - **Summary**: Hierarchical Delegation pattern.
-- **Public API**: `Verdict` *enum*; `WorkerSpec` *dataclass*; `SalaryBatchArtifact` *dataclass*; `SafetyBoundary` *class*(must_escalate); `SettlementSupervisor` *class*(decompose, run, synthesize)
+- **Public API**: `Verdict` *enum*; `SalaryBatchResult` *dataclass*; `BatchAssignment` *dataclass*(batch_id); `SafetyBoundary` *dataclass*(evaluate); `PayrollPortfolioResult` *dataclass*; `PortfolioBoundary` *dataclass*(evaluate); `DelegationSummary` *dataclass*(total, employee_count, auto_approved, human_review); `SettlementSupervisor` *class*(root_contract, decompose, run, synthesize)
+- **Module functions**: `batch_fingerprint`, `bind_salary_result`
 - **Contract lines (from docstring)**:
-  - context, and only ever sees the workers' structured artifacts — never their raw
-  - work. The model is the same as a manager who delegates and reviews but never
-  - This file is intentionally small (~130 lines). It is not a framework. It is the
-  - a ``WorkerSpec`` (Spec), runs in isolation and returns only an artifact
-  - (Budget), and is admitted only through ``SafetyBoundary`` (Gate).
-  - **The Manager-Never-Executes rule** (主管不下场) — the supervisor only
-  - decomposes / dispatches / synthesizes / gates. It reads artifacts, never a
-  - worker's intermediate trace, and workers never talk to each other.
+  - contracts, dispatches each child through an isolated handoff, and accepts only
 
 ### C2 扇出聚合 Fan-out / Gather — `collaboration/b-fan-out-gather/`
 
@@ -349,9 +343,9 @@ Generated 2026-07-17 at HEAD `711afec` (working tree has uncommitted changes).
 ### Shared 协作边界契约 Collaboration Boundary Contract
 
 - **Role**: cross-cutting interface shared by C1-C4; not a fifth pattern
-- **State**: `boundary_contract.py` 213 lines · last commit 711afec 2026-07-17 · clean
+- **State**: `boundary_contract.py` 235 lines · last commit 594304a 2026-07-17 · clean
 - **Summary**: Shared boundary contract for collaboration patterns.
-- **Public API**: `FindingSeverity` *enum*; `AcceptanceDecision` *enum*; `ExecutionBudget` *dataclass*; `TaskContract` *dataclass*(digest); `Finding` *dataclass*; `AcceptanceReceipt` *dataclass*(accepted); `HandoffEnvelope` *dataclass*; `ArtifactEnvelope` *dataclass*
+- **Public API**: `FindingSeverity` *enum*; `AcceptanceDecision` *enum*; `ExecutionBudget` *dataclass*; `TaskContract` *dataclass*(digest); `Finding` *dataclass*; `AcceptanceReceipt` *dataclass*(accepted); `HandoffEnvelope` *dataclass*; `ArtifactEnvelope` *dataclass*(bind)
 - **Contract chain**: `TaskContract -> HandoffEnvelope -> ArtifactEnvelope -> AcceptanceReceipt`
 - **Version invariant**: The contract is immutable and content-addressed. Artifacts and receipts bind to that exact digest, so approval cannot drift to a different task version. This module defines the transport-neutral interface; each pattern still owns how it decomposes, dispatches, aggregates, challenges, or sequences work.
 
