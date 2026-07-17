@@ -19,6 +19,7 @@ import asyncio
 import importlib.util
 import os
 import sys
+from dataclasses import dataclass
 
 ROOT = os.path.dirname(__file__)
 
@@ -136,34 +137,94 @@ def gap_additive_masks_conflict() -> dict:
 # ── G3 · 对抗评审 · 评审者盲区 ──────────────────────────────────────────────
 # 教学版独立评审真的独立，可它只查它知道的那条规则（车比登机晚）。压力：换一份产出，
 # 这次赶得上车，但埋的是另一类阻断级（护照 6 个月内过期，出不了境）。评审者不查护照，
-# 于是一份该拦的产出被 CONFIRMED 放行。独立 ≠ 全知，评审只挡它会查的那类问题。
+# 于是一份该拦的产出被 CONFIRMED 放行。评审闸执行了策略，可策略本身漏了风险目录。
+
+
+@dataclass(frozen=True)
+class TravelCandidate:
+    taxi_eta: str
+    boarding: str
+    passport_expiry_days: int
 
 def gap_reviewer_blind_spot() -> dict:
     AdversarialReview = REVIEW.AdversarialReview
-    Itinerary = REVIEW.Itinerary
+    ArtifactEnvelope = REVIEW.ArtifactEnvelope
     Objection = REVIEW.Objection
     Severity = REVIEW.Severity
     Outcome = REVIEW.Outcome
+    ReviewPanel = REVIEW.ReviewPanel
+    ReviewPolicy = REVIEW.ReviewPolicy
+    ReviewerSpec = REVIEW.ReviewerSpec
+    TaskContract = REVIEW.TaskContract
 
-    # 车赶得上，但护照快过期——另一类阻断级
-    plan = Itinerary(legs=[{"type": "flight", "boarding": "19:30", "intl": True},
-                           {"type": "taxi", "airport_eta": "18:10"},
-                           {"type": "doc", "passport_expiry_days": 90}])
+    contract = TaskContract(
+        contract_id="confirm-international-trip",
+        version=1,
+        objective="confirm one reviewed itinerary",
+        output_schema="TravelCandidate",
+        accountable_owner="travel-controller",
+        boundary="reviewers may object; only the gate may confirm",
+    )
+    plan = TravelCandidate(
+        taxi_eta="18:10",
+        boarding="19:30",
+        passport_expiry_days=90,
+    )
+    artifact = ArtifactEnvelope(
+        artifact_id="travel-candidate-r0",
+        contract_digest=contract.digest,
+        schema=contract.output_schema,
+        produced_by="travel-author",
+        payload=plan,
+        evidence_refs=("booking://flight-42", "booking://taxi-7"),
+    )
 
-    async def reviewer_taxi_only(plan):        # 只会查『车 vs 登机』这一条
-        taxi = next((leg for leg in plan.legs if leg["type"] == "taxi"), None)
-        flight = next((leg for leg in plan.legs if leg["type"] == "flight"), None)
-        if taxi and flight and taxi["airport_eta"] > flight["boarding"]:
-            return [Objection(Severity.BLOCKER, "taxi", "车比登机晚")]
-        return []
+    async def reviewer_taxi_only(request):
+        candidate = request.artifact.payload
+        if candidate.taxi_eta > candidate.boarding:
+            return (
+                Objection(
+                    code="taxi_after_boarding",
+                    rule_id="taxi-before-boarding",
+                    severity=Severity.BLOCKER,
+                    field="taxi_eta",
+                    claim="车比登机晚",
+                    evidence_refs=("booking://flight-42", "booking://taxi-7"),
+                ),
+            )
+        return ()
 
-    out = asyncio.run(AdversarialReview(reviewer=reviewer_taxi_only).run(plan))
-    doc = next(leg for leg in plan.legs if leg["type"] == "doc")
-    real_blocker = doc["passport_expiry_days"] < 180        # 出境要求护照有效期>6个月
+    panel = ReviewPanel(
+        "taxi-only-panel",
+        (
+            ReviewerSpec(
+                reviewer_id="taxi-reviewer",
+                actor_id="travel-risk-agent",
+                rule_ids=("taxi-before-boarding",),
+                evidence_scope=("read:flight", "read:taxi"),
+                review=reviewer_taxi_only,
+            ),
+        ),
+    )
+    system = AdversarialReview(
+        panel,
+        ReviewPolicy(
+            rubric_version="travel-taxi-only-v1",
+            required_rule_ids=("taxi-before-boarding",),
+            max_rounds=1,
+        ),
+        author_actor_id="travel-author",
+        fingerprint=lambda candidate: (
+            f"{candidate.taxi_eta}|{candidate.boarding}|"
+            f"{candidate.passport_expiry_days}"
+        ),
+    )
+    out = asyncio.run(system.run(contract, artifact))
+    real_blocker = plan.passport_expiry_days < 180
     return {"gap": "评审者盲区", "pattern": "C3 对抗评审",
-            "leaked": out["outcome"] is Outcome.CONFIRMED and real_blocker,
-            "evidence": f"埋的是护照过期(有效期{doc['passport_expiry_days']}天<180)，"
-                        f"评审只查车/登机 → 结论={out['outcome'].value}(放行)"}
+            "leaked": out.outcome is Outcome.CONFIRMED and real_blocker,
+            "evidence": f"护照有效期{plan.passport_expiry_days}天<180，"
+                        f"规则目录只声明接送时间 → 结论={out.outcome.value}(放行)"}
 
 
 # ── G4 · 交接链 · 查存在不查值 ──────────────────────────────────────────────
@@ -212,7 +273,7 @@ def report() -> None:
         assert r["leaked"], f"{r['gap']} 未如期暴露"
     print("\n" + "-" * 78)
     print("四条都来自接口或配置边界：组合线要显式配置 / additive 不辨冲突与重复 /")
-    print("评审只挡它会查的风险 / 接缝查 key 不查值。这是从教学接口走向生产配置的路。")
+    print("评审闸不能补全残缺规则目录 / 接缝查 key 不查值。这是从教学接口走向生产配置的路。")
     print("=" * 78)
 
 
