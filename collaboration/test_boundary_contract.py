@@ -71,6 +71,45 @@ def test_artifact_binds_to_the_exact_contract_digest() -> None:
     assert artifact.contract_digest == task.digest
 
 
+def test_artifact_bind_uses_the_handoff_contract_and_receiver() -> None:
+    task = contract()
+    handoff = HandoffEnvelope(
+        handoff_id="handoff-1",
+        sender="payroll-supervisor",
+        receiver="report-worker",
+        contract=task,
+    )
+
+    artifact = ArtifactEnvelope.bind(
+        handoff,
+        artifact_id="artifact-1",
+        produced_by="report-worker",
+        payload={"paid": 798},
+        evidence_refs=("sqlite://payroll.db?month=2026-06",),
+    )
+
+    assert artifact.contract_digest == task.digest
+    assert artifact.schema == task.output_schema
+    assert artifact.evidence_refs
+
+
+def test_artifact_bind_rejects_a_different_producer() -> None:
+    handoff = HandoffEnvelope(
+        handoff_id="handoff-1",
+        sender="payroll-supervisor",
+        receiver="report-worker",
+        contract=contract(),
+    )
+
+    with pytest.raises(ValueError, match="designated receiver"):
+        ArtifactEnvelope.bind(
+            handoff,
+            artifact_id="artifact-1",
+            produced_by="other-worker",
+            payload={"paid": 798},
+        )
+
+
 def test_retry_requires_a_receipt_from_the_same_contract_version() -> None:
     task = contract()
     receipt = rejected_receipt(task)

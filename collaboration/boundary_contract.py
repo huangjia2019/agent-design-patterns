@@ -211,3 +211,25 @@ class ArtifactEnvelope(Generic[PayloadT]):
             )
         ):
             raise ValueError("artifact identity fields must not be empty")
+
+    @classmethod
+    def bind(
+        cls,
+        handoff: HandoffEnvelope,
+        *,
+        artifact_id: str,
+        produced_by: str,
+        payload: PayloadT,
+        evidence_refs: tuple[str, ...] = (),
+    ) -> ArtifactEnvelope[PayloadT]:
+        """Bind a worker result to the exact contract carried by its handoff."""
+        if produced_by != handoff.receiver:
+            raise ValueError("only the designated receiver may bind this artifact")
+        return cls(
+            artifact_id=artifact_id,
+            contract_digest=handoff.contract.digest,
+            schema=handoff.contract.output_schema,
+            produced_by=produced_by,
+            payload=payload,
+            evidence_refs=evidence_refs,
+        )

@@ -1,16 +1,15 @@
 """Stress · 协作模块后半场：教学版四个模式，各放到一种真实压力下逼出缺口。
 
 和行动模块的 stress_gaps 同一个思路。stress_collab 证明的是「装上模式关掉一列」，
-那是教学版在自己承诺的范围内成立。这个文件不植入任何 bug，把 collaboration/{a,b,c,d}
-四个教学版模式一行不改，各放到一种真实压力下，让「从教学到生产」之间的缺口自己冒出来。
+那是教学版在自己承诺的范围内成立。这个文件不植入业务 bug，把 collaboration/{a,b,c,d}
+四个教学版模式各放到一种真实压力下，让「接口具备能力」和「生产正确配置」之间的缺口冒出来。
 
-    G1 层级委派 · 聚合级越限   逐批都不越单批阈值，合起来几百万照样自动放行（主管只逐批把关）
+    G1 层级委派 · 聚合级越限   逐批都不越单批阈值，未配置组合上限时整月仍会自动放行
     G2 扇出聚合 · 加和吞冲突   additive 把两个『分歧』求成一个更大的和，冲突信息被抹平
     G3 对抗评审 · 评审者盲区   独立评审只查它知道的那条规则，另一类阻断级从眼皮底下过
     G4 交接链   · 查存在不查值 接缝校验只保证 net_amount『交付了』，不保证它『交付对了』
 
-四条都是教学契约本身的边界，不是错误。它们标出从教学版到生产之间真正要补的那段路。
-框架四个 pattern.py 一行没改。
+四条都是教学契约或生产配置的边界，不是业务错误。它们标出从教学版到生产之间真正要补的那段路。
 
     python3 collaboration/stress_collab_gaps.py
 """
@@ -40,33 +39,59 @@ HANDOFF = _load("d-handoff-chain", "gaps_d")
 
 
 # ── G1 · 层级委派 · 聚合级越限 ──────────────────────────────────────────────
-# 教学版 SafetyBoundary.must_escalate 逐个 artifact 判 total_amount > 阈值。
-# 压力：把发薪拆成很多小批，每批总额都卡在阈值下一点点。逐批都合规，合起来几百万，
-# 全部自动放行，人工队列空。主管守住了每一批的边界，守不住『所有批加起来』这条边界。
+# SafetyBoundary 逐批验收，PortfolioBoundary 负责组合级约束。
+# 压力：把发薪拆成很多小批，每批总额都卡在阈值下一点点。先不配置组合上限，
+# 再配置总额上限。接口相同，只改变一项生产策略，观察根回执是否改变。
 
 def gap_aggregate_blindness() -> dict:
     SettlementSupervisor = DELEG.SettlementSupervisor
     SafetyBoundary = DELEG.SafetyBoundary
-    SalaryBatchArtifact = DELEG.SalaryBatchArtifact
+    PortfolioBoundary = DELEG.PortfolioBoundary
+    SalaryBatchResult = DELEG.SalaryBatchResult
     Verdict = DELEG.Verdict
+    batch_fingerprint = DELEG.batch_fingerprint
+    bind_salary_result = DELEG.bind_salary_result
 
     threshold = 100_000.0
-    per_batch = 99_000.0                       # 每批卡在阈值下一点点
+    per_batch = 99_000.0
     n_batches = 60
     roster = [{"id": f"e{i}", "client": f"c{i}", "base": 8000} for i in range(n_batches)]
 
-    async def dispatch(spec, rows):
-        return SalaryBatchArtifact(spec.batch_id, Verdict.SUCCESS, len(rows),
-                                   total_amount=per_batch, confidence=0.99)
-    sup = SettlementSupervisor(dispatch=dispatch,
-                               boundary=SafetyBoundary(amount_threshold=threshold))
-    result = asyncio.run(sup.run(roster))
+    async def dispatch(handoff, rows):
+        employee_ids = tuple(str(row["id"]) for row in rows)
+        result = SalaryBatchResult(
+            batch_id=handoff.contract.contract_id,
+            verdict=Verdict.SUCCESS,
+            employee_count=len(rows),
+            total_amount=per_batch,
+            input_fingerprint=batch_fingerprint(employee_ids),
+            confidence=0.99,
+        )
+        return bind_salary_result(
+            handoff,
+            result,
+            evidence_refs=("stress://aggregate-blindness",),
+        )
+
+    blind = SettlementSupervisor(
+        dispatch=dispatch,
+        boundary=SafetyBoundary(amount_threshold=threshold),
+        portfolio_boundary=PortfolioBoundary(max_total_amount=None),
+    )
+    guarded = SettlementSupervisor(
+        dispatch=dispatch,
+        boundary=SafetyBoundary(amount_threshold=threshold),
+        portfolio_boundary=PortfolioBoundary(max_total_amount=threshold * 10),
+    )
+    blind_result = asyncio.run(blind.run(roster))
+    guarded_result = asyncio.run(guarded.run(roster))
     aggregate = round(per_batch * n_batches, 2)
-    to_human = result["human_review"]
+    blind_decision = blind_result.portfolio_receipt.decision.value
+    guarded_decision = guarded_result.portfolio_receipt.decision.value
     return {"gap": "聚合级越限", "pattern": "C1 层级委派",
-            "leaked": len(to_human) == 0 and aggregate > threshold * 10,
+            "leaked": blind_decision == "accepted" and guarded_decision == "escalated",
             "evidence": f"{n_batches}批×{per_batch:.0f}=合计{aggregate:.0f}，"
-                        f"逐批都<{threshold:.0f}阈值 → 人工队列{len(to_human)}条，全自动放行"}
+                        f"未配组合线={blind_decision}，配置组合线={guarded_decision}"}
 
 
 # ── G2 · 扇出聚合 · 加和吞冲突 ──────────────────────────────────────────────
@@ -114,14 +139,14 @@ def gap_reviewer_blind_spot() -> dict:
                            {"type": "doc", "passport_expiry_days": 90}])
 
     async def reviewer_taxi_only(plan):        # 只会查『车 vs 登机』这一条
-        taxi = next((l for l in plan.legs if l["type"] == "taxi"), None)
-        flight = next((l for l in plan.legs if l["type"] == "flight"), None)
+        taxi = next((leg for leg in plan.legs if leg["type"] == "taxi"), None)
+        flight = next((leg for leg in plan.legs if leg["type"] == "flight"), None)
         if taxi and flight and taxi["airport_eta"] > flight["boarding"]:
             return [Objection(Severity.BLOCKER, "taxi", "车比登机晚")]
         return []
 
     out = asyncio.run(AdversarialReview(reviewer=reviewer_taxi_only).run(plan))
-    doc = next(l for l in plan.legs if l["type"] == "doc")
+    doc = next(leg for leg in plan.legs if leg["type"] == "doc")
     real_blocker = doc["passport_expiry_days"] < 180        # 出境要求护照有效期>6个月
     return {"gap": "评审者盲区", "pattern": "C3 对抗评审",
             "leaked": out["outcome"] is Outcome.CONFIRMED and real_blocker,
@@ -165,7 +190,7 @@ GAPS = [gap_aggregate_blindness, gap_additive_masks_conflict,
 
 def report() -> None:
     print("=" * 78)
-    print("Stress 协作后半场 · 教学版四模式 × 一种真实压力，缺口全靠压出来（零植入）")
+    print("Stress 协作后半场 · 四个模式 × 一种真实压力")
     print("=" * 78)
     for fn in GAPS:
         r = fn()
@@ -174,8 +199,8 @@ def report() -> None:
         print(f"  {r['evidence']}")
         assert r["leaked"], f"{r['gap']} 未如期暴露"
     print("\n" + "-" * 78)
-    print("四条都是教学契约的边界，不是 bug：主管逐批不看总量 / additive 分不清冲突与重复 /")
-    print("评审只挡它会查的那类 / 接缝查 key 不查值。这就是教学版到生产之间要补的那段路。")
+    print("四条都来自接口或配置边界：组合线要显式配置 / additive 不辨冲突与重复 /")
+    print("评审只挡它会查的风险 / 接缝查 key 不查值。这是从教学接口走向生产配置的路。")
     print("=" * 78)
 
 
