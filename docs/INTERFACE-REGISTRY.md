@@ -7,7 +7,7 @@
 >
 > **Citation discipline**: course lectures, whitepapers, and book chapters that quote an interface must pin the commit (`pattern.py@<hash>` in the document header). Interfaces do refactor; a pinned quote stays honest, an unpinned one rots.
 
-Generated 2026-07-17 at HEAD `a06e6e3` (working tree has uncommitted changes).
+Generated 2026-07-17 at HEAD `a5337b5` (working tree has uncommitted changes).
 
 ## Summary
 
@@ -36,7 +36,7 @@ Generated 2026-07-17 at HEAD `a06e6e3` (working tree has uncommitted changes).
 | C1 层级委派 Hierarchical Delegation | 协作 × 层级 | `SettlementSupervisor` | 07-17 |
 | C2 扇出聚合 Fan-out / Gather | 协作 × 并行 | `FanOutGather` | 07-17 |
 | C3 对抗评审 Adversarial Review | 协作 × 循环 | `AdversarialReview` | 07-17 |
-| C4 交接链 Handoff Chain | 协作 × 链式 | `HandoffChain` | 07-01 |
+| C4 交接链 Handoff Chain | 协作 × 链式 | `HandoffChain` | 07-17 |
 | Shared 协作边界契约 Collaboration Boundary Contract | 协作横切接口 | `TaskContract` → `AcceptanceReceipt` | 07-17 |
 | G1 审批门 Approval Gate | 治理 × 路由 | README only | no impl |
 | G2 爆炸半径控制 Blast Radius Control | 治理 × 层级 | README only | no impl |
@@ -323,18 +323,18 @@ Generated 2026-07-17 at HEAD `a06e6e3` (working tree has uncommitted changes).
 ### C4 交接链 Handoff Chain — `collaboration/d-handoff-chain/`
 
 - **Coordinate**: 协作 × 链式
-- **State**: `pattern.py` 123 lines · last commit 4620664 2026-07-01 · clean · tests: yes
+- **State**: `pattern.py` 617 lines · last commit a5337b5 2026-07-17 · clean · tests: yes
 - **Summary**: Handoff Chain pattern.
-- **Public API**: `SeamError` *class*; `Baton` *dataclass*; `StageSpec` *dataclass*; `HandoffChain` *class*(run)
-- **Module functions**: `trip_chain`
+- **Public API**: `SeamError` *class*; `FactValue` *dataclass*; `FactRule` *dataclass*; `FactRecord` *dataclass*; `Baton` *dataclass*(facts, fact_record, fingerprint, snapshot_id); `BatonView` *dataclass*; `StageSpec` *dataclass*; `StageDelta` *dataclass*; `StageFn` *class*; `StageBinding` *dataclass*; `StageReceipt` *dataclass*; `ChainRun` *dataclass*; `HandoffChain` *class*(run, advance)
+- **Module functions**: `new_baton`
 - **Contract lines (from docstring)**:
-  - one stage and passing a baton to the next. Not a tree (that is Hierarchical
-  - Delegation), not parallel copies (that is Fan-out-Gather) — a line.
-  - Like the sibling patterns this file is small (~140 lines) and is not a framework.
-  - not three stages downstream where the cause is lost.
-  - **Append-only baton** (棒上不回改) — the intent and committed facts are locked once
-  - set. A later stage may add, never silently overwrite. A handoff passes values, not
-  - a shared mutable scratchpad, so one stage cannot quietly rewrite what an earlier
+  - read-only snapshot, consumes declared facts, and returns a typed delta. The chain
+  - The shared collaboration boundary remains:
+  - The pattern owns five invariants:
+  - a stage must receive every fact it declares in ``requires``;
+  - a stage must itself deliver every fact it declares in ``provides``;
+  - one fact has one declared producer and committed facts are append-only;
+  - values cross the seam only after type, evidence, and semantic validation;
 
 ### Shared 协作边界契约 Collaboration Boundary Contract
 
