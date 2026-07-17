@@ -7,7 +7,7 @@
 >
 > **Citation discipline**: course lectures, whitepapers, and book chapters that quote an interface must pin the commit (`pattern.py@<hash>` in the document header). Interfaces do refactor; a pinned quote stays honest, an unpinned one rots.
 
-Generated 2026-07-17 at HEAD `27e920b` (working tree has uncommitted changes).
+Generated 2026-07-17 at HEAD `711afec` (working tree has uncommitted changes).
 
 ## Summary
 
@@ -37,6 +37,7 @@ Generated 2026-07-17 at HEAD `27e920b` (working tree has uncommitted changes).
 | C2 扇出聚合 Fan-out / Gather | 协作 × 并行 | `FanOutGather` | 07-01 |
 | C3 对抗评审 Adversarial Review | 协作 × 循环 | `AdversarialReview` | 07-01 |
 | C4 交接链 Handoff Chain | 协作 × 链式 | `HandoffChain` | 07-01 |
+| Shared 协作边界契约 Collaboration Boundary Contract | 协作横切接口 | `TaskContract` → `AcceptanceReceipt` | 07-17 |
 | G1 审批门 Approval Gate | 治理 × 路由 | README only | no impl |
 | G2 爆炸半径控制 Blast Radius Control | 治理 × 层级 | README only | no impl |
 | G3 渐进承诺 Progressive Commitment | 治理 × 链式 | README only | no impl |
@@ -344,6 +345,15 @@ Generated 2026-07-17 at HEAD `27e920b` (working tree has uncommitted changes).
   - **Append-only baton** (棒上不回改) — the intent and committed facts are locked once
   - set. A later stage may add, never silently overwrite. A handoff passes values, not
   - a shared mutable scratchpad, so one stage cannot quietly rewrite what an earlier
+
+### Shared 协作边界契约 Collaboration Boundary Contract
+
+- **Role**: cross-cutting interface shared by C1-C4; not a fifth pattern
+- **State**: `boundary_contract.py` 213 lines · last commit 711afec 2026-07-17 · clean
+- **Summary**: Shared boundary contract for collaboration patterns.
+- **Public API**: `FindingSeverity` *enum*; `AcceptanceDecision` *enum*; `ExecutionBudget` *dataclass*; `TaskContract` *dataclass*(digest); `Finding` *dataclass*; `AcceptanceReceipt` *dataclass*(accepted); `HandoffEnvelope` *dataclass*; `ArtifactEnvelope` *dataclass*
+- **Contract chain**: `TaskContract -> HandoffEnvelope -> ArtifactEnvelope -> AcceptanceReceipt`
+- **Version invariant**: The contract is immutable and content-addressed. Artifacts and receipts bind to that exact digest, so approval cannot drift to a different task version. This module defines the transport-neutral interface; each pattern still owns how it decomposes, dispatches, aggregates, challenges, or sequences work.
 
 ## 治理 Governance (placeholders)
 

@@ -92,6 +92,8 @@ MODULE_ZH = {
     "collaboration": "协作 Collaboration",
 }
 
+SHARED_BOUNDARY_INTERFACE = "collaboration/boundary_contract.py"
+
 CONTRACT_MARKERS = (
     "not ", "never", "belongs", "boundary", "must", "only", "does not",
     "outer", "explicit", "cannot", "invariant",
@@ -180,6 +182,52 @@ def pattern_block(rel_dir: str) -> str:
     return "\n".join(out)
 
 
+def shared_boundary_block() -> str:
+    path = ROOT / SHARED_BOUNDARY_INTERFACE
+    source = path.read_text()
+    tree = ast.parse(source)
+    doc = ast.get_docstring(tree) or ""
+    classes, functions = public_api(tree)
+    last_commit = git(
+        "log",
+        "-1",
+        "--format=%h %ad",
+        "--date=format:%Y-%m-%d",
+        "--",
+        SHARED_BOUNDARY_INTERFACE,
+    )
+    dirty = bool(git("status", "--porcelain", "--", SHARED_BOUNDARY_INTERFACE))
+
+    out = [
+        "### Shared 协作边界契约 Collaboration Boundary Contract",
+        "",
+        "- **Role**: cross-cutting interface shared by C1-C4; not a fifth pattern",
+    ]
+    state = (
+        f"`boundary_contract.py` {len(source.splitlines())} lines"
+        f" · last commit {last_commit or 'n/a'}"
+        f" · {'**UNCOMMITTED CHANGES**' if dirty else 'clean'}"
+    )
+    out.append(f"- **State**: {state}")
+    out.append(f"- **Summary**: {doc.split(chr(10), 1)[0]}")
+    if classes:
+        out.append(f"- **Public API**: {'; '.join(classes)}")
+    if functions:
+        out.append(f"- **Module functions**: {', '.join(functions)}")
+    paragraphs = [" ".join(part.split()) for part in doc.split("\n\n")]
+    chain = next((part.strip("`") for part in paragraphs if part.startswith("``")), "")
+    invariant = next(
+        (part for part in paragraphs if "content-addressed" in part),
+        "",
+    )
+    if chain:
+        out.append(f"- **Contract chain**: `{chain}`")
+    if invariant:
+        out.append(f"- **Version invariant**: {invariant}")
+    out.append("")
+    return "\n".join(out)
+
+
 def main() -> None:
     head = git("rev-parse", "--short", "HEAD")
     dirty_any = bool(git("status", "--porcelain"))
@@ -229,6 +277,23 @@ def main() -> None:
             state = f"{last}{' ⚠ dirty' if dirty else ''}"
             parts.append(f"| {code} {name_zh} {name_en} | {coordinate} | {entry} | {state} |")
 
+    shared_last = git(
+        "log",
+        "-1",
+        "--format=%ad",
+        "--date=format:%m-%d",
+        "--",
+        SHARED_BOUNDARY_INTERFACE,
+    )
+    shared_dirty = bool(
+        git("status", "--porcelain", "--", SHARED_BOUNDARY_INTERFACE)
+    )
+    parts.append(
+        "| Shared 协作边界契约 Collaboration Boundary Contract"
+        " | 协作横切接口 | `TaskContract` → `AcceptanceReceipt`"
+        f" | {shared_last}{' ⚠ dirty' if shared_dirty else ''} |"
+    )
+
     for rel_dir, (code, name_zh, name_en, coordinate) in GOVERNANCE_PLACEHOLDERS.items():
         parts.append(f"| {code} {name_zh} {name_en} | {coordinate} | README only | no impl |")
 
@@ -239,6 +304,8 @@ def main() -> None:
         parts.append("")
         for rel_dir in sorted(d for d in COORDINATES if d.startswith(module + "/")):
             parts.append(pattern_block(rel_dir))
+        if module == "collaboration":
+            parts.append(shared_boundary_block())
 
     parts.append("## 治理 Governance (placeholders)")
     parts.append("")
