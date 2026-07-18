@@ -1,6 +1,10 @@
 """
-ADPS 双轴矩阵图片水印工具 · v4 (2026-07-18)
+ADPS 双轴矩阵图片水印工具 · v5 (2026-07-18)
 ==========================================
+v5 相对 v4 一个改动:
+- icon 里的点阵去掉 (在 52-78px 小尺寸下点阵渲染不齐 · 与 A 字母比例失衡),
+  只保留 gold A 字母, 铅字更干净
+
 v4 相对 v3 三个改动:
 1. 深底图上不再用白面板 (突兀), 改成半透明 navy 面板 + gold 描边, 与图融合
 2. ADPS wordmark 与副标题之间加更多呼吸空间 (line_gap 4→10)
@@ -138,37 +142,25 @@ def build_watermark_tile(is_dark_bg: bool, scale: float = 1.0, lang: str = "both
         fill=NAVY,
     )
 
-    dot_r = max(1, int(0.9 * scale))
-    dot_spacing = int(6 * scale)
-    dot_start = int(6.5 * scale)
-    dot_fill = (INK_LIGHT[0], INK_LIGHT[1], INK_LIGHT[2], 107)
-    for row in range(7):
-        for col in range(6):
-            cx = icon_x + dot_start + col * dot_spacing
-            cy = icon_y + dot_start + row * dot_spacing
-            if cx <= icon_x + icon - 3 and cy <= icon_y + icon - 3:
-                td.ellipse(
-                    [(cx - dot_r, cy - dot_r), (cx + dot_r, cy + dot_r)],
-                    fill=dot_fill,
-                )
-
+    # v5: 去掉点阵, 只保留居中 gold A (在小尺寸下更耐看)
+    # A 在 64×64 参照系里居中: 左脚 (14,50) · 顶 (32,10) · 右脚 (50,50) · 交叉 (22,34)-(42,34)
     def _s(v):
         return int(v * (icon / 64.0))
-    gold_w = max(2, int(2.8 * scale))
-    a_left = (icon_x + _s(13), icon_y + _s(49))
-    a_top = (icon_x + _s(31.5), icon_y + _s(13))
-    a_right = (icon_x + _s(50), icon_y + _s(49))
-    a_cross_l = (icon_x + _s(21.5), icon_y + _s(34.5))
-    a_cross_r = (icon_x + _s(41.5), icon_y + _s(34.5))
+    gold_w = max(2, int(3.2 * scale))
+    a_left = (icon_x + _s(14), icon_y + _s(50))
+    a_top = (icon_x + _s(32), icon_y + _s(10))
+    a_right = (icon_x + _s(50), icon_y + _s(50))
+    a_cross_l = (icon_x + _s(22), icon_y + _s(34))
+    a_cross_r = (icon_x + _s(42), icon_y + _s(34))
     td.line([a_left, a_top], fill=GOLD, width=gold_w)
     td.line([a_top, a_right], fill=GOLD, width=gold_w)
     td.line([a_cross_l, a_cross_r], fill=GOLD, width=gold_w)
 
-    sq = max(2, int(2.8 * scale))
+    sq = max(3, int(3.2 * scale))
     for cx, cy in [a_left, a_top, a_right]:
         td.rectangle(
             [(cx - sq // 2, cy - sq // 2), (cx + sq // 2, cy + sq // 2)],
-            fill=INK_LIGHT,
+            fill=GOLD,
         )
 
     text_x = icon_x + icon + text_gap_x
