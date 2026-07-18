@@ -189,11 +189,12 @@ if __name__ == "__main__":
     render(base / "matrix.png", clean=False, show_codes=True)
     render(base / "matrix-clean.png", clean=True, show_codes=True)
 
-    # 2026-07-04: 加 ADPS 水印
+    # 2026-07-04→07-18: 加 ADPS 水印 v4 (dark-bg 面板改半透明 navy + gold 边)
+    # EN repo README → lang='en' 只 by Jia Huang
     import sys
     sys.path.insert(0, str(base))
     from add_watermark import add_watermark
     for name in ("matrix.png", "matrix-clean.png"):
         p = base / name
-        add_watermark(str(p), str(p))
+        add_watermark(str(p), str(p), position="tr", lang="en")
         print(f"✓ Watermarked {name}")
