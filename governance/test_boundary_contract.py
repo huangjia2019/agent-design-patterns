@@ -28,6 +28,7 @@ def proposal() -> ActionProposal:
         version=1,
         contract_digest="contract-a",
         artifact_id="artifact-a",
+        artifact_digest="artifact-content-a",
         requested_by="payroll-controller",
         action="payroll.disburse",
         resource_scope=("payroll:2026-06", "bank:payroll"),
@@ -72,6 +73,7 @@ def test_proposal_digest_changes_with_the_requested_effect() -> None:
 
     assert item.digest != replace(item, amount=item.amount + 1).digest
     assert item.digest != replace(item, artifact_id="artifact-b").digest
+    assert item.digest != replace(item, artifact_digest="artifact-content-b").digest
     assert item.digest != replace(item, version=2).digest
 
 

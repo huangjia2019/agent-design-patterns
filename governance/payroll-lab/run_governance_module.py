@@ -73,6 +73,10 @@ def main() -> None:
         print("== approval cannot move to a changed proposal ==")
         print(f"   original: {result['original_digest']}")
         print(f"   changed:  {result['changed_digest']}")
+        print(
+            f"   restored: {list(result['restored_ids'])}, "
+            f"delta={result['delta_amount']:,.2f}"
+        )
         print(f"   old approval authorizes: {result['old_approval_authorizes']}")
         print(f"   adapter: {result['adapter_result']}")
     else:

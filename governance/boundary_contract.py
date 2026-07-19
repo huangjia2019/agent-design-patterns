@@ -72,6 +72,7 @@ class ActionProposal:
     version: int
     contract_digest: str
     artifact_id: str
+    artifact_digest: str
     requested_by: str
     action: str
     resource_scope: tuple[str, ...]
@@ -88,6 +89,7 @@ class ActionProposal:
             "proposal_id": self.proposal_id,
             "contract_digest": self.contract_digest,
             "artifact_id": self.artifact_id,
+            "artifact_digest": self.artifact_digest,
             "requested_by": self.requested_by,
             "action": self.action,
             "idempotency_key": self.idempotency_key,
@@ -118,6 +120,7 @@ class ActionProposal:
                 "version": self.version,
                 "contract_digest": self.contract_digest,
                 "artifact_id": self.artifact_id,
+                "artifact_digest": self.artifact_digest,
                 "requested_by": self.requested_by,
                 "action": self.action,
                 "resource_scope": self.resource_scope,

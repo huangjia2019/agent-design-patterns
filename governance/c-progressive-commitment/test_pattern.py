@@ -60,6 +60,7 @@ def proposal(
         version=1,
         contract_digest="contract",
         artifact_id="artifact",
+        artifact_digest="artifact-content-v1",
         requested_by="payroll-agent",
         action="payroll.disburse",
         resource_scope=("payroll:2026-06", "bank:payroll"),

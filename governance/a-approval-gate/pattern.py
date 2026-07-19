@@ -42,13 +42,35 @@ class ApprovalRoute(str, Enum):
 
 
 @dataclass(frozen=True)
+class ApprovalTier:
+    """Roles required when a human-review proposal falls in one amount band."""
+
+    max_amount: float | None
+    required_roles: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if self.max_amount is not None and self.max_amount < 0:
+            raise ValueError("approval tier amount must not be negative")
+        if not self.required_roles or len(set(self.required_roles)) != len(
+            self.required_roles
+        ):
+            raise ValueError("approval tier roles must be unique and non-empty")
+
+
+@dataclass(frozen=True)
 class ApprovalPolicy:
     policy_id: str = "approval-gate"
     version: int = 1
     auto_allow_max_amount: float = 10_000.0
     auto_allow_max_subjects: int = 10
     deny_above_amount: float = 20_000_000.0
-    required_roles: tuple[str, ...] = ("payroll-controller", "treasury-controller")
+    approval_tiers: tuple[ApprovalTier, ...] = (
+        ApprovalTier(10_000.0, ("payroll-operator",)),
+        ApprovalTier(3_000_000.0, ("payroll-supervisor",)),
+        ApprovalTier(13_000_000.0, ("finance-controller",)),
+        ApprovalTier(None, ("payroll-controller", "treasury-controller")),
+    )
+    policy_change_roles: tuple[str, ...] = ("governance-owner", "risk-owner")
     denied_actions: tuple[str, ...] = ()
     human_review_risks: tuple[RiskLevel, ...] = (RiskLevel.HIGH, RiskLevel.CRITICAL)
     irreversible_requires_human: bool = True
@@ -65,8 +87,25 @@ class ApprovalPolicy:
             raise ValueError("auto_allow_max_subjects must not be negative")
         if self.deny_above_amount <= self.auto_allow_max_amount:
             raise ValueError("deny_above_amount must exceed the auto-allow limit")
-        if not self.required_roles or len(set(self.required_roles)) != len(self.required_roles):
-            raise ValueError("required_roles must be unique and non-empty")
+        if not self.approval_tiers:
+            raise ValueError("approval_tiers must not be empty")
+        finite_limits = [
+            tier.max_amount
+            for tier in self.approval_tiers
+            if tier.max_amount is not None
+        ]
+        if finite_limits != sorted(finite_limits) or len(set(finite_limits)) != len(
+            finite_limits
+        ):
+            raise ValueError("approval tier amounts must be unique and ascending")
+        if self.approval_tiers[-1].max_amount is not None:
+            raise ValueError("the final approval tier must be unbounded")
+        if any(tier.max_amount is None for tier in self.approval_tiers[:-1]):
+            raise ValueError("only the final approval tier may be unbounded")
+        if not self.policy_change_roles or len(set(self.policy_change_roles)) != len(
+            self.policy_change_roles
+        ):
+            raise ValueError("policy change roles must be unique and non-empty")
         if self.ticket_ttl_minutes < 1:
             raise ValueError("ticket_ttl_minutes must be positive")
 
@@ -79,13 +118,25 @@ class ApprovalPolicy:
                 "auto_allow_max_amount": self.auto_allow_max_amount,
                 "auto_allow_max_subjects": self.auto_allow_max_subjects,
                 "deny_above_amount": self.deny_above_amount,
-                "required_roles": self.required_roles,
+                "approval_tiers": tuple(
+                    (tier.max_amount, tier.required_roles)
+                    for tier in self.approval_tiers
+                ),
+                "policy_change_roles": self.policy_change_roles,
                 "denied_actions": self.denied_actions,
                 "human_review_risks": tuple(level.name for level in self.human_review_risks),
                 "irreversible_requires_human": self.irreversible_requires_human,
                 "ticket_ttl_minutes": self.ticket_ttl_minutes,
             },
         )
+
+    def required_roles_for(self, proposal: ActionProposal) -> tuple[str, ...]:
+        if proposal.action == "governance.approval-policy.update":
+            return self.policy_change_roles
+        for tier in self.approval_tiers:
+            if tier.max_amount is None or proposal.amount <= tier.max_amount:
+                return tier.required_roles
+        raise RuntimeError("approval policy has no matching role tier")
 
 
 @dataclass(frozen=True)
@@ -155,15 +206,34 @@ class ApprovalGate:
         *,
         role_resolver: ApproverRoleResolver | None = None,
     ) -> None:
-        self.policy = policy or ApprovalPolicy()
+        self._policy = policy or ApprovalPolicy()
         self._role_resolver = role_resolver
         self._tickets: dict[str, ApprovalTicket] = {}
         self._proposals: dict[str, ActionProposal] = {}
-        self._final_receipts: dict[str, GovernanceReceipt] = {}
+        self._ticket_ids: dict[tuple[str, str], str] = {}
+        self._latest_receipts: dict[tuple[str, str], GovernanceReceipt] = {}
+        self._final_receipts: dict[tuple[str, str], GovernanceReceipt] = {}
+
+    @property
+    def policy(self) -> ApprovalPolicy:
+        return self._policy
 
     def evaluate(self, proposal: ActionProposal, *, now: str) -> ApprovalEvaluation:
         _parse(now)
         self._proposals[proposal.digest] = proposal
+        binding = (proposal.digest, self.policy.ref.digest)
+        existing = self._latest_receipts.get(binding)
+        if existing is not None:
+            ticket_id = self._ticket_ids.get(binding)
+            ticket = self._tickets.get(ticket_id) if ticket_id is not None else None
+            if ticket is not None and existing.decision is not ControlDecision.DENIED:
+                route = ApprovalRoute.HUMAN_REVIEW
+            elif existing.decision is ControlDecision.ALLOWED:
+                route = ApprovalRoute.AUTO_ALLOW
+            else:
+                route = ApprovalRoute.DENY
+            return ApprovalEvaluation(route, existing, ticket)
+
         reasons = self._reason_codes(proposal)
 
         if "action_denied" in reasons or "amount_above_hard_limit" in reasons:
@@ -182,7 +252,8 @@ class ApprovalGate:
                     if code in {"action_denied", "amount_above_hard_limit"}
                 ),
             )
-            self._final_receipts[proposal.digest] = receipt
+            self._latest_receipts[binding] = receipt
+            self._final_receipts[binding] = receipt
             return ApprovalEvaluation(ApprovalRoute.DENY, receipt)
 
         if reasons:
@@ -190,16 +261,20 @@ class ApprovalGate:
                 _parse(now) + timedelta(minutes=self.policy.ticket_ttl_minutes)
             ).isoformat()
             ticket = ApprovalTicket(
-                ticket_id=f"approval::{proposal.proposal_id}::v{proposal.version}",
+                ticket_id=(
+                    f"approval::{proposal.proposal_id}::v{proposal.version}"
+                    f"::{proposal.digest[:8]}::{self.policy.ref.digest[:8]}"
+                ),
                 proposal_digest=proposal.digest,
                 policy_digest=self.policy.ref.digest,
                 requester_id=proposal.requested_by,
-                required_roles=self.policy.required_roles,
+                required_roles=self.policy.required_roles_for(proposal),
                 reason_codes=reasons,
                 created_at=now,
                 expires_at=expires,
             )
             self._tickets[ticket.ticket_id] = ticket
+            self._ticket_ids[binding] = ticket.ticket_id
             receipt = self._receipt(
                 proposal,
                 decision=ControlDecision.PENDING,
@@ -217,6 +292,7 @@ class ApprovalGate:
                 ),
                 evidence_refs=(f"approval://{ticket.ticket_id}",),
             )
+            self._latest_receipts[binding] = receipt
             return ApprovalEvaluation(ApprovalRoute.HUMAN_REVIEW, receipt, ticket)
 
         receipt = self._receipt(
@@ -226,7 +302,8 @@ class ApprovalGate:
             issued_at=now,
             evidence_refs=(f"policy://{self.policy.policy_id}/v{self.policy.version}",),
         )
-        self._final_receipts[proposal.digest] = receipt
+        self._latest_receipts[binding] = receipt
+        self._final_receipts[binding] = receipt
         return ApprovalEvaluation(ApprovalRoute.AUTO_ALLOW, receipt)
 
     def attest(
@@ -242,7 +319,8 @@ class ApprovalGate:
         if ticket is None:
             raise ApprovalError("unknown approval ticket")
         proposal = self._proposals[ticket.proposal_digest]
-        if ticket.proposal_digest in self._final_receipts:
+        binding = (ticket.proposal_digest, ticket.policy_digest)
+        if binding in self._final_receipts:
             raise ApprovalError("approval ticket is already closed")
         if ticket.policy_digest != self.policy.ref.digest:
             raise ApprovalError("approval ticket belongs to another policy version")
@@ -261,7 +339,8 @@ class ApprovalGate:
                 ),
                 evidence_refs=(f"approval://{ticket.ticket_id}",),
             )
-            self._final_receipts[proposal.digest] = receipt
+            self._latest_receipts[binding] = receipt
+            self._final_receipts[binding] = receipt
             return ApprovalEvaluation(ApprovalRoute.DENY, receipt, ticket)
         if role not in ticket.required_roles:
             raise ApprovalError(f"role {role!r} is not required by this ticket")
@@ -300,7 +379,8 @@ class ApprovalGate:
                 ),
                 evidence_refs=self._attestation_refs(updated),
             )
-            self._final_receipts[proposal.digest] = receipt
+            self._latest_receipts[binding] = receipt
+            self._final_receipts[binding] = receipt
             return ApprovalEvaluation(ApprovalRoute.DENY, receipt, updated)
 
         if updated.complete:
@@ -312,7 +392,8 @@ class ApprovalGate:
                 expires_at=updated.expires_at,
                 evidence_refs=self._attestation_refs(updated),
             )
-            self._final_receipts[proposal.digest] = receipt
+            self._latest_receipts[binding] = receipt
+            self._final_receipts[binding] = receipt
             return ApprovalEvaluation(ApprovalRoute.HUMAN_REVIEW, receipt, updated)
 
         receipt = self._receipt(
@@ -323,6 +404,7 @@ class ApprovalGate:
             expires_at=updated.expires_at,
             evidence_refs=self._attestation_refs(updated),
         )
+        self._latest_receipts[binding] = receipt
         return ApprovalEvaluation(ApprovalRoute.HUMAN_REVIEW, receipt, updated)
 
     def authorize(
@@ -333,6 +415,28 @@ class ApprovalGate:
         at: str,
     ) -> bool:
         return receipt.authorizes(proposal, self.policy.ref, at=at)
+
+    def install_policy(
+        self,
+        new_policy: ApprovalPolicy,
+        *,
+        proposal: ActionProposal,
+        receipt: GovernanceReceipt,
+        at: str,
+    ) -> PolicyRef:
+        """Install a new policy only through an approval bound to its content."""
+        if proposal.action != "governance.approval-policy.update":
+            raise ApprovalError("policy installation requires a policy-update proposal")
+        if new_policy.policy_id != self.policy.policy_id:
+            raise ApprovalError("a policy update cannot change policy identity")
+        if new_policy.version <= self.policy.version:
+            raise ApprovalError("a policy update must advance the version")
+        if proposal.artifact_digest != new_policy.ref.content_digest:
+            raise ApprovalError("policy proposal does not bind the new policy content")
+        if not receipt.authorizes(proposal, self.policy.ref, at=at):
+            raise ApprovalError("policy update is not authorized by the active policy")
+        self._policy = new_policy
+        return new_policy.ref
 
     def _reason_codes(self, proposal: ActionProposal) -> tuple[str, ...]:
         reasons: list[str] = []
@@ -376,7 +480,10 @@ class ApprovalGate:
         evidence_refs: tuple[str, ...] = (),
     ) -> GovernanceReceipt:
         return GovernanceReceipt(
-            receipt_id=f"approval-receipt::{proposal.proposal_id}::{decision.value}",
+            receipt_id=(
+                f"approval-receipt::{proposal.proposal_id}"
+                f"::{self.policy.ref.digest[:8]}::{decision.value}"
+            ),
             control="approval-gate",
             proposal_digest=proposal.digest,
             policy_digest=self.policy.ref.digest,

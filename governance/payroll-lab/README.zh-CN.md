@@ -27,7 +27,7 @@
 |---|---|
 | `governance_payroll_imports.py` | 用唯一模块名加载本地文件，避免多个课程 Lab 的 `bench.py` 在全仓测试中碰撞 |
 | `bench.py` | 月末薪酬事实、协作工件适配与 SQLite 控制账本 |
-| `governance_lab.py` | 无治理桥、完整治理链和审批后改提案实验 |
+| `governance_lab.py` | 无治理桥、完整治理链、补回两张工资单与策略变更过门实验 |
 | `ungoverned_policy_lab.py` | 策略盘点、静默改闸与策略摘要实验 |
 | `run_governance_module.py` | 模块级 CLI |
 | `approval_gate_lab.py` | 第 37 讲 |
@@ -43,6 +43,8 @@ uv run python governance/payroll-lab/run_governance_module.py --mode naive
 uv run python governance/payroll-lab/run_governance_module.py --mode governed
 uv run python governance/payroll-lab/run_governance_module.py --mode changed
 uv run python governance/payroll-lab/run_governance_module.py --mode policy-drift
+uv run python governance/payroll-lab/approval_gate_lab.py --changed
+uv run python governance/payroll-lab/approval_gate_lab.py --policy-change
 uv run python governance/payroll-lab/progressive_commitment_lab.py
 uv run python governance/payroll-lab/progressive_commitment_lab.py --variant
 uv run pytest governance -q

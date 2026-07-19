@@ -20,6 +20,7 @@ proposal = ActionProposal(
     version=1,
     contract_digest="contract-2026-06",
     artifact_id="reviewed-payroll-run",
+    artifact_digest="reviewed-payroll-run-content-v1",
     requested_by="payroll-agent",
     action="payroll.disburse",
     resource_scope=("payroll:2026-06", "bank:payroll"),

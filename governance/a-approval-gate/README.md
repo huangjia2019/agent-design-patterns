@@ -1,6 +1,6 @@
 # a · Approval Gate
 
-> Pattern · Govern × Route
+> Pattern · Governance × Router
 >
 > [中文 README](README.zh-CN.md)
 
@@ -24,9 +24,16 @@ to decide:
 AUTO_ALLOW | HUMAN_REVIEW | DENY
 ```
 
+If the first route selects human review, `ApprovalPolicy.approval_tiers` routes
+the amount a second time to the required signing roles. Re-evaluating the same
+proposal-policy binding returns the existing ticket without erasing signatures
+or extending its lifetime.
+
 Human review creates an expiring `ApprovalTicket`. Attestations record actor,
 role, decision, and time. The final `GovernanceReceipt` binds both the proposal
-digest and the policy digest. Any change to amount, artifact version, or policy
+digest and the policy digest. `ActionProposal` also carries the accepted
+artifact's content digest, so keeping an artifact ID while changing its content
+does not preserve approval. Any change to amount, artifact content, or policy
 invalidates the old authority.
 
 `role_resolver` obtains real role membership from IAM or an organizational
@@ -34,11 +41,16 @@ directory. Callers cannot gain approval authority by self-asserting a role.
 Missing reviewers, expiration, and explicit rejection fail closed. Allowed and
 denied tickets are terminal.
 
+Approval policy changes use the same gate. `install_policy()` accepts only a
+policy-update proposal bound to the new policy content and authorized under the
+currently active policy.
+
 ## Public interface
 
 | Object | Responsibility |
 |---|---|
 | `ApprovalPolicy` | Auto, review, and hard-deny boundaries |
+| `ApprovalTier` | Amount band and roles for the second routing decision |
 | `ApprovalTicket` | Version-bound, expiring review task |
 | `ApprovalAttestation` | One reviewer's role and decision |
 | `ApprovalEvaluation` | Route, receipt, and optional ticket |
@@ -54,10 +66,11 @@ uv run python governance/a-approval-gate/example.py
 uv run pytest governance/a-approval-gate/test_pattern.py -q
 uv run python governance/payroll-lab/approval_gate_lab.py
 uv run python governance/payroll-lab/approval_gate_lab.py --changed
+uv run python governance/payroll-lab/approval_gate_lab.py --policy-change
 ```
 
 ## Where this pattern sits
 
-Govern × Route. Approval chooses a responsibility path. Blast Radius constrains
+Governance × Router. Approval chooses a responsibility path. Blast Radius constrains
 impact, Progressive Commitment checks current authority, and Observability keeps
 the causal evidence.

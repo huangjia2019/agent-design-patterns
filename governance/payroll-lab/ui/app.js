@@ -50,17 +50,17 @@ const presentation = {
     digestLabel: "哈希",
   },
   "37": {
-    eyebrow: "APPROVAL ROUTE",
-    title: "一项高风险付款，怎样走完审批",
+    eyebrow: "DOUBLE ROUTING",
+    title: "先定走哪条路，再定由谁签字",
     left: {
-      kicker: "风险路由",
-      title: "先解释为什么必须等人",
+      kicker: "第一次路由",
+      title: "自动放行、人审还是硬拒绝",
       labels: ["审批路线", "触发理由", "票据有效期", "提案摘要"],
       tone: "warning",
     },
     right: {
-      kicker: "双人复核",
-      title: "角色和人都必须独立",
+      kicker: "第二次路由",
+      title: "金额档位决定谁来签字",
       labels: ["第一位审批人", "第二位审批人", "最终决定", "回执到期"],
       tone: "success",
     },
@@ -272,19 +272,21 @@ function renderApprovalGate(result) {
     $("#trace-status").textContent = "审批时间线";
   } else {
     const changed = result.changed;
-    $("#left-kicker").textContent = "版本逃逸实验";
-    $("#left-title").textContent = "审批后只改 1 元";
-    setLabels("left", ["原提案摘要", "新提案摘要", "新金额", "旧审批可用"]);
-    $("#naive-acceptance").textContent = changed.original_digest;
-    $("#naive-receipts").textContent = changed.changed_digest;
-    $("#naive-payment").textContent = money(changed.changed_amount);
+    $("#left-kicker").textContent = "真实版本漂移";
+    $("#left-title").textContent = "审批后补回 E0007 与 E0012";
+    setLabels("left", ["补发对象", "金额变化", "工件摘要", "旧审批可用"]);
+    $("#naive-acceptance").textContent = changed.restored_ids.join(" + ");
+    $("#naive-receipts").textContent =
+      `${money(changed.delta_amount)} / ${changed.changed_subject_count} 人`;
+    $("#naive-payment").textContent =
+      `${changed.original_artifact_digest} → ${changed.changed_artifact_digest}`;
     $("#naive-audit").textContent =
       changed.old_approval_authorizes ? "是" : "否";
     $("#right-kicker").textContent = "执行边界";
     $("#right-title").textContent = "支付适配器重新仲裁";
-    setLabels("right", ["审批回执", "其他控制", "付款结果", "拒绝原因"]);
-    $("#governed-approval").textContent = "仍绑定原提案";
-    $("#governed-radius").textContent = "已绑定新提案";
+    setLabels("right", ["原提案摘要", "新提案摘要", "付款结果", "拒绝原因"]);
+    $("#governed-approval").textContent = changed.original_digest;
+    $("#governed-radius").textContent = changed.changed_digest;
     $("#governed-authority").textContent = "0 笔";
     $("#governed-audit").textContent =
       changed.adapter_result.includes("approval-gate")

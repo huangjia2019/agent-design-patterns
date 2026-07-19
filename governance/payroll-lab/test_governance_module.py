@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 import sys
 from dataclasses import replace
 
@@ -19,6 +20,7 @@ TIMES = governance_lab.TIMES
 approval = governance_lab.approval
 run_changed_after_approval = governance_lab.run_changed_after_approval
 run_approval_gate = governance_lab.run_approval_gate
+run_approval_policy_change = governance_lab.run_approval_policy_change
 run_blast_radius = governance_lab.run_blast_radius
 run_governed = governance_lab.run_governed
 run_naive = governance_lab.run_naive
@@ -95,9 +97,46 @@ def test_approval_scene_exposes_route_roles_and_bound_receipt() -> None:
 def test_approval_scene_changed_variant_fails_at_approval_binding() -> None:
     result = run_approval_gate(changed_after_approval=True)
 
+    assert result["changed"]["restored_ids"] == ("E0007", "E0012")
+    assert result["changed"]["delta_amount"] == 38_444.0
+    assert result["changed"]["changed_subject_count"] == 800
+    assert (
+        result["changed"]["original_artifact_digest"]
+        != result["changed"]["changed_artifact_digest"]
+    )
     assert not result["changed"]["old_approval_authorizes"]
     assert "invalid receipts: approval-gate" in result["changed"]["adapter_result"]
     assert result["state"]["payment_count"] == 0
+
+
+def test_approval_policy_change_is_approved_under_the_old_policy() -> None:
+    result = run_approval_policy_change()
+
+    assert result["route"] == "human_review"
+    assert result["required_roles"] == ("governance-owner", "risk-owner")
+    assert result["first_decision"] == "pending"
+    assert result["final_decision"] == "allowed"
+    assert result["installed_policy_version"] == 2
+    assert result["approved_under_policy"] != result["installed_policy_digest"]
+
+
+def test_equal_total_artifact_drift_changes_the_proposal_binding() -> None:
+    bench.prepare()
+    original = bench.release_proposal()
+    with sqlite3.connect(bench.ACTION_LAB / "payroll.db") as con:
+        con.execute(
+            "UPDATE employees SET bank_account=? WHERE emp_id='E0042'",
+            ("6222-0042-REVIEW",),
+        )
+        con.commit()
+    changed = bench.release_proposal()
+
+    assert changed.amount == original.amount
+    assert changed.subject_count == original.subject_count
+    assert changed.contract_digest == original.contract_digest
+    assert changed.artifact_id == original.artifact_id
+    assert changed.artifact_digest != original.artifact_digest
+    assert changed.digest != original.digest
 
 
 def test_sibling_batches_are_locally_legal_but_share_the_parent_window() -> None:

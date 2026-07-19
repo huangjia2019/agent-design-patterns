@@ -25,6 +25,12 @@ raw acceptance receipt does not identify the policy version that judged it;
 the governance contract makes that change visible through `PolicyRef` and
 `policy_digest`.
 
+Lecture 37 routes twice: first to auto-allow, human review, or deny, then from
+human review to an amount-based signing tier. Its variant restores E0007 and
+E0012 after approval, changing the accepted artifact by 38,444 while the
+payment adapter rejects the old receipt. A second CLI scene sends an approval
+policy update through the active gate before installation.
+
 Lecture 39 adds an evidence-bound authority chain. Five real payroll department
 slices support each one-level promotion. Shadow execution remains non-live, a
 20-person canary fits LIMITED authority, the full payroll does not, and the
@@ -41,6 +47,8 @@ uv run python governance/payroll-lab/run_governance_module.py --mode naive
 uv run python governance/payroll-lab/run_governance_module.py --mode governed
 uv run python governance/payroll-lab/run_governance_module.py --mode changed
 uv run python governance/payroll-lab/run_governance_module.py --mode policy-drift
+uv run python governance/payroll-lab/approval_gate_lab.py --changed
+uv run python governance/payroll-lab/approval_gate_lab.py --policy-change
 uv run python governance/payroll-lab/progressive_commitment_lab.py
 uv run python governance/payroll-lab/progressive_commitment_lab.py --variant
 uv run pytest governance -q

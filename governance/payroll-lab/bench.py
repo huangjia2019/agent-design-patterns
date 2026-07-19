@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
 import sqlite3
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 
@@ -51,8 +52,10 @@ collaboration = load_module(
 class PayrollReleaseArtifact:
     month: str
     employee_count: int
+    employee_ids: tuple[str, ...]
     amount: float
     exception_ids: tuple[str, ...]
+    settlement_digest: str
 
 
 @dataclass(frozen=True)
@@ -87,6 +90,7 @@ def prepare() -> dict:
                 proposal_id TEXT PRIMARY KEY,
                 proposal_digest TEXT NOT NULL,
                 artifact_id TEXT NOT NULL,
+                artifact_digest TEXT NOT NULL,
                 action TEXT NOT NULL,
                 amount REAL NOT NULL,
                 subject_count INTEGER NOT NULL,
@@ -163,26 +167,50 @@ def payroll_truth() -> PayrollReleaseArtifact:
     if not payroll_db.exists():
         prepare()
     with sqlite3.connect(payroll_db) as con:
-        employee_count, amount = con.execute(
-            "SELECT COUNT(*), SUM(e.base_salary) "
+        rows = con.execute(
+            "SELECT p.emp_id, e.bank_account, e.base_salary "
             "FROM payroll p JOIN employees e ON e.emp_id=p.emp_id "
-            "WHERE p.month=? AND p.status='PAID'",
+            "WHERE p.month=? AND p.status='PAID' ORDER BY p.emp_id",
             (MONTH,),
-        ).fetchone()
+        ).fetchall()
         exception_ids = tuple(
             row[0]
             for row in con.execute(
                 "SELECT emp_id FROM payroll "
                 "WHERE month=? AND status='REVERSED' ORDER BY emp_id",
                 (MONTH,),
+                )
             )
-        )
+    settlement_digest = hashlib.sha256(
+        json.dumps(
+            rows,
+            ensure_ascii=True,
+            separators=(",", ":"),
+        ).encode()
+    ).hexdigest()[:16]
     return PayrollReleaseArtifact(
         MONTH,
-        int(employee_count),
-        float(amount),
+        len(rows),
+        tuple(str(employee_id) for employee_id, _account, _amount in rows),
+        float(sum(float(amount) for _employee_id, _account, amount in rows)),
         exception_ids,
+        settlement_digest,
     )
+
+
+def reinstate_reversed_payroll() -> PayrollReleaseArtifact:
+    """Add the two reviewed exceptions back to the payable settlement."""
+    payroll_db = ACTION_LAB / "payroll.db"
+    if not payroll_db.exists():
+        prepare()
+    with sqlite3.connect(payroll_db) as con:
+        con.execute(
+            "UPDATE payroll SET status='PAID' "
+            "WHERE month=? AND emp_id IN ('E0007', 'E0012')",
+            (MONTH,),
+        )
+        con.commit()
+    return payroll_truth()
 
 
 def payroll_department_slices(
@@ -249,7 +277,10 @@ def reviewed_artifact():
         objective="release the reviewed month-end payroll artifact to governance",
         output_schema="PayrollReleaseArtifact",
         accountable_owner="payroll-controller",
-        input_refs=(f"sqlite://payroll.db?month={MONTH}",),
+        input_refs=tuple(
+            f"sqlite://payroll.db?month={MONTH}&emp_id={employee_id}"
+            for employee_id in truth.employee_ids
+        ),
         constraints=(
             "release amount must match the PAID ledger",
             "reversed rows must remain outside the payment artifact",
@@ -284,6 +315,24 @@ def reviewed_artifact():
     return contract, artifact, receipt
 
 
+def artifact_content_digest(artifact) -> str:
+    """Bind governance to the exact accepted payload, not only its display ID."""
+    canonical = json.dumps(
+        {
+            "artifact_id": artifact.artifact_id,
+            "contract_digest": artifact.contract_digest,
+            "schema": artifact.schema,
+            "produced_by": artifact.produced_by,
+            "payload": asdict(artifact.payload),
+            "evidence_refs": artifact.evidence_refs,
+        },
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    return hashlib.sha256(canonical.encode()).hexdigest()[:16]
+
+
 def release_proposal(
     *,
     version: int = 1,
@@ -298,6 +347,7 @@ def release_proposal(
         version=version,
         contract_digest=contract.digest,
         artifact_id=artifact.artifact_id,
+        artifact_digest=artifact_content_digest(artifact),
         requested_by="payroll-agent",
         action="payroll.disburse",
         resource_scope=(f"payroll:{MONTH}", "bank:payroll"),
@@ -328,6 +378,7 @@ def release_department_proposal(department: str) -> ActionProposal:
         version=1,
         contract_digest=contract.digest,
         artifact_id=artifact.artifact_id,
+        artifact_digest=artifact_content_digest(artifact),
         requested_by="payroll-agent",
         action="payroll.disburse",
         resource_scope=(
@@ -359,6 +410,7 @@ def release_limited_proposal(*, limit: int = 20) -> ActionProposal:
         version=1,
         contract_digest=contract.digest,
         artifact_id=artifact.artifact_id,
+        artifact_digest=artifact_content_digest(artifact),
         requested_by="payroll-agent",
         action="payroll.disburse",
         resource_scope=(
@@ -390,11 +442,12 @@ def release_limited_proposal(*, limit: int = 20) -> ActionProposal:
 def persist_proposal(proposal: ActionProposal, status: str = "PROPOSED") -> None:
     with sqlite3.connect(CONTROL_DB) as con:
         con.execute(
-            "INSERT OR REPLACE INTO proposals VALUES (?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO proposals VALUES (?,?,?,?,?,?,?,?)",
             (
                 proposal.proposal_id,
                 proposal.digest,
                 proposal.artifact_id,
+                proposal.artifact_digest,
                 proposal.action,
                 proposal.amount,
                 proposal.subject_count,
@@ -650,6 +703,7 @@ def state() -> dict:
                 "employee_count": truth.employee_count,
                 "amount": truth.amount,
                 "exception_ids": truth.exception_ids,
+                "settlement_digest": truth.settlement_digest,
             }
             if truth
             else None

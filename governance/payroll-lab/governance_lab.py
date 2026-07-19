@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
-from dataclasses import asdict, replace
+from dataclasses import asdict
 from pathlib import Path
 
 from governance_payroll_imports import load_local
@@ -58,8 +58,18 @@ TIMES = {
     "commit": "2026-07-17T10:07:00+00:00",
 }
 APPROVER_ROLES = {
+    "olivia": ("payroll-operator",),
+    "sam": ("payroll-supervisor",),
+    "frank": ("finance-controller",),
     "alice": ("payroll-controller",),
     "bob": ("treasury-controller",),
+    "carol": ("governance-owner",),
+    "dave": ("risk-owner",),
+}
+APPROVER_BY_ROLE = {
+    role: approver_id
+    for approver_id, roles in APPROVER_ROLES.items()
+    for role in roles
 }
 GOVERNANCE_ROLES = {
     "governance-admin": ("governance-owner",),
@@ -107,6 +117,7 @@ def run_approval_gate(*, changed_after_approval: bool = False) -> dict:
     """Run the lecture-37 route, two-person review, and version-binding scene."""
     bench.prepare()
     proposal = bench.release_proposal()
+    original_truth = bench.payroll_truth()
     gate = approval_controller()
     routed = gate.evaluate(proposal, now=TIMES["proposal"])
     bench.persist_receipt(routed.receipt)
@@ -191,12 +202,8 @@ def run_approval_gate(*, changed_after_approval: bool = False) -> dict:
         ),
     }
     if changed_after_approval:
-        changed = replace(
-            proposal,
-            version=2,
-            amount=proposal.amount + 1,
-            idempotency_key=f"{proposal.idempotency_key}-changed",
-        )
+        changed_truth = bench.reinstate_reversed_payroll()
+        changed = bench.release_proposal(version=2)
         allowed = gate.authorize(
             changed,
             final.receipt,
@@ -224,12 +231,95 @@ def run_approval_gate(*, changed_after_approval: bool = False) -> dict:
         result["changed"] = {
             "original_digest": proposal.digest,
             "changed_digest": changed.digest,
+            "original_artifact_digest": proposal.artifact_digest,
+            "changed_artifact_digest": changed.artifact_digest,
             "changed_amount": changed.amount,
+            "changed_subject_count": changed.subject_count,
+            "delta_amount": changed.amount - proposal.amount,
+            "restored_ids": tuple(
+                employee_id
+                for employee_id in changed_truth.employee_ids
+                if employee_id not in original_truth.employee_ids
+            ),
             "old_approval_authorizes": allowed,
             "adapter_result": adapter_result,
         }
+        result["timeline"] = (
+            *result["timeline"],
+            {
+                "sequence": 4,
+                "event_type": "approval.binding_rejected",
+                "control": "payment-adapter",
+                "decision": "denied",
+                "summary": (
+                    "E0007 and E0012 changed the accepted artifact "
+                    "and the requested payment"
+                ),
+                "event_hash": changed.digest,
+            },
+        )
     result["state"] = bench.state()
     return result
+
+
+def run_approval_policy_change() -> dict:
+    """Approve a new ApprovalPolicy through the old policy before installing it."""
+    bench.prepare()
+    gate = approval_controller()
+    next_policy = approval.ApprovalPolicy(
+        version=2,
+        auto_allow_max_amount=20_000.0,
+    )
+    proposal = approval.ActionProposal(
+        proposal_id="approval-policy-update::v2",
+        version=2,
+        contract_digest="governance-policy-change::v1",
+        artifact_id=next_policy.policy_id,
+        artifact_digest=next_policy.ref.content_digest,
+        requested_by="governance-agent",
+        action="governance.approval-policy.update",
+        resource_scope=(f"policy:{next_policy.policy_id}",),
+        idempotency_key="approval-policy-update::v2",
+        risk=approval.RiskLevel.CRITICAL,
+        reversibility=approval.Reversibility.REVERSIBLE,
+        subject_count=1,
+        evidence_refs=("change-request://approval-policy/v2",),
+    )
+    bench.persist_proposal(proposal)
+    routed = gate.evaluate(proposal, now=TIMES["proposal"])
+    first = gate.attest(
+        routed.ticket.ticket_id,
+        approver_id="carol",
+        role="governance-owner",
+        approved=True,
+        at=TIMES["approval_1"],
+    )
+    final = gate.attest(
+        routed.ticket.ticket_id,
+        approver_id="dave",
+        role="risk-owner",
+        approved=True,
+        at=TIMES["approval_2"],
+    )
+    installed = gate.install_policy(
+        next_policy,
+        proposal=proposal,
+        receipt=final.receipt,
+        at=TIMES["authority"],
+    )
+    bench.persist_receipt(final.receipt)
+    return {
+        "mode": "approval-policy-change",
+        "route": routed.route.value,
+        "required_roles": routed.ticket.required_roles,
+        "first_decision": first.receipt.decision.value,
+        "final_decision": final.receipt.decision.value,
+        "proposal_digest": proposal.digest,
+        "approved_under_policy": final.receipt.policy_digest,
+        "installed_policy_version": next_policy.version,
+        "installed_policy_digest": installed.digest,
+        "state": bench.state(),
+    }
 
 
 def containment_controller() -> object:
@@ -476,20 +566,15 @@ def autonomous_credential(progressive_control) -> object:
 def _real_upstream_receipts(proposal) -> tuple[object, object]:
     gate = approval_controller()
     routed = gate.evaluate(proposal, now=TIMES["proposal"])
-    gate.attest(
-        routed.ticket.ticket_id,
-        approver_id="alice",
-        role="payroll-controller",
-        approved=True,
-        at=TIMES["approval_1"],
-    )
-    final = gate.attest(
-        routed.ticket.ticket_id,
-        approver_id="bob",
-        role="treasury-controller",
-        approved=True,
-        at=TIMES["approval_2"],
-    )
+    final = routed
+    for index, role in enumerate(routed.ticket.required_roles, start=1):
+        final = gate.attest(
+            routed.ticket.ticket_id,
+            approver_id=APPROVER_BY_ROLE[role],
+            role=role,
+            approved=True,
+            at=TIMES[f"approval_{min(index, 2)}"],
+        )
     radius = containment_controller()
     lease = radius.reserve(
         proposal,
@@ -962,58 +1047,9 @@ def run_governed() -> dict:
 
 
 def run_changed_after_approval() -> dict:
-    bench.prepare()
-    original = bench.release_proposal()
-    gate = approval_controller()
-    routed = gate.evaluate(original, now=TIMES["proposal"])
-    gate.attest(
-        routed.ticket.ticket_id,
-        approver_id="alice",
-        role="payroll-controller",
-        approved=True,
-        at=TIMES["approval_1"],
-    )
-    final = gate.attest(
-        routed.ticket.ticket_id,
-        approver_id="bob",
-        role="treasury-controller",
-        approved=True,
-        at=TIMES["approval_2"],
-    )
-    changed = replace(
-        original,
-        version=2,
-        amount=original.amount + 1,
-        idempotency_key=f"{original.idempotency_key}-changed",
-    )
-    allowed = gate.authorize(
-        changed,
-        final.receipt,
-        at=TIMES["authority"],
-    )
-    supporting = (
-        _supporting_control("blast-radius", changed),
-        _supporting_control("progressive-commitment", changed),
-    )
-    try:
-        bench.execute_payment(
-            changed,
-            receipts=(final.receipt, *(item[0] for item in supporting)),
-            active_policies={
-                "approval-gate": gate.policy.ref,
-                **{item[0].control: item[1] for item in supporting},
-            },
-            at=TIMES["effect"],
-        )
-    except PermissionError as error:
-        adapter_result = str(error)
-    else:
-        adapter_result = "unexpectedly paid"
+    result = run_approval_gate(changed_after_approval=True)
     return {
         "mode": "changed-after-approval",
-        "original_digest": original.digest,
-        "changed_digest": changed.digest,
-        "old_approval_authorizes": allowed,
-        "adapter_result": adapter_result,
-        "state": bench.state(),
+        **result["changed"],
+        "state": result["state"],
     }
