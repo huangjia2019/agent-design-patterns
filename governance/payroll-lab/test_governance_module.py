@@ -163,6 +163,43 @@ def test_payment_adapter_rechecks_proposal_binding() -> None:
         bench.execute_payment(
             changed,
             receipts=(final.receipt,),
+            active_policies={"approval-gate": gate.policy.ref},
+            at=TIMES["effect"],
+        )
+
+
+def test_payment_adapter_rechecks_active_policy_binding() -> None:
+    bench.prepare()
+    item = bench.release_proposal()
+    gate = approval_controller()
+    routed = gate.evaluate(item, now=TIMES["proposal"])
+    gate.attest(
+        routed.ticket.ticket_id,
+        approver_id="alice",
+        role="payroll-controller",
+        approved=True,
+        at=TIMES["approval_1"],
+    )
+    final = gate.attest(
+        routed.ticket.ticket_id,
+        approver_id="bob",
+        role="treasury-controller",
+        approved=True,
+        at=TIMES["approval_2"],
+    )
+    containment = governance_lab._supporting_control("blast-radius", item)
+    authority = governance_lab._supporting_control("progressive-commitment", item)
+    changed_policy = approval.ApprovalPolicy(version=2)
+
+    with pytest.raises(PermissionError, match="invalid receipts: approval-gate"):
+        bench.execute_payment(
+            item,
+            receipts=(final.receipt, containment[0], authority[0]),
+            active_policies={
+                "approval-gate": changed_policy.ref,
+                "blast-radius": containment[1],
+                "progressive-commitment": authority[1],
+            },
             at=TIMES["effect"],
         )
 

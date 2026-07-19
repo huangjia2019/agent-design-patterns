@@ -23,6 +23,7 @@ sys.path.insert(0, str(GOVERNANCE))
 
 from boundary_contract import (  # noqa: E402
     ActionProposal,
+    PolicyRef,
     Reversibility,
     RiskLevel,
 )
@@ -507,6 +508,7 @@ def execute_payment(
     proposal: ActionProposal,
     *,
     receipts: tuple,
+    active_policies: dict[str, PolicyRef],
     at: str,
     mode: str = "governed",
 ) -> dict:
@@ -523,11 +525,20 @@ def execute_payment(
             "payment adapter missing governance receipts: "
             + ", ".join(sorted(missing))
         )
+    missing_policies = required - set(active_policies)
+    if missing_policies:
+        raise PermissionError(
+            "payment adapter missing active policies: "
+            + ", ".join(sorted(missing_policies))
+        )
     invalid = [
         control
         for control in required
-        if by_control[control].decision.value != "allowed"
-        or by_control[control].proposal_digest != proposal.digest
+        if not by_control[control].authorizes(
+            proposal,
+            active_policies[control],
+            at=at,
+        )
     ]
     if invalid:
         raise PermissionError(

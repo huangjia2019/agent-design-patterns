@@ -84,17 +84,23 @@ def progressive_controller(policy=None):
     )
 
 
-def _supporting_receipt(control: str, proposal) -> object:
-    return approval.GovernanceReceipt(
+def _supporting_control(control: str, proposal) -> tuple[object, object]:
+    policy = approval.PolicyRef.from_content(
+        control,
+        1,
+        {"teaching_scene": "changed-proposal"},
+    )
+    receipt = approval.GovernanceReceipt(
         receipt_id=f"{control}::changed-proposal",
         control=control,
         proposal_digest=proposal.digest,
-        policy_digest=f"{control}-policy-v1",
+        policy_digest=policy.digest,
         decided_by=control,
         decision=approval.ControlDecision.ALLOWED,
         issued_at=TIMES["authority"],
         evidence_refs=(f"{control}://changed-proposal",),
     )
+    return receipt, policy
 
 
 def run_approval_gate(*, changed_after_approval: bool = False) -> dict:
@@ -197,13 +203,17 @@ def run_approval_gate(*, changed_after_approval: bool = False) -> dict:
             at=TIMES["authority"],
         )
         supporting = (
-            _supporting_receipt("blast-radius", changed),
-            _supporting_receipt("progressive-commitment", changed),
+            _supporting_control("blast-radius", changed),
+            _supporting_control("progressive-commitment", changed),
         )
         try:
             bench.execute_payment(
                 changed,
-                receipts=(final.receipt, *supporting),
+                receipts=(final.receipt, *(item[0] for item in supporting)),
+                active_policies={
+                    "approval-gate": gate.policy.ref,
+                    **{item[0].control: item[1] for item in supporting},
+                },
                 at=TIMES["effect"],
             )
         except PermissionError as error:
@@ -846,6 +856,11 @@ def run_governed() -> dict:
     payment = bench.execute_payment(
         proposal,
         receipts=(final.receipt, reservation, authority_receipt),
+        active_policies={
+            "approval-gate": gate.policy.ref,
+            "blast-radius": radius.policy_ref,
+            "progressive-commitment": commitment.policy.ref,
+        },
         at=TIMES["effect"],
     )
     _emit(
@@ -977,13 +992,17 @@ def run_changed_after_approval() -> dict:
         at=TIMES["authority"],
     )
     supporting = (
-        _supporting_receipt("blast-radius", changed),
-        _supporting_receipt("progressive-commitment", changed),
+        _supporting_control("blast-radius", changed),
+        _supporting_control("progressive-commitment", changed),
     )
     try:
         bench.execute_payment(
             changed,
-            receipts=(final.receipt, *supporting),
+            receipts=(final.receipt, *(item[0] for item in supporting)),
+            active_policies={
+                "approval-gate": gate.policy.ref,
+                **{item[0].control: item[1] for item in supporting},
+            },
             at=TIMES["effect"],
         )
     except PermissionError as error:
