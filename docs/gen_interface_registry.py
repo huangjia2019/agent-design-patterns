@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "INTERFACE-REGISTRY.md"
 
-COORDINATE_SYNC_DATE = "2026-07-16"
+COORDINATE_SYNC_DATE = "2026-07-17"
 
 # Labeled cache of ADPS canonical coordinates (control board, synced above).
 # Format: dir -> (code, name_zh, name_en, coordinate)
@@ -51,10 +51,6 @@ COORDINATES: dict[str, tuple[str, str, str, str]] = {
     "collaboration/b-fan-out-gather": ("C2", "扇出聚合", "Fan-out / Gather", "协作 × 并行"),
     "collaboration/c-adversarial-review": ("C3", "对抗评审", "Adversarial Review", "协作 × 循环"),
     "collaboration/d-handoff-chain": ("C4", "交接链", "Handoff Chain", "协作 × 链式"),
-}
-
-# Governance patterns are README-only (no reference implementation yet).
-GOVERNANCE_PLACEHOLDERS: dict[str, tuple[str, str, str, str]] = {
     "governance/a-approval-gate": ("G1", "审批门", "Approval Gate", "治理 × 路由"),
     "governance/b-blast-radius": ("G2", "爆炸半径控制", "Blast Radius Control", "治理 × 层级"),
     "governance/c-progressive-commitment": ("G3", "渐进承诺", "Progressive Commitment", "治理 × 链式"),
@@ -82,7 +78,15 @@ NOTES: dict[str, str] = {
     ),
 }
 
-MODULE_ORDER = ["perception", "memory", "reasoning", "action", "reflection", "collaboration"]
+MODULE_ORDER = [
+    "perception",
+    "memory",
+    "reasoning",
+    "action",
+    "reflection",
+    "collaboration",
+    "governance",
+]
 MODULE_ZH = {
     "perception": "感知 Perception",
     "memory": "记忆 Memory",
@@ -90,9 +94,11 @@ MODULE_ZH = {
     "action": "行动 Action",
     "reflection": "反思 Reflection",
     "collaboration": "协作 Collaboration",
+    "governance": "治理 Governance",
 }
 
 SHARED_BOUNDARY_INTERFACE = "collaboration/boundary_contract.py"
+GOVERNANCE_BOUNDARY_INTERFACE = "governance/boundary_contract.py"
 
 CONTRACT_MARKERS = (
     "not ", "never", "belongs", "boundary", "must", "only", "does not",
@@ -228,6 +234,52 @@ def shared_boundary_block() -> str:
     return "\n".join(out)
 
 
+def governance_boundary_block() -> str:
+    path = ROOT / GOVERNANCE_BOUNDARY_INTERFACE
+    source = path.read_text()
+    tree = ast.parse(source)
+    doc = ast.get_docstring(tree) or ""
+    classes, functions = public_api(tree)
+    last_commit = git(
+        "log",
+        "-1",
+        "--format=%h %ad",
+        "--date=format:%Y-%m-%d",
+        "--",
+        GOVERNANCE_BOUNDARY_INTERFACE,
+    )
+    dirty = bool(
+        git("status", "--porcelain", "--", GOVERNANCE_BOUNDARY_INTERFACE)
+    )
+
+    out = [
+        "### Shared 治理边界契约 Governance Boundary Contract",
+        "",
+        "- **Role**: cross-cutting interface shared by G1-G4; not a fifth pattern",
+    ]
+    state = (
+        f"`boundary_contract.py` {len(source.splitlines())} lines"
+        f" · last commit {last_commit or 'n/a'}"
+        f" · {'**UNCOMMITTED CHANGES**' if dirty else 'clean'}"
+    )
+    out.append(f"- **State**: {state}")
+    out.append(f"- **Summary**: {doc.split(chr(10), 1)[0]}")
+    if classes:
+        out.append(f"- **Public API**: {'; '.join(classes)}")
+    if functions:
+        out.append(f"- **Module functions**: {', '.join(functions)}")
+    out.append(
+        "- **Contract chain**:"
+        " `ActionProposal -> PolicyRef -> GovernanceReceipt`"
+    )
+    out.append(
+        "- **Authority invariant**: upstream artifact acceptance does not"
+        " grant authority to change the world."
+    )
+    out.append("")
+    return "\n".join(out)
+
+
 def main() -> None:
     head = git("rev-parse", "--short", "HEAD")
     dirty_any = bool(git("status", "--porcelain"))
@@ -293,9 +345,22 @@ def main() -> None:
         " | 协作横切接口 | `TaskContract` → `AcceptanceReceipt`"
         f" | {shared_last}{' ⚠ dirty' if shared_dirty else ''} |"
     )
-
-    for rel_dir, (code, name_zh, name_en, coordinate) in GOVERNANCE_PLACEHOLDERS.items():
-        parts.append(f"| {code} {name_zh} {name_en} | {coordinate} | README only | no impl |")
+    governance_last = git(
+        "log",
+        "-1",
+        "--format=%ad",
+        "--date=format:%m-%d",
+        "--",
+        GOVERNANCE_BOUNDARY_INTERFACE,
+    )
+    governance_dirty = bool(
+        git("status", "--porcelain", "--", GOVERNANCE_BOUNDARY_INTERFACE)
+    )
+    parts.append(
+        "| Shared 治理边界契约 Governance Boundary Contract"
+        " | 治理横切接口 | `ActionProposal` → `GovernanceReceipt`"
+        f" | {governance_last}{' ⚠ dirty' if governance_dirty else ''} |"
+    )
 
     parts.append("")
 
@@ -306,19 +371,14 @@ def main() -> None:
             parts.append(pattern_block(rel_dir))
         if module == "collaboration":
             parts.append(shared_boundary_block())
-
-    parts.append("## 治理 Governance (placeholders)")
-    parts.append("")
-    parts.append(
-        "The four governance patterns are README-only: no `pattern.py`,"
-        " no interface to register yet. G5 钩子流水线 Hooks Pipeline has no"
-        " directory (extension pattern, folded into the governance control"
-        " layer on the teaching side)."
-    )
-    parts.append("")
-    for rel_dir, (code, name_zh, name_en, coordinate) in GOVERNANCE_PLACEHOLDERS.items():
-        parts.append(f"- {code} {name_zh} {name_en} — {coordinate} — `{rel_dir}/` (README only)")
-    parts.append("")
+        if module == "governance":
+            parts.append(governance_boundary_block())
+            parts.append(
+                "G5 钩子流水线 Hooks Pipeline remains an extension"
+                " implementation mechanism and does not define a fifth"
+                " governance boundary contract."
+            )
+            parts.append("")
     parts.append("## 组合 Composition")
     parts.append("")
     parts.append(

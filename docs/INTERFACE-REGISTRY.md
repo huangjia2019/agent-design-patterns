@@ -3,11 +3,11 @@
 > **GENERATED FILE — DO NOT EDIT.** Regenerate with `python3 docs/gen_interface_registry.py`.
 >
 > **Truth for interfaces** = each pattern's `pattern.py` (module docstring contract + public API). This file is a view of it.
-> **Truth for coordinates and taxonomy** = the ADPS master control board and the [adpsagent.com](https://adpsagent.com) pattern pages; the coordinates below are a labeled cache synced 2026-07-16, and conflicts resolve toward the ADPS side.
+> **Truth for coordinates and taxonomy** = the ADPS master control board and the [adpsagent.com](https://adpsagent.com) pattern pages; the coordinates below are a labeled cache synced 2026-07-17, and conflicts resolve toward the ADPS side.
 >
 > **Citation discipline**: course lectures, whitepapers, and book chapters that quote an interface must pin the commit (`pattern.py@<hash>` in the document header). Interfaces do refactor; a pinned quote stays honest, an unpinned one rots.
 
-Generated 2026-07-17 at HEAD `d5e77ae` (working tree has uncommitted changes).
+Generated 2026-07-20 at HEAD `ebdffa8` (working tree has uncommitted changes).
 
 ## Summary
 
@@ -37,11 +37,12 @@ Generated 2026-07-17 at HEAD `d5e77ae` (working tree has uncommitted changes).
 | C2 扇出聚合 Fan-out / Gather | 协作 × 并行 | `FanOutGather` | 07-17 |
 | C3 对抗评审 Adversarial Review | 协作 × 循环 | `AdversarialReview` | 07-17 |
 | C4 交接链 Handoff Chain | 协作 × 链式 | `HandoffChain` | 07-17 |
+| G1 审批门 Approval Gate | 治理 × 路由 | `ApprovalGate` | 07-19 |
+| G2 爆炸半径控制 Blast Radius Control | 治理 × 层级 | `BlastRadiusController` | 07-20 |
+| G3 渐进承诺 Progressive Commitment | 治理 × 链式 | `ProgressiveCommitment` | 07-20 |
+| G4 可观测性 Observability Harness | 治理 × 编排 | `ObservabilityHarness` | 07-20 |
 | Shared 协作边界契约 Collaboration Boundary Contract | 协作横切接口 | `TaskContract` → `AcceptanceReceipt` | 07-17 |
-| G1 审批门 Approval Gate | 治理 × 路由 | README only | no impl |
-| G2 爆炸半径控制 Blast Radius Control | 治理 × 层级 | README only | no impl |
-| G3 渐进承诺 Progressive Commitment | 治理 × 链式 | README only | no impl |
-| G4 可观测性 Observability Harness | 治理 × 编排 | README only | no impl |
+| Shared 治理边界契约 Governance Boundary Contract | 治理横切接口 | `ActionProposal` → `GovernanceReceipt` | 07-19 |
 
 ## 感知 Perception
 
@@ -345,14 +346,62 @@ Generated 2026-07-17 at HEAD `d5e77ae` (working tree has uncommitted changes).
 - **Contract chain**: `TaskContract -> HandoffEnvelope -> ArtifactEnvelope -> AcceptanceReceipt`
 - **Version invariant**: The contract is immutable and content-addressed. Artifacts and receipts bind to that exact digest, so approval cannot drift to a different task version. This module defines the transport-neutral interface; each pattern still owns how it decomposes, dispatches, aggregates, challenges, or sequences work.
 
-## 治理 Governance (placeholders)
+## 治理 Governance
 
-The four governance patterns are README-only: no `pattern.py`, no interface to register yet. G5 钩子流水线 Hooks Pipeline has no directory (extension pattern, folded into the governance control layer on the teaching side).
+### G1 审批门 Approval Gate — `governance/a-approval-gate/`
 
-- G1 审批门 Approval Gate — 治理 × 路由 — `governance/a-approval-gate/` (README only)
-- G2 爆炸半径控制 Blast Radius Control — 治理 × 层级 — `governance/b-blast-radius/` (README only)
-- G3 渐进承诺 Progressive Commitment — 治理 × 链式 — `governance/c-progressive-commitment/` (README only)
-- G4 可观测性 Observability Harness — 治理 × 编排 — `governance/d-observability-harness/` (README only)
+- **Coordinate**: 治理 × 路由
+- **State**: `pattern.py` 503 lines · last commit 98e2c16 2026-07-19 · clean · tests: yes
+- **Summary**: Approval Gate pattern.
+- **Public API**: `ApprovalRoute` *enum*; `ApprovalTier` *dataclass*; `ApprovalPolicy` *dataclass*(ref, required_roles_for); `ApprovalAttestation` *dataclass*; `ApprovalTicket` *dataclass*(approved_roles, complete); `ApprovalEvaluation` *dataclass*; `ApprovalError` *class*; `ApprovalGate` *class*(policy, evaluate, attest, authorize, install_policy)
+- **Contract lines (from docstring)**:
+  - version-bound receipt, not a chat message or a mutable ``approved`` flag.
+  - The gate must not:
+
+### G2 爆炸半径控制 Blast Radius Control — `governance/b-blast-radius/`
+
+- **Coordinate**: 治理 × 层级
+- **State**: `pattern.py` 921 lines · last commit 5b9810c 2026-07-20 · clean · tests: yes
+- **Summary**: Blast Radius Control pattern.
+- **Public API**: `BlastBudget` *dataclass*; `ContainmentScope` *dataclass*; `BudgetUsage` *dataclass*; `LeaseStatus` *enum*; `ContainmentLease` *dataclass*; `LeaseUsage` *dataclass*; `EffectStatus` *enum*; `EffectPermit` *dataclass*; `ContainmentError` *class*; `BlastRadiusController` *class*(register_scope, seal, policy_ref, reserve, authorizes, begin_effect, effect_authorizes, confirm_effect, reservation_receipt, commit, cancel, trip_kill_switch, snapshot)
+- **Contract lines (from docstring)**:
+  - must never widen it. Before an external effect runs, the controller reserves
+  - Each external effect must then exchange part of that reservation for a one-use
+  - The controller must not:
+  - count only the leaf while ignoring aggregate parent consumption;
+
+### G3 渐进承诺 Progressive Commitment — `governance/c-progressive-commitment/`
+
+- **Coordinate**: 治理 × 链式
+- **State**: `pattern.py` 808 lines · last commit 2fcfdb7 2026-07-20 · clean · tests: yes
+- **Summary**: Progressive Commitment pattern.
+- **Public API**: `AuthorityLevel` *enum*; `IncidentSeverity` *enum*; `CapabilityProfile` *dataclass*; `ProgressivePolicy` *dataclass*(ref, profile); `RunOutcome` *dataclass*; `EvidenceWindow` *dataclass*(runs, successes, blockers, success_rate, evaluation_slices, digest); `AuthorityCredential` *dataclass*; `PromotionRequest` *dataclass*; `AuthorityTransition` *dataclass*; `CommitmentError` *class*; `ProgressiveCommitment` *class*(enroll, record_outcome, request_promotion, approve_promotion, authorize, demote, transition_history)
+- **Contract lines (from docstring)**:
+  - Promotion consumes a fresh evidence window and an explicit human decision. It
+  - is never inferred from age, model version, or a single successful run. A live
+  - The pattern must not:
+
+### G4 可观测性 Observability Harness — `governance/d-observability-harness/`
+
+- **Coordinate**: 治理 × 编排
+- **State**: `pattern.py` 442 lines · last commit ebdffa8 2026-07-20 · clean · tests: yes
+- **Summary**: Observability Harness pattern.
+- **Public API**: `RedactionPolicy` *dataclass*(apply); `EventDraft` *dataclass*; `EventRecord` *dataclass*; `TracePolicy` *dataclass*; `TraceAudit` *dataclass*; `ObservabilityError` *class*; `InMemoryEventStore` *class*(append, trace); `ObservabilityHarness` *class*(emit, record_receipt, replay, verify_hash_chain, audit)
+- **Contract lines (from docstring)**:
+  - The harness records semantic governance events in an append-only, hash-chained
+  - The harness must not:
+  - accept a child span whose parent is missing or belongs to another trace;
+
+### Shared 治理边界契约 Governance Boundary Contract
+
+- **Role**: cross-cutting interface shared by G1-G4; not a fifth pattern
+- **State**: `boundary_contract.py` 270 lines · last commit 98e2c16 2026-07-19 · clean
+- **Summary**: Shared boundary contract for governance patterns.
+- **Public API**: `RiskLevel` *enum*; `Reversibility` *enum*; `ControlDecision` *enum*; `FindingSeverity` *enum*; `ActionProposal` *dataclass*(digest); `PolicyRef` *dataclass*(digest, from_content); `GovernanceFinding` *dataclass*; `GovernanceReceipt` *dataclass*(digest, authorizes)
+- **Contract chain**: `ActionProposal -> PolicyRef -> GovernanceReceipt`
+- **Authority invariant**: upstream artifact acceptance does not grant authority to change the world.
+
+G5 钩子流水线 Hooks Pipeline remains an extension implementation mechanism and does not define a fifth governance boundary contract.
 
 ## 组合 Composition
 
