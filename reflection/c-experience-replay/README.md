@@ -15,7 +15,8 @@ heuristics); retrieval renders the hits into an upper context layer
 the current decision runs under. Every reuse writes the downstream
 outcome back (EMA); lessons reused enough that still sit below the
 health line are archived out of the pool. Deterministically checkable
-lessons with a proven track record graduate into pre-action guards
+lessons explicitly marked as deterministically checkable and backed by
+a proven track record graduate into pre-action guards
 (lecture 25), and the soft lesson retires.
 
 ## Quick start

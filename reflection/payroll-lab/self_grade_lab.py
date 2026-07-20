@@ -8,7 +8,7 @@ wrong.
 
     run 1  an introspective critic reviews the report. No external data.
            It approves. Asked to double-check, it approves again.
-    run 2  a reconciliation check: two SQL counts against the ledger.
+    run 2  a reconciliation check: two SQL queries against the ledger.
            Both errors surface immediately.
 
 The "model" here is mocked and deterministic (no API key). Its blind spot
@@ -16,31 +16,14 @@ is the realistic one: a critic that only re-reads the report can check
 consistency, not truth. Pass --strict to make the self-critic harsher and
 see what changes (spoiler: the score, not the findings).
 """
-import sqlite3
 import sys
-from pathlib import Path
 
-HERE = Path(__file__).parent
-BENCH = HERE.parent.parent / "action" / "payroll-lab"
-sys.path.insert(0, str(BENCH))
-import db as bench_db  # noqa: E402
+import bench
 
-MONTH = "2026-06"
+MONTH = bench.MONTH
 STRICT = "--strict" in sys.argv
 
-
-def month_end_state():
-    """Rebuild the bench into a known month-end state: 798 PAID, 2 REVERSED."""
-    bench_db.create()
-    con = sqlite3.connect(BENCH / "payroll.db")
-    con.execute("UPDATE payroll SET status='PAID' WHERE month=?", (MONTH,))
-    con.execute("UPDATE payroll SET status='REVERSED' WHERE month=? "
-                "AND emp_id IN ('E0007','E0012')", (MONTH,))
-    con.commit()
-    return con
-
-
-con = month_end_state()
+con = bench.month_end_state()
 
 # The report the agent wrote for finance. The numbers are internally
 # consistent with each other -- and wrong about the ledger.
@@ -61,7 +44,7 @@ def self_grade(report, strict=False):
 
 
 def reconcile(report):
-    """External signal: two SQL counts against the ledger. Cheap, deterministic."""
+    """External signal: two SQL queries against the ledger. Cheap, deterministic."""
     findings = []
     paid_db = con.execute("SELECT COUNT(*) FROM payroll WHERE month=? AND status='PAID'",
                           (MONTH,)).fetchone()[0]
@@ -87,7 +70,7 @@ for attempt in (1, 2):
     for n in notes:
         print(f"      - {n}")
 
-print("\n== run 2: reconciliation against the ledger (two SQL counts) ==")
+print("\n== run 2: reconciliation against the ledger (two SQL queries) ==")
 findings, paid_db, reversed_ids = reconcile(REPORT)
 for f in findings:
     print(f"   REJECTED: {f}")
@@ -98,5 +81,5 @@ print(f"   MONTHLY-REPORT month={MONTH} paid={paid_db} "
       f"conclusion=exceptions-pending")
 
 print(f"\n[VERDICT] same report: the self-critic approved it twice "
-      f"(score {'88' if STRICT else '96'}/100), one reconciliation query "
-      f"rejected it with {len(findings)} findings. The signal cost two SQL counts.")
+      f"(score {score}/100), one reconciliation pass rejected it with "
+      f"{len(findings)} findings. The signal cost two SQL queries.")

@@ -1,80 +1,89 @@
-# a · Generator-Critic
+# Generator-Critic
 
-> Column lecture **06-02** · pattern · Reflect × Chain
+> Lecture **06-02** · pattern · Reflect × Chain
 >
 > [中文 README](README.zh-CN.md)
 
-## The problem
+## Contract
 
-An agent drafts a customer-facing incident update, or a month-end payroll report.
-The prose sounds confident, but the important claims need external signals:
-status-page incidents, schemas, SQL reconciliation, tests, or policy clauses. If
-the same generation step is also allowed to say "looks good," the harness has no
-real reflection. It has a model endorsing its own work.
-
-Generator-Critic separates those jobs. The generator produces an artifact. The
-critic produces evidence about that artifact: score, issues, blockers, warnings.
-Then a deterministic policy decides whether the artifact can pass. The critic can
-inform the gate; it cannot grant approval by vibes.
-
-An actionable issue must name its `source` and carry `evidence`. Opinions without
-evidence are retained in `dropped_issues` for audit, but they cannot trigger a
-revision.
-
-## The pattern
-
-The topology is a short chain:
+Generator-Critic reviews one artifact in one bounded pass:
 
 ```text
-generate -> critique -> gate -> optional revision draft
+generate -> critique -> policy gate -> optional revision draft
 ```
 
-The important boundary is the last step. If a reviser drafts a better artifact, the
-result is still `NEEDS_REVISION`; this pattern does not automatically accept the
-revision without another critique. That keeps Generator-Critic distinct from
-Self-Heal Loop, where the critique/revise cycle repeats until a stop condition.
+The critic reports evidence; it does not approve the artifact. A deterministic
+`AcceptancePolicy` converts grounded issues and an evidence-backed score into
+`ACCEPTED` or `NEEDS_REVISION`. An actionable issue needs both a named `check`
+(called `source` in the notebook JSON schema) and `evidence`. Unsupported
+opinions remain visible in `dropped_issues` but cannot trigger revision.
 
-The implementation has four named pieces:
+Low scores follow the same rule: when evidence is required, a low score is
+actionable only when `Critique.score_evidence` records the rubric or check result
+behind it.
 
-- **Artifact** — the generated object under review.
-- **Issue** — one finding with severity, message, location, named source, and
-  evidence.
-- **Critique** — score plus evidence-backed issues and dropped unevidenced
-  opinions. It can report blockers and warnings, but it has no "approve" method.
-- **AcceptancePolicy** — the deterministic gate. Blockers, warnings, and score
-  thresholds are evaluated in code.
+If a reviser creates a new draft, that draft is explicitly unreviewed.
+`ChainResult.reviewed_artifact` identifies what the current pass actually judged;
+`ChainResult.revision_draft` must be submitted through `review()` in another
+explicit pass before it can be accepted.
+
+This keeps the topology honest. Repeating repair until a test, lint, build, or
+CI signal turns green belongs to the sibling
+[Self-Heal Loop](../d-self-heal-loop/README.md).
+
+## Quick start
+
+```bash
+python3 reflection/a-generator-critic/example.py
+python3 reflection/payroll-lab/generator_critic_lab.py
+python3 reflection/payroll-lab/generator_critic_lab.py --rubber-stamp
+
+uv run pytest reflection/a-generator-critic/test_pattern.py -q
+```
+
+The payroll lab reviews a report that claims 800 paid payslips while SQLite
+contains 798 `PAID` and 2 `REVERSED`. The standard critic attaches ledger and
+schema evidence, drafts a correction, and accepts it only in an explicit second
+pass. The rubber-stamp contrast has no access to those facts and approves the
+wrong report.
+
+## Reference interface
+
+| Type | Responsibility |
+|---|---|
+| `Artifact` | The generated object and its revision metadata. |
+| `Issue` | A finding with severity, location, named check, and evidence. |
+| `Critique` | Grounded issues, dropped opinions, summary, score, and score evidence. |
+| `AcceptancePolicy` | The deterministic evidence and severity gate. |
+| `ChainResult` | Separates the reviewed artifact from any unreviewed revision draft. |
+| `GeneratorCriticChain` | Runs one pass from a prompt or explicitly reviews an existing artifact. |
 
 ## Files
 
-| File | What |
+| File | What it demonstrates |
 |---|---|
-| [`pattern.py`](pattern.py) | Framework-agnostic reference: `Artifact`, `Issue`, `Critique`, `AcceptancePolicy`, and one-pass `GeneratorCriticChain`. |
-| [`shared.py`](shared.py) | Shared parser, policy, mock data, reviser, and trace helpers used by both reference notebooks. |
-| [`example.py`](example.py) | Runs an incident-update draft through a mock critic and optional reviser. No API key. |
-| [`test_pattern.py`](test_pattern.py) | Tests covering score thresholds, evidence gate, blocker/warning gates, strict parser failure, trace order, and the no-auto-accept-after-revision invariant. |
-| [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | StateGraph implementation: explicit `generate -> critique -> gate -> revise` nodes plus conditional routing. |
-| [`langchain/tutorial.ipynb`](langchain/tutorial.ipynb) | LangChain LCEL implementation: compact runnable pipe with the same shared parser and policy gate. |
-| [`../payroll-lab/generator_critic_lab.py`](../payroll-lab/generator_critic_lab.py) | Lecture 27 Payroll Lab: wired external checks, rubber-stamp critic, and pass-budget exhaustion. Repeated passes are explicit runner behavior. |
+| [`pattern.py`](pattern.py) | Framework-independent reference interface and one-pass boundary. |
+| [`shared.py`](shared.py) | Shared JSON parser, policy, deterministic fixtures, reviser, and trace renderer. |
+| [`example.py`](example.py) | Two explicit passes over a customer incident update; no API key required. |
+| [`test_pattern.py`](test_pattern.py) | Evidence, score, parser, reviewed-version, and optional-dependency invariants. |
+| [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | StateGraph nodes and conditional routing for the same contract. |
+| [`langchain/tutorial.ipynb`](langchain/tutorial.ipynb) | LCEL implementation using the same parser, policy, fixtures, and vocabulary. |
+| [`../payroll-lab/generator_critic_lab.py`](../payroll-lab/generator_critic_lab.py) | Ledger-backed critique versus a rubber-stamp critic. |
 
-## Run
+## Notebook verification
+
+Both notebooks run deterministic fake-model scenarios first and call
+`get_model()` directly in the optional real-backend section. No separate
+fake/real environment flag is required.
 
 ```bash
-python reflection/a-generator-critic/example.py
-pytest reflection/a-generator-critic/test_pattern.py -v
-
-# Payroll Lab scenes — no API key needed
-python reflection/payroll-lab/generator_critic_lab.py
-python reflection/payroll-lab/generator_critic_lab.py --stubborn
-
-# reference notebooks — deterministic verification should run with provider API keys unset
-pytest --nbmake --nbmake-timeout=120 \
+env OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
+  uv run pytest --nbmake --nbmake-timeout=120 \
   reflection/a-generator-critic/langgraph/tutorial.ipynb \
   reflection/a-generator-critic/langchain/tutorial.ipynb
 ```
 
-## Where this pattern sits
+## Matrix position
 
-Reflect (cognitive function) × Chain (execution topology). Its nearest neighbors
-are Self-Heal Loop, which repeats the critique/revise path, and Adversarial Review,
-which moves from self-reflection to an independent collaborating reviewer. See the
-[two-axis matrix](../../README.md).
+This pattern sits at **Reflect × Chain**. See the
+[two-axis matrix](../../README.md#the-28-pattern-map) for neighboring patterns.

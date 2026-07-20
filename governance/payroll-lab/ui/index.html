@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Payroll Governance Lab</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">G</div>
+      <div>
+        <strong>Payroll Governance Lab</strong>
+        <span>薪酬治理控制面</span>
+      </div>
+    </div>
+    <div class="side-label">课程实验</div>
+    <nav id="lecture-nav" class="lecture-nav" aria-label="课程实验"></nav>
+    <div class="side-actions">
+      <button id="run-module" class="button button-primary button-wide" type="button">
+        <span aria-hidden="true">▶</span> 运行完整治理链
+      </button>
+      <div class="db-indicator">
+        <span class="status-dot"></span>
+        <div>
+          <strong>SQLite 控制账本</strong>
+          <span id="db-status">基线状态</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-view="experiment" type="button">实验</button>
+        <button class="tab" data-view="database" type="button">证据账本</button>
+        <button class="tab" data-view="architecture" type="button">系统结构</button>
+      </div>
+      <button id="reset" class="button button-secondary" type="button" title="重置治理数据库">
+        <span aria-hidden="true">↻</span> 重置
+      </button>
+    </header>
+
+    <section id="view-experiment" class="view active">
+      <div class="lecture-head">
+        <div>
+          <div id="coordinate" class="eyebrow">GOVERNANCE BASELINE</div>
+          <h1 id="lecture-title">36 · 治理模块导论</h1>
+          <p id="lecture-question">一份已经验收通过的工件，凭什么还不能直接改变世界？</p>
+        </div>
+        <div class="lecture-actions">
+          <button id="run-variant" class="button button-secondary" type="button">只跑无治理桥接</button>
+          <button id="run-lecture" class="button button-primary" type="button">
+            <span aria-hidden="true">▶</span> 运行本讲
+          </button>
+        </div>
+      </div>
+
+      <div id="stage-strip" class="stage-strip" aria-label="治理阶段"></div>
+
+      <section class="metric-band" aria-label="实验状态">
+        <div class="metric">
+          <span>员工</span>
+          <strong id="metric-employees">798</strong>
+          <small>可付款工资单</small>
+        </div>
+        <div class="metric">
+          <span>放行金额</span>
+          <strong id="metric-amount">¥13,706,097</strong>
+          <small>银行实付口径</small>
+        </div>
+        <div class="metric">
+          <span>控制回执</span>
+          <strong id="metric-receipts">0</strong>
+          <small>版本绑定</small>
+        </div>
+        <div class="metric">
+          <span>因果事件</span>
+          <strong id="metric-events">0</strong>
+          <small id="trace-status">尚未运行</small>
+        </div>
+      </section>
+
+      <section class="comparison-section">
+        <div class="section-heading">
+          <div>
+            <span id="comparison-eyebrow" class="eyebrow">CONTROL PLANE COMPARISON</span>
+            <h2 id="comparison-title">同一份已验收工件，两条执行桥</h2>
+          </div>
+          <span id="run-status" class="run-status">等待运行</span>
+        </div>
+        <div class="comparison-grid">
+          <article id="comparison-left" class="comparison-panel danger">
+            <div id="left-kicker" class="panel-kicker">无治理桥接</div>
+            <h3 id="left-title">把验收通过当成执行授权</h3>
+            <dl>
+              <div><dt id="left-label-1">工件验收</dt><dd id="naive-acceptance">--</dd></div>
+              <div><dt id="left-label-2">治理回执</dt><dd id="naive-receipts">--</dd></div>
+              <div><dt id="left-label-3">付款结果</dt><dd id="naive-payment">--</dd></div>
+              <div><dt id="left-label-4">审计结论</dt><dd id="naive-audit">--</dd></div>
+            </dl>
+          </article>
+          <div class="comparison-arrow" aria-hidden="true">→</div>
+          <article id="comparison-right" class="comparison-panel success">
+            <div id="right-kicker" class="panel-kicker">完整治理链</div>
+            <h3 id="right-title">每一种权力都要留下回执</h3>
+            <dl>
+              <div><dt id="right-label-1">审批门</dt><dd id="governed-approval">--</dd></div>
+              <div><dt id="right-label-2">爆炸半径</dt><dd id="governed-radius">--</dd></div>
+              <div><dt id="right-label-3">权限凭证</dt><dd id="governed-authority">--</dd></div>
+              <div><dt id="right-label-4">轨迹审计</dt><dd id="governed-audit">--</dd></div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <section class="evidence-section">
+        <div class="section-heading">
+          <div>
+            <span id="evidence-eyebrow" class="eyebrow">SEMANTIC TRACE</span>
+            <h2 id="evidence-title">治理事件</h2>
+          </div>
+          <span id="event-count" class="run-status">0 events</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>事件</th>
+                <th>控制</th>
+                <th>决定</th>
+                <th>摘要</th>
+                <th id="evidence-digest-label">哈希</th>
+              </tr>
+            </thead>
+            <tbody id="event-rows">
+              <tr><td colspan="6" class="empty">运行完整治理链后显示因果事件</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="view-database" class="view">
+      <div class="lecture-head compact">
+        <div>
+          <div class="eyebrow">SQLITE EVIDENCE</div>
+          <h1>治理证据账本</h1>
+          <p>提案、回执、权限、预算、事件与付款事实。</p>
+        </div>
+      </div>
+      <div id="table-tabs" class="table-tabs"></div>
+      <div class="table-wrap database-table">
+        <table>
+          <thead id="db-head"></thead>
+          <tbody id="db-body">
+            <tr><td class="empty">请选择一张表</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="view-architecture" class="view">
+      <div class="lecture-head compact">
+        <div>
+          <div class="eyebrow">GOVERNANCE RUNTIME</div>
+          <h1>控制链结构</h1>
+          <p>上游工件通过验收以后，执行权从这里重新开始计算。</p>
+        </div>
+      </div>
+      <div class="architecture-flow">
+        <div class="architecture-node">
+          <span>上游</span>
+          <strong>Accepted Artifact</strong>
+          <small>内容和契约通过验收</small>
+        </div>
+        <div class="architecture-join">→</div>
+        <div class="architecture-node">
+          <span>治理边界</span>
+          <strong>ActionProposal</strong>
+          <small>绑定工件、动作与副作用</small>
+        </div>
+        <div class="architecture-join">→</div>
+        <div class="architecture-node">
+          <span>控制面</span>
+          <strong>Policy + Receipts</strong>
+          <small>审批、预算、权限</small>
+        </div>
+        <div class="architecture-join">→</div>
+        <div class="architecture-node">
+          <span>执行边界</span>
+          <strong>Effect Adapter</strong>
+          <small>重新校验后产生副作用</small>
+        </div>
+      </div>
+      <div class="contract-list">
+        <div><strong>G1 · 路由</strong><span>自动放行、人审、拒绝</span></div>
+        <div><strong>G2 · 层级</strong><span>子预算不得突破父预算</span></div>
+        <div><strong>G3 · 链式</strong><span>权限随证据逐级开放</span></div>
+        <div><strong>G4 · 编排</strong><span>统一记录因果与回执</span></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

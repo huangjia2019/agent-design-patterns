@@ -17,12 +17,16 @@ except ModuleNotFoundError as error:
 
 from ui_service import (
     LECTURES,
+    STRESS_META,
     LabError,
     database_state,
     ensure_database,
     inject_typo,
     reset_database,
-    run_lecture,
+    run_stress,
+    run_stress_gaps,
+    run_stress_matrix,
+    run_stress_vector,
     table_rows,
 )
 
@@ -57,6 +61,7 @@ async def meta() -> dict:
         "title": "Payroll Action Lab",
         "subtitle": "行动模块教学控制台",
         "lectures": list(LECTURES.values()),
+        "stress": STRESS_META,
     }
 
 
@@ -100,12 +105,38 @@ async def typo() -> dict:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
-@app.post("/api/run/{lecture}")
-async def run(lecture: str) -> dict:
+@app.post("/api/stress/matrix")
+async def stress_matrix() -> dict:
     try:
-        return await run_in_threadpool(run_lecture, lecture)
+        return await run_in_threadpool(run_stress_matrix)
+    except LabError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@app.post("/api/stress/gaps")
+async def stress_gaps() -> dict:
+    try:
+        return await run_in_threadpool(run_stress_gaps)
+    except LabError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@app.post("/api/stress/vector/{vector_id}")
+async def stress_vector(vector_id: str) -> dict:
+    try:
+        return await run_in_threadpool(run_stress_vector, vector_id)
     except KeyError as error:
-        raise HTTPException(status_code=404, detail="unknown lecture") from error
+        raise HTTPException(status_code=404, detail="unknown vector") from error
+    except LabError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@app.post("/api/stress/{level}")
+async def stress_level(level: str) -> dict:
+    try:
+        return await run_in_threadpool(run_stress, level)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail="unknown level") from error
     except LabError as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 

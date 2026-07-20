@@ -75,6 +75,7 @@ class Skill:
     triggers: list[str]
     steps: list[str]
     source: str = "human"            # human | distilled
+    source_task: str = ""
     status: SkillStatus = SkillStatus.TRIAL
     version: int = 1
     verified_against: list[str] = field(default_factory=list)
@@ -129,6 +130,10 @@ class SkillLibrary:
     def verify(self, name: str, goldens: list[GoldenQuestion],
                runner: RunnerFn) -> VerificationReport:
         skill = self.skills[name]
+        # A verification run replaces the old badge. Policy updates and new
+        # boundary cases must be able to remove a previously earned approval.
+        skill.status = SkillStatus.TRIAL
+        skill.verified_against = []
         report = VerificationReport(skill=name)
         for g in goldens:
             got = runner(skill, g.payload)
@@ -139,6 +144,10 @@ class SkillLibrary:
         if goldens and not report.failed:
             skill.status = SkillStatus.VERIFIED
             skill.verified_against = [g.name for g in goldens]
+            # Reuse outcomes belong to this verification credential. A new
+            # credential starts a fresh observation window.
+            skill.use_count = 0
+            skill.success_count = 0
             report.promoted = True
         return report
 
@@ -164,12 +173,13 @@ class SkillLibrary:
     # ── post-reuse signal ─────────────────────────────────────────────
     def record_use(self, name: str, success: bool) -> Skill:
         skill = self.skills[name]
+        if skill.status is not SkillStatus.VERIFIED:
+            raise ValueError("only VERIFIED skills can record routed outcomes")
         skill.use_count += 1
         if success:
             skill.success_count += 1
         if (skill.use_count >= self.min_uses
-                and skill.success_rate < self.demote_below
-                and skill.status is SkillStatus.VERIFIED):
+                and skill.success_rate < self.demote_below):
             skill.status = SkillStatus.TRIAL     # must re-verify
         return skill
 
@@ -179,14 +189,23 @@ class SkillLibrary:
 
 def distill_from_trace(task: str, tool_calls: list[dict[str, Any]],
                        name: str, description: str, triggers: list[str],
+                       *, succeeded: bool,
                        min_calls: int = 5, min_unique: int = 3) -> Skill | None:
-    """Hermes-style distillation trigger: only a successful trace with
+    """Hermes-inspired distillation trigger: only a successful trace with
     enough distinct tool calls is worth freezing into a skill. The
     returned skill is TRIAL — distillation earns storage, never trust."""
+    if not succeeded:
+        return None
     if len(tool_calls) < min_calls:
         return None
     if len({c.get("tool") for c in tool_calls}) < min_unique:
         return None
     steps = [f"{c['tool']}:{c.get('args', '')}" for c in tool_calls]
-    return Skill(name=name, description=description, triggers=triggers,
-                 steps=steps, source="distilled")
+    return Skill(
+        name=name,
+        description=description,
+        triggers=triggers,
+        steps=steps,
+        source="distilled",
+        source_task=task,
+    )

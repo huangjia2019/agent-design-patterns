@@ -1,30 +1,7 @@
-# Adversarial Review — LangGraph Implementation
+# Adversarial Review with LangGraph
 
-> "A review is a loop, and the loop needs a way out."
-
-This notebook builds Adversarial Review as an **explicit LangGraph loop**: a review
-node, a conditional edge that either sends the plan back for revision or exits, and
-a **back-edge** from revise to review that is, literally, the loop.
-
-The scenario is column lecture **07-04**: an AI travel assistant has assembled an
-itinerary — flight, hotel, airport taxi — and is about to confirm and pay. An
-**independent** reviewer audits it first. Here the reviewer catches a taxi whose ETA
-lands after boarding closes; the loop sends it back, an earlier taxi is booked, and
-the second review comes back clean.
-
-The deterministic gate (`ReviewGate` from [`pattern.py`](../pattern.py)) decides
-admission — a plan with an open blocker never confirms. The model finds faults; the
-gate, not the model, grants passage.
-
-## Two implementations, two philosophies
-
-| | `langgraph/` (this notebook) | `claude-agent-sdk/` |
-|---|---|---|
-| **The loop** | An explicit back-edge: `revise → review`. Visible in LangGraph Studio. | A Python `for` loop that re-spawns the critic subagent each round. |
-| **Independence** | You isolate: the review node reads only the plan. | Built in — the critic subagent runs in a fresh conversation, sees only the plan. |
-| **Gate** | `route` reuses `ReviewGate`. | Python reuses `ReviewGate`. |
-
-Same pattern, same `pattern.py` gate, two ways to wire the loop.
+This tutorial makes the `review -> revise -> review` loop a visible graph back-edge.
+It reuses the contract, receipt, and gate from [`pattern.py`](../pattern.py).
 
 ## Setup
 
@@ -33,164 +10,195 @@ from __future__ import annotations
 
 import os
 import sys
+from dataclasses import dataclass, replace
 from typing import TypedDict
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "..")))
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "../../..")))
 
-from langgraph.graph import START, END, StateGraph
+from langgraph.graph import END, START, StateGraph
 
-from pattern import Objection, ReviewGate, Severity   # the deterministic gate + types
-
-print("Imports ready")
+from pattern import (
+    ArtifactEnvelope,
+    Objection,
+    ReviewGate,
+    ReviewPanel,
+    ReviewPolicy,
+    ReviewReceipt,
+    ReviewRequest,
+    ReviewerSpec,
+    Severity,
+    TaskContract,
+)
 ```
 
-    Imports ready
-
-## Step 1 — State: the plan, the objections, the round counter
-
-The round counter is what makes the loop safe. Without it, a reviewer that keeps
-finding new faults would loop forever. `MAX_ROUNDS` is the way out.
+## One contract and one candidate
 
 ```python
+@dataclass(frozen=True)
+class TravelPlan:
+    taxi_eta: str
+    boarding: str
+
+
+CONTRACT = TaskContract(
+    contract_id="confirm-trip",
+    version=1,
+    objective="confirm one reviewed itinerary",
+    output_schema="TravelPlan",
+    accountable_owner="travel-controller",
+    boundary="reviewers may object; only the gate may confirm",
+)
+
+
+def bind(plan: TravelPlan, revision: int, producer: str):
+    return ArtifactEnvelope(
+        artifact_id=f"travel-plan-r{revision}",
+        contract_digest=CONTRACT.digest,
+        schema=CONTRACT.output_schema,
+        produced_by=producer,
+        payload=plan,
+        evidence_refs=("booking://flight-42", "booking://taxi-7"),
+    )
+
+
+def fingerprint(plan: TravelPlan) -> str:
+    return f"{plan.taxi_eta}|{plan.boarding}"
+```
+
+## A reviewer that can object, not approve
+
+```python
+async def review_boarding(request):
+    plan = request.artifact.payload
+    if plan.taxi_eta <= plan.boarding:
+        return ()
+    return (
+        Objection(
+            code="taxi_after_boarding",
+            rule_id="boarding-time",
+            severity=Severity.BLOCKER,
+            field="taxi_eta",
+            claim=f"taxi={plan.taxi_eta} boarding={plan.boarding}",
+            evidence_refs=("booking://flight-42", "booking://taxi-7"),
+        ),
+    )
+
+
+PANEL = ReviewPanel(
+    "travel-review-panel",
+    (
+        ReviewerSpec(
+            reviewer_id="boarding-reviewer",
+            actor_id="travel-risk-agent",
+            rule_ids=("boarding-time",),
+            evidence_scope=("read:flight", "read:taxi"),
+            review=review_boarding,
+        ),
+    ),
+)
+POLICY = ReviewPolicy(
+    rubric_version="travel-release-v1",
+    required_rule_ids=("boarding-time",),
+    max_rounds=3,
+)
 GATE = ReviewGate()
-MAX_ROUNDS = 3
+```
 
+The reviewer declares which rules it checks. A clean objection list is useful only
+when the resulting `ReviewReceipt` also proves that every required rule was checked.
 
+## Graph state and nodes
+
+```python
 class ReviewState(TypedDict):
-    plan: dict
-    objections: list
-    round: int
-
-print("State ready — note the round counter, the loop's safety valve")
-```
-
-    State ready — note the round counter, the loop's safety valve
-
-## Step 2 — the review node: an independent critic
-
-The review node reads **only** `state["plan"]` — never how the plan was built. That
-is context isolation, done structurally. It returns objections, never an approval.
-
-```python
-def make_review(reviewer):
-    def review(state: ReviewState) -> dict:
-        return {"objections": reviewer(state["plan"])}   # sees only the plan
-    return review
+    artifact: ArtifactEnvelope
+    revision: int
+    receipt: ReviewReceipt | None
+    outcome: str
 
 
-def mock_reviewer(plan: dict) -> list:
-    """Independent check with no model: does the taxi make boarding?"""
-    if plan["taxi_eta"] > plan["boarding"]:
-        return [Objection(Severity.BLOCKER, "taxi",
-                          f"taxi arrives {plan['taxi_eta']}, boarding {plan['boarding']}").__dict__]
-    return []
+async def review_node(state: ReviewState) -> dict:
+    artifact = state["artifact"]
+    request = ReviewRequest(
+        contract=CONTRACT,
+        artifact=artifact,
+        artifact_revision=state["revision"],
+        artifact_fingerprint=fingerprint(artifact.payload),
+        rubric_version=POLICY.rubric_version,
+    )
+    receipt = await PANEL.review(request, POLICY)
+    return {"receipt": receipt}
 
-print("Review node ready")
-```
 
-    Review node ready
-
-## Step 3 — the loop: route, revise, and the way out
-
-`route` is the conditional edge. It reuses `ReviewGate` to ask "any open blocker?"
-If yes and there is round budget left, go revise. Otherwise exit. `revise` fixes the
-blocker and bumps the round counter.
-
-```python
 def route(state: ReviewState) -> str:
-    blockers = [o for o in state["objections"] if o["severity"] == Severity.BLOCKER]
-    return "revise" if blockers and state["round"] < MAX_ROUNDS else END
+    receipt = state["receipt"]
+    if GATE.may_confirm(receipt):
+        return "confirm"
+    if not receipt.complete or state["revision"] + 1 >= POLICY.max_rounds:
+        return "hold"
+    return "revise"
 
 
-def revise(state: ReviewState) -> dict:
-    plan = dict(state["plan"])
-    plan["taxi_eta"] = "19:00"                      # book an earlier taxi
-    return {"plan": plan, "round": state["round"] + 1}
+def revise_node(state: ReviewState) -> dict:
+    revision = state["revision"] + 1
+    revised = replace(state["artifact"].payload, taxi_eta="19:00")
+    return {
+        "artifact": bind(revised, revision, "travel-reviser"),
+        "revision": revision,
+    }
 
-print("Loop parts ready")
+
+def confirm_node(state: ReviewState) -> dict:
+    return {"outcome": "confirmed"}
+
+
+def hold_node(state: ReviewState) -> dict:
+    return {"outcome": "held_for_human"}
 ```
 
-    Loop parts ready
-
-## Step 4 — wire the graph (the back-edge is the loop)
-
-`START → review → (route) → revise → review …`. The edge from `revise` back to
-`review` is the loop. The conditional edge from `review` is the only way out.
+## Wire the loop
 
 ```python
-def build_graph(reviewer):
-    g = StateGraph(ReviewState)
-    g.add_node("review", make_review(reviewer))
-    g.add_node("revise", revise)
-    g.add_edge(START, "review")
-    g.add_conditional_edges("review", route, ["revise", END])   # loop or exit
-    g.add_edge("revise", "review")                              # back-edge = the loop
-    return g.compile()
-
-print("Graph builder ready")
+graph = StateGraph(ReviewState)
+graph.add_node("review", review_node)
+graph.add_node("revise", revise_node)
+graph.add_node("confirm", confirm_node)
+graph.add_node("hold", hold_node)
+graph.add_edge(START, "review")
+graph.add_conditional_edges(
+    "review",
+    route,
+    {"revise": "revise", "confirm": "confirm", "hold": "hold"},
+)
+graph.add_edge("revise", "review")
+graph.add_edge("confirm", END)
+graph.add_edge("hold", END)
+app = graph.compile()
 ```
 
-    Graph builder ready
-
-## Step 5 — run it (mock, no API key)
-
-The initial plan has a taxi arriving 19:40, ten minutes after boarding closes at
-19:30. The reviewer should catch it, the loop should revise once, and the second
-review should come back clean.
+Run it:
 
 ```python
-app = build_graph(mock_reviewer)
-out = app.invoke({"plan": {"taxi_eta": "19:40", "boarding": "19:30"},
-                  "objections": [], "round": 0})
-print("final round:    ", out["round"])
-print("final objections:", out["objections"])
-print("final taxi_eta: ", out["plan"]["taxi_eta"])
+out = await app.ainvoke(
+    {
+        "artifact": bind(TravelPlan("19:40", "19:30"), 0, "travel-author"),
+        "revision": 0,
+        "receipt": None,
+        "outcome": "",
+    }
+)
+print(out["outcome"], out["artifact"].artifact_id, out["receipt"].blockers)
 ```
 
-    final round:     1
-    final objections: []
-    final taxi_eta:  19:00
+The graph exits through `confirm` only for a complete receipt with zero blockers.
+Missing rule coverage, reviewer failure, or an exhausted repair budget exits through
+`hold`.
 
-The loop ran review → revise → review and converged: the blocker in round 0
-was gone by round 1, so `route` sent it to `END`. No plan with an open blocker ever
-reached the exit.
+## Production notes
 
-### Real run — a model-backed reviewer
-
-Swap `mock_reviewer` for a reviewer that calls a model with structured output
-(`model.with_structured_output(list[Objection])`). The loop, the gate, and the
-back-edge do not change — only how objections are produced.
-
-```python
-# from model_config import get_model
-# model = get_model()
-# def model_reviewer(plan):
-#     critic = model.with_structured_output(...)      # returns list[Objection]
-#     return critic.invoke(REVIEW_PROMPT.format(plan=plan))
-# app = build_graph(model_reviewer)
-print("Swap mock_reviewer for a model-backed reviewer; the loop is unchanged.")
-```
-
-    Swap mock_reviewer for a model-backed reviewer; the loop is unchanged.
-
-## What LangGraph gives you here
-
-1. **The loop is a first-class edge.** `revise → review` makes "review again after a
-   fix" a visible part of the graph, not a hidden `while`.
-2. **A guaranteed way out.** The `round < MAX_ROUNDS` check in `route` is the
-   difference between a review loop and an infinite one.
-3. **The gate is reused, not reinvented.** `route` calls `ReviewGate`, the same
-   deterministic rule the framework-agnostic `pattern.py` and its tests use.
-
-## When this breaks
-
-| Failure | In this graph |
-|---|---|
-| **Rubber stamp** | The review node reading the planner's trace, not just the plan. Keep it reading only `state["plan"]`. |
-| **Infinite loop** | Dropping the `round < MAX_ROUNDS` guard in `route`. The counter is not optional. |
-| **Severity laundering** | A revise step that downgrades a blocker to a warning to escape. Severity must have an objective basis. |
-
-Next: the same pattern with the Claude Agent SDK, where the critic's independence
-is built into the subagent primitive →
-[`../claude-agent-sdk/tutorial.md`](../claude-agent-sdk/tutorial.md).
+- Give each reviewer a workload identity. An `actor_id` string is a teaching
+  contract, not proof of process isolation.
+- Persist `ReviewReceipt` and the final acceptance decision together.
+- Add timeout and retry policy around reviewer calls.
+- Keep the rubric version under change control. A gate cannot invent a missing rule.

@@ -133,13 +133,25 @@ MOCK_RETURNS = [
     '{"source":"attendance","line_items":{"基本工资":3100000,"社保代扣":120000,"加班费":250000}}',
 ]
 
-readings = [SourceResult(**json.loads(r)) for r in MOCK_RETURNS]
+def to_source_result(payload: dict) -> SourceResult:
+    source = payload["source"]
+    return SourceResult.from_mapping(
+        source_id=source,
+        snapshot_ref=f"snapshot://{source}/2026-06-30T23:59:59Z",
+        period="2026-06",
+        unit="CNY",
+        line_items=payload["line_items"],
+    )
+
+readings = [to_source_result(json.loads(r)) for r in MOCK_RETURNS]
 report = Reconciler(tol=1.0).reconcile(readings)      # the SAME gather as the LangGraph version
 
-print("agreed:", report["agreed_items"])
-for rc in report["root_causes"]:
-    item, gap, lo, hi = rc["item"], rc["gap"], rc["low_sources"], rc["high_sources"]
-    print(f"located: {item} gap {gap:,.0f} -> {lo} low vs {hi} high")
+print("agreed:", list(report.agreed_items))
+for verdict in report.attributable_divergences:
+    print(
+        f"located: {verdict.item} gap {verdict.gap:,.0f} -> "
+        f"{list(verdict.low_sources)} low vs {list(verdict.high_sources)} high"
+    )
 ```
 
     agreed: ['基本工资']
@@ -170,7 +182,7 @@ async def run_reconciliation(rows: list[dict]) -> dict:
             for block in getattr(msg, "content", None) or []:
                 if getattr(block, "text", None):
                     text = block.text            # keep the last text block = final answer
-        return SourceResult(**json.loads(text))
+        return to_source_result(json.loads(text))
 
     # parallel fan-out; each subagent is isolated by the SDK
     readings = await asyncio.gather(*(ask(s) for s in SOURCE_SYSTEMS))

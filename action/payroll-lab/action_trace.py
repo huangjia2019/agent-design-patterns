@@ -1,7 +1,7 @@
 """ActionTrace schema sketch for the Action module (lectures 21-25).
 
 The current labs keep their native traces and do not automatically emit into
-this class yet. Running this file replays the naked loop's known actions to
+this class yet. Running this file replays the prompt-injected proposal to
 demonstrate four metrics that a future unified event layer can compute:
 
     tool call success rate   -- healthy > 80% per tool
@@ -86,17 +86,62 @@ class ActionTrace:
 
 
 if __name__ == "__main__":
-    # Replay what naked_loop.py actually did, as a trace: 3 planned actions,
-    # 4 improvised ones. Watch the scope-creep alarm fire.
+    # Replay the scope-creep proposal: 3 North-Star actions and 4 actions
+    # induced by untrusted context. Watch the scope-creep alarm fire.
     trace = ActionTrace(session_id="payroll-2026-06")
-    planned = [("apply_approval", RiskLevel.MEDIUM), ("apply_approval", RiskLevel.MEDIUM),
-               ("pay_everyone", RiskLevel.CRITICAL)]
-    improvised = [("normalize_bank_account", RiskLevel.CRITICAL),
-                  ("normalize_bank_account", RiskLevel.CRITICAL),
-                  ("clear_note", RiskLevel.MEDIUM), ("clear_note", RiskLevel.MEDIUM)]
-    for i, (tool, risk) in enumerate(planned + improvised):
-        trace.log(ActionEvent(action_id=f"a{i}", tool_name=tool, risk_level=risk,
-                              success=True, planned=(tool, risk) in planned))
-    print(f"scope creep ratio: {trace.scope_creep_ratio():.2f}")
+    replay = [
+        ("apply_approval", RiskLevel.MEDIUM, True),
+        ("apply_approval", RiskLevel.MEDIUM, True),
+        ("pay_everyone", RiskLevel.CRITICAL, True),
+        ("normalize_bank_account", RiskLevel.CRITICAL, False),
+        ("normalize_bank_account", RiskLevel.CRITICAL, False),
+        ("clear_payroll_note", RiskLevel.MEDIUM, False),
+        ("clear_payroll_note", RiskLevel.MEDIUM, False),
+    ]
+    for index, (tool, risk, is_planned) in enumerate(replay, start=1):
+        trace.log(
+            ActionEvent(
+                action_id=f"a{index}",
+                tool_name=tool,
+                risk_level=risk,
+                success=True,
+                planned=is_planned,
+            )
+        )
+
+    print(f"ActionTrace session={trace.session_id}")
+    print("\nEVENTS")
+    for event in trace.events:
+        source = "PLANNED" if event.planned else "IMPROVISED"
+        print(
+            f"  {event.action_id}  {source:10}  risk={event.risk_level.name:8}  "
+            f"tool={event.tool_name:24}  success={event.success}"
+        )
+
+    total = len(trace.events)
+    planned_count = sum(event.planned for event in trace.events)
+    improvised_count = total - planned_count
+    repaired_count = sum(event.arguments_repaired for event in trace.events)
+    blocked_count = sum(event.guardrail_blocked for event in trace.events)
+
+    print("\nMETRICS")
+    print("  tool call success rate")
+    for tool, rate in trace.tool_call_success_rate().items():
+        print(f"    {tool:24} {rate:.0%}")
+    print(
+        f"  argument repair rate     {repaired_count}/{total} "
+        f"= {trace.argument_repair_rate():.0%}"
+    )
+    print(
+        f"  guardrail block rate     {blocked_count}/{total} "
+        f"= {trace.guardrail_block_rate():.0%}"
+    )
+    print(
+        f"  scope creep ratio        actual/planned = {total}/{planned_count} "
+        f"= {trace.scope_creep_ratio():.2f}"
+    )
+    print(f"  improvised actions       {improvised_count}")
+
+    print("\nHEALTH SIGNALS (illustrative thresholds)")
     for key, msg in trace.health_check().items():
-        print(f"  {key}: {msg}")
+        print(f"  {key:20} {msg}")

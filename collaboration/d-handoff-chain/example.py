@@ -1,61 +1,117 @@
-"""Runnable example: "I need to be in Shanghai tomorrow afternoon" → a booked trip.
-
-    python collaboration/d-handoff-chain/example.py
-
-No API key needed. Five mock stages pass a baton down the chain — intent → route →
-flight → taxi → hotel — each adding its part. Then we break it on purpose: a route
-stage that forgets to hand off ``depart_by``, and watch the chain fail fast at the
-taxi seam instead of booking a taxi that can't make the flight. Swap the mocks for
-LangGraph nodes or Claude Agent SDK subagents (see the tutorials) and the chain and
-its seam checks never change.
-"""
+"""Small runnable example for the contract-bound Handoff Chain pattern."""
 from __future__ import annotations
 
 import asyncio
 
-from pattern import Baton, SeamError, trip_chain
+from pattern import (
+    FactRule,
+    FactValue,
+    HandoffChain,
+    SeamError,
+    StageBinding,
+    StageDelta,
+    StageSpec,
+    TaskContract,
+    new_baton,
+)
 
 
-def stages(drop_depart_by: bool = False) -> dict:
-    async def intent(b: Baton) -> dict:
-        return {"facts": {"city": "Shanghai", "date": "2026-07-02"}}
+CONTRACT = TaskContract(
+    contract_id="book-trip",
+    version=1,
+    objective="book one trip through specialist stages",
+    output_schema="TravelBaton",
+    accountable_owner="travel-controller",
+    boundary="each specialist owns declared facts",
+)
 
-    async def route(b: Baton) -> dict:
-        # The Amap stage. If drop_depart_by, it "forgets" to hand off the deadline.
-        return {"facts": {} if drop_depart_by else {"depart_by": "18:00"}}
 
-    async def flight(b: Baton) -> dict:
-        return {"facts": {"boarding": "19:30"},
-                "legs": [{"type": "flight", "code": "MU5102", "boarding": "19:30"}]}
+async def intent(view):
+    return StageDelta(
+        facts=(
+            FactValue("city", "Shanghai", ("request://trip-42",)),
+            FactValue("date", "2026-07-18", ("request://trip-42",)),
+        )
+    )
 
-    async def taxi(b: Baton) -> dict:
-        # Needs depart_by AND boarding — both come from upstream stages.
-        return {"facts": {"taxi_eta": "19:00"},
-                "legs": [{"type": "taxi", "provider": "didi", "eta": "19:00"}]}
 
-    async def hotel(b: Baton) -> dict:
-        return {"facts": {"hotel": "ctrip#88"},
-                "legs": [{"type": "hotel", "provider": "ctrip"}]}
+async def route(view):
+    return StageDelta(
+        facts=(
+            FactValue("depart_by", "18:00", ("map://route-42",)),
+        )
+    )
 
-    return {"intent": intent, "route": route, "flight": flight, "taxi": taxi, "hotel": hotel}
+
+async def booking(view):
+    return StageDelta(
+        facts=(
+            FactValue(
+                "booking_id",
+                "booking-42",
+                ("booking://booking-42",),
+            ),
+        ),
+        artifact_refs=("artifact://ticket-42",),
+    )
+
+
+def chain(route_stage=route) -> HandoffChain:
+    return HandoffChain(
+        CONTRACT,
+        (
+            StageBinding(
+                StageSpec("intent", provides=("city", "date")),
+                intent,
+            ),
+            StageBinding(
+                StageSpec(
+                    "route",
+                    requires=("city", "date"),
+                    provides=("depart_by",),
+                ),
+                route_stage,
+            ),
+            StageBinding(
+                StageSpec(
+                    "booking",
+                    requires=("depart_by",),
+                    provides=("booking_id",),
+                ),
+                booking,
+            ),
+        ),
+        (
+            FactRule("city", "intent", str),
+            FactRule("date", "intent", str),
+            FactRule("depart_by", "route", str),
+            FactRule("booking_id", "booking", str),
+        ),
+        chain_id="travel-handoff",
+    )
 
 
 async def main() -> None:
-    print("=== A clean run: the baton makes it down the chain ===\n")
-    baton = await trip_chain(stages()).run(Baton(intent="be in Shanghai tomorrow PM"))
-    print(f"intent (carried unchanged): {baton.intent}")
-    print(f"trace: {' -> '.join(baton.trace)}")
-    print(f"committed facts: {baton.facts}")
-    print(f"booked legs: {[leg['type'] for leg in baton.legs]}")
+    baton = new_baton(
+        CONTRACT,
+        baton_id="trip-42",
+        intent="be in Shanghai tomorrow afternoon",
+    )
+    result = await chain().run(baton)
+    print(f"Trace: {' -> '.join(result.baton.trace)}")
+    print(f"Revision: {result.baton.revision}")
+    print(f"Facts: {dict(result.baton.facts)}")
+    print(f"Stage receipts: {len(result.receipts)}")
+    print(f"Acceptance: {result.acceptance_receipt.decision.value}")
 
-    print("\n=== A dropped handoff: route forgets depart_by ===\n")
+    async def route_forgets_departure(view):
+        return StageDelta()
+
     try:
-        await trip_chain(stages(drop_depart_by=True)).run(Baton(intent="be in Shanghai"))
-    except SeamError as e:
-        print(f"SeamError (fail fast, named): {e}")
-        print("\nThe chain stopped at the route seam — the exact stage that dropped "
-              "the handoff, not three stages later at the airport. The culprit is "
-              "named, so the fix is one place, not a hunt.")
+        await chain(route_forgets_departure).run(baton)
+    except SeamError as exc:
+        print(f"\nSeamError: {exc}")
+        print(f"Checkpoint: {exc.checkpoint.snapshot_id}")
 
 
 if __name__ == "__main__":

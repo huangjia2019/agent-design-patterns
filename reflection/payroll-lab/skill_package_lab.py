@@ -13,8 +13,8 @@ Three scenes:
              an unmatched task falls back to from-scratch, explicitly
     scene 3  run with --no-gate: the wrong-year skill is stored as
              trusted without verification, July routes to it, and the
-             800-person database shows how many contribution bases go
-             wrong -- silently, every step reporting success
+             800-person fixture shows how many contribution-base results
+             would be wrong -- silently, every step reporting success
 
 Run `python3 skill_package_lab.py` (add --no-gate for scene 3).
 """
@@ -81,6 +81,7 @@ skill = distill_from_trace(
     name="social-base-adjust",
     description="monthly settlement when contribution-base bounds change",
     triggers=["settlement", "social", "base", "adjust", "contribution"],
+    succeeded=True,
 )
 library.add(skill)
 
@@ -146,8 +147,9 @@ else:
         if got != right:
             wrong += 1
     total = con.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
-    print(f"   applied to all {total} employees with 2025 bounds:")
-    print(f"   {wrong} contribution bases computed wrong. Every step reported")
-    print("   success; nothing in the run knows the policy year rolled over.")
-    print("   The three golden questions cost three comparisons. This costs")
-    print(f"   {wrong} wrong social-insurance payments and a July of corrections.")
+    print(f"   evaluated all {total} employees against 2025 bounds:")
+    print(f"   {wrong} contribution bases computed wrong in simulation. Every step")
+    print("   reported success; nothing in the run knows the policy year rolled over.")
+    print("   No computed value is written back and no payment is triggered.")
+    print("   The three golden questions cost three comparisons.")
+    print(f"   Without that gate, a production run would send {wrong} wrong bases downstream.")

@@ -21,10 +21,6 @@
         <p class="nav-label">课程实验</p>
         <div id="lecture-list"></div>
       </nav>
-      <button class="full-run-button" id="run-all" type="button">
-        <span aria-hidden="true">&#9654;</span>
-        运行完整模块
-      </button>
       <div class="sidebar-status">
         <span class="status-dot" aria-hidden="true"></span>
         <div>
@@ -42,10 +38,6 @@
           <button class="view-tab" data-view="structure" role="tab" type="button">系统结构</button>
         </div>
         <div class="topbar-actions">
-          <button class="button secondary" id="inject-typo" type="button" title="注入 E0099 错误审批">
-            <span aria-hidden="true">+</span>
-            注入 999999
-          </button>
           <button class="button secondary" id="reset-db" type="button" title="恢复数据库基线">
             <span aria-hidden="true">&#8635;</span>
             重置数据库
@@ -58,13 +50,21 @@
           <div>
             <span class="coordinate" id="lesson-coordinate">Action baseline</span>
             <h1 id="lesson-title">21 · 行动模块导论</h1>
-            <p id="lesson-question">没有执行边界时，Agent 到底会多做多少事？</p>
+            <p id="lesson-question">故障被提出以后，无护栏运行时能不能把它拦住？</p>
           </div>
-          <button class="button primary run-button" id="run-lecture" type="button">
-            <span aria-hidden="true">&#9654;</span>
-            运行本讲
-          </button>
         </div>
+        <section class="stress-console" id="stress-console" aria-labelledby="stress-title">
+          <div class="stress-heading">
+            <div>
+              <p class="eyebrow">Action Stress Workbench</p>
+              <h2 id="stress-title">行动压力工作台</h2>
+              <p id="stress-subtitle">受控刺激、模式前后对照与业务证据</p>
+            </div>
+            <button class="button secondary" id="stress-primary" type="button">运行对照</button>
+          </div>
+          <div class="scenario-actions" id="stress-actions"></div>
+          <div class="stress-ladder hidden" id="stress-ladder"></div>
+        </section>
         <div class="stage-strip" id="stage-strip" aria-label="模式执行阶段"></div>
 
         <section class="state-band" aria-labelledby="state-title">
@@ -103,8 +103,8 @@
             <span class="run-meta" id="run-meta">等待运行</span>
           </div>
           <div class="empty-state" id="run-empty">
-            <strong id="empty-pattern">裸 PRA 循环</strong>
-            <p id="empty-summary">观察范围漂移、批量副作用，以及已批准的 999999 如何穿透裸循环。</p>
+            <strong id="empty-pattern">无护栏对照与故障注入</strong>
+            <p id="empty-summary">这是无 LLM 的确定性教学夹具，用于验证执行边界。</p>
           </div>
           <div class="run-result hidden" id="run-result">
             <div class="result-summary">
@@ -152,16 +152,16 @@
 
       <section class="view" id="view-structure">
         <div class="page-heading">
-          <div><p class="eyebrow">Teaching architecture</p><h1>系统结构</h1><p>CLI 保留原始实验，Web 层负责受控触发与结构化呈现。</p></div>
+          <div><p class="eyebrow">Teaching architecture</p><h1>系统结构</h1><p>一套压力工作台，共用白名单入口、受控 Runner 与事实判定协议。</p></div>
         </div>
         <div class="architecture-flow" aria-label="教学控制台架构">
           <div class="architecture-node"><span>01</span><strong>Browser UI</strong><small>实验、数据库、结构</small></div>
           <span class="flow-arrow" aria-hidden="true">&#8594;</span>
           <div class="architecture-node"><span>02</span><strong>FastAPI</strong><small>固定 API 与白名单</small></div>
           <span class="flow-arrow" aria-hidden="true">&#8594;</span>
-          <div class="architecture-node"><span>03</span><strong>Controlled Runner</strong><small>21—25 CLI 实验</small></div>
+          <div class="architecture-node"><span>03</span><strong>Stress Runners</strong><small>消融阶梯 / 模式对照 / 生产压力</small></div>
           <span class="flow-arrow" aria-hidden="true">&#8594;</span>
-          <div class="architecture-node"><span>04</span><strong>SQLite</strong><small>状态、证据、副作用</small></div>
+          <div class="architecture-node"><span>04</span><strong>Evidence</strong><small>SQLite、动作账、模式 Trace</small></div>
         </div>
         <div class="structure-grid">
           <section>

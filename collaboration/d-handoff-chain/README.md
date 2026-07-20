@@ -1,77 +1,89 @@
 # d · Handoff Chain
 
-> Column lecture **07-05** · pattern · Collaborate × Chain
+> Pattern coordinate: **Collaborate × Chain**
 >
 > [中文 README](README.zh-CN.md)
 
 ## The problem
 
-An AI travel assistant turns "I need to be in Shanghai tomorrow afternoon" into a
-booked trip by passing a baton down a line of specialists: intent → route (Amap) →
-flight → airport taxi (Didi) → hotel (Ctrip). Each stage reads the baton, does its
-one job, and adds to it.
+Specialist agents often work in a fixed order: intent, settlement, funding,
+payment, receipt. A plain shared dictionary leaves four gaps:
 
-This is not a tree (that is Hierarchical Delegation) and not parallel copies (that is
-Fan-out-Gather). It is a line, and the whole risk lives at the **seams** between
-stages. If the route stage forgets to hand off the departure deadline, the taxi stage
-books a car that can't make the flight — and you find out at the airport, three
-stages downstream from the mistake, where the cause is already unrecoverable.
+1. a stage can forget a field and fail several steps downstream
+2. an upstream field can satisfy a later stage's `provides` without that stage
+   producing anything
+3. a stage can mutate the shared object and bypass append-only checks
+4. a key can exist with the wrong type, evidence, owner, or business value
 
-## The pattern
+Handoff Chain turns each seam into a commit boundary.
 
-Two named tools carry it (from the lecture):
+## The contract
 
-**The Baton Contract (接力棒规约)** — every stage declares what it `requires` from the
-baton and what it `provides`. The chain validates both at each seam. A stage handed a
-baton missing what it needs, or a stage that doesn't deliver what it promised, fails
-fast — *at the seam that dropped it*, with the stage named — not three stages later
-where the cause is lost.
+```text
+TaskContract
+  -> immutable Baton r0
+  -> StageDelta
+  -> Baton r1 + StageReceipt
+  -> ...
+  -> AcceptanceReceipt
+```
 
-**Append-only baton (棒上不回改)** — the intent is set once and carried unchanged;
-committed facts are locked once set. A later stage may add, never silently overwrite.
-The handoff passes values, not a shared mutable scratchpad, so one stage cannot
-quietly rewrite what an earlier stage committed.
+Each `StageSpec` declares `requires` and `provides`. Each provided key has one
+`FactRule` that declares its producer, runtime type, evidence requirement, and
+optional semantic validator.
 
-Both rules are enforced in `pattern.py`, so a broken chain raises a `SeamError` that
-names the culprit — the fix is one place, not a hunt.
+A stage receives a detached, read-only `BatonView`. It can only propose a
+`StageDelta`. The runner validates the delta before creating the next immutable
+baton revision.
 
-## Two runnable implementations
+## Seam invariants
 
-Same pattern, same `pattern.py` contract, two ways to run the line:
-
-| | [`langgraph/`](langgraph/tutorial.ipynb) | [`claude-agent-sdk/`](claude-agent-sdk/tutorial.ipynb) |
-|---|---|---|
-| **The chain** | A linear `StateGraph`: `intent → route → flight → taxi → hotel`. | A Python sequence running one subagent per stage. |
-| **The baton** | The graph's accumulating state. | A JSON baton passed hand to hand. |
-| **Seam checks** | A `guarded` node wrapper reusing `StageSpec` / `SeamError`. | The same `HandoffChain` checks in Python between subagents. |
-| **Model** | Provider-agnostic (`model_config`). | Claude-native (a `haiku` specialist per stage). |
-
-No parallelism here means no reducer — the chain is a straight line. The contract is
-identical on both sides.
+- Every required fact must already be committed.
+- The current stage must itself return every promised fact.
+- Undeclared fields are rejected.
+- A fact has one producer and cannot be rewritten, even with the same value.
+- Type, evidence, and semantic validators run at the producing seam.
+- Every commit produces a `StageReceipt` bound to input and output fingerprints.
+- Failure returns the prior checkpoint. Retrying resumes at the failed stage with
+  the same `stage_run_id`.
 
 ## Files
 
 | File | What |
-|---|---|
-| [`pattern.py`](pattern.py) | Framework-agnostic reference (~140 lines): `Baton`, `StageSpec`, `SeamError`, `HandoffChain`, and `trip_chain`. A pluggable `StageFn` is the seam both tutorials fill. |
-| [`example.py`](example.py) | Runs the trip chain with mock stages — no API key. Shows a clean run and a dropped handoff failing fast at the culprit stage. |
-| [`test_pattern.py`](test_pattern.py) | 8 tests: accumulation + order, the missing-requirement seam error, append-only enforcement, the underdelivery check, and intent carried unchanged. |
-| [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | Step-by-step: accumulating State → a `guarded` seam wrapper → a linear graph → a broken chain failing at its seam. |
-| [`claude-agent-sdk/tutorial.ipynb`](claude-agent-sdk/tutorial.ipynb) | Step-by-step: one `AgentDefinition` per stage → the `HandoffChain` contract in Python → a live `query()` chain. |
+|:--|:--|
+| [`pattern.py`](pattern.py) | Generic immutable baton, fact ownership rules, seam validation, receipts, checkpoints, and bounded static chain. |
+| [`example.py`](example.py) | Small travel example using the generic interface. No API key. |
+| [`test_pattern.py`](test_pattern.py) | Invariants for exact delivery, ownership, read-only views, semantic checks, receipts, and retry. |
+| [`../payroll-lab/handoff_chain_lab.py`](../payroll-lab/handoff_chain_lab.py) | Lecture 35 lab: intent to payroll receipt, plus the wrong-value experiment. |
+| [`langgraph/`](langgraph/) | Wiring the same commit boundary into a linear graph. |
+| [`claude-agent-sdk/`](claude-agent-sdk/) | Adapting specialist subagents to `StageFn`. |
 
 ## Run
 
 ```bash
-# framework-agnostic core — no API key
 python collaboration/d-handoff-chain/example.py
-pytest collaboration/d-handoff-chain/test_pattern.py -v
+pytest collaboration/d-handoff-chain/test_pattern.py -q
 
-# the two implementations need a model — see .env.example
+python collaboration/payroll-lab/handoff_chain_lab.py
+python collaboration/payroll-lab/handoff_chain_lab.py --wrong-value
+pytest collaboration/payroll-lab/test_handoff_chain_lab.py -q
 ```
 
-## Where this pattern sits
+The wrong-value run first uses a thin contract. Every key, producer, type, and
+evidence check passes, so a wrong payroll total is paid. The same stages under the
+release contract fail at `settle`, because `net_total` does not match the controlling
+ledger. The runner enforces declared semantics; it cannot invent a rule the contract
+omitted.
 
-Collaborate (cognitive function) × Chain (execution topology). Its module-mates:
-Hierarchical Delegation (a tree), Fan-out-Gather (parallel copies), Adversarial
-Review (a loop). Handoff Chain is the line — the simplest topology, and the one where
-the danger is entirely at the joints. See the [two-axis matrix](../../README.md).
+## Static chain and dynamic handoff
+
+This implementation is a statically wired specialist pipeline. A dynamic
+conversational handoff additionally needs route allowlists, context filtering,
+authority transfer, and active-agent lifecycle controls.
+
+## Production boundary
+
+`stage_run_id` is a stable idempotency key for retries from the same checkpoint, but
+the reference runner does not provide a durable database, distributed lock, signed
+evidence, compensation engine, or outbox. External side effects must consume the
+idempotency key and persist their own result before returning a delta.

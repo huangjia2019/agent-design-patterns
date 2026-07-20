@@ -180,7 +180,7 @@ def main() -> None:
     print(f"  total dispatch attempts : {total}")
     print(f"  successes               : {successes}")
     print(f"  rejections              : {rejections}")
-    print(f"  reject breakdown        :")
+    print("  reject breakdown        :")
     by_reason: dict[str, int] = {}
     for t in dispatcher.traces:
         if t.status == "rejected" and t.rejected_reason:

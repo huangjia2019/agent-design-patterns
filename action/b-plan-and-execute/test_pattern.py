@@ -253,6 +253,55 @@ def test_replan_local_rejects_when_above_cap() -> None:
         replan_local(plan, big_replanner, failed_step_id="1", cap=5)
 
 
+def test_replan_local_rejects_completed_step_replacement() -> None:
+    plan = Plan(goal="x")
+    plan.add(PlanStep("done", "already paid", "pay", status=StepStatus.DONE))
+    plan.add(PlanStep("failed", "retry payment", "pay", deps=["done"], status=StepStatus.FAILED))
+
+    def unsafe_replanner(goal):
+        patch = Plan(goal=goal)
+        patch.add(PlanStep("done", "pay completed employee again", "pay"))
+        return patch
+
+    with pytest.raises(PlanError, match="unrelated step|'done'"):
+        replan_local(plan, unsafe_replanner, failed_step_id="failed")
+    assert plan.steps["done"].status == StepStatus.DONE
+
+
+def test_replan_local_does_not_reset_unrelated_failed_branch() -> None:
+    plan = Plan(goal="x")
+    plan.add(PlanStep("a-failed", "branch A failed", "fix", status=StepStatus.FAILED))
+    plan.add(PlanStep(
+        "a-tail", "branch A tail", "ok", deps=["a-failed"], status=StepStatus.SKIPPED
+    ))
+    plan.add(PlanStep("b-failed", "branch B failed", "fix", status=StepStatus.FAILED))
+    plan.add(PlanStep(
+        "b-tail", "branch B tail", "ok", deps=["b-failed"], status=StepStatus.SKIPPED
+    ))
+
+    replan_local(plan, lambda goal: Plan(goal=goal), failed_step_id="a-failed")
+
+    assert plan.steps["a-failed"].status == StepStatus.TODO
+    assert plan.steps["a-tail"].status == StepStatus.TODO
+    assert plan.steps["b-failed"].status == StepStatus.FAILED
+    assert plan.steps["b-tail"].status == StepStatus.SKIPPED
+
+
+def test_replan_local_preserves_external_dependencies() -> None:
+    plan = Plan(goal="x")
+    plan.add(PlanStep("done", "approved prerequisite", "ok", status=StepStatus.DONE))
+    plan.add(PlanStep("failed", "payment failed", "bad", deps=["done"], status=StepStatus.FAILED))
+
+    def dependency_dropping_replanner(goal):
+        patch = Plan(goal=goal)
+        patch.add(PlanStep("failed", "retry without prerequisite", "ok"))
+        return patch
+
+    with pytest.raises(PlanError, match="dropped external dependencies"):
+        replan_local(plan, dependency_dropping_replanner, failed_step_id="failed")
+    assert plan.steps["failed"].status == StepStatus.FAILED
+
+
 # ---- Completion check ----------------------------------------------------
 
 

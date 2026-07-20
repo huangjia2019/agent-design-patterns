@@ -98,6 +98,236 @@ function renderLesson() {
       `,
     )
     .join("");
+  renderStressControls();
+}
+
+function renderStressControls() {
+  const stress = appState.meta.stress;
+  if (!stress) return;
+  const lecture = appState.selectedLecture;
+  const primary = byId("stress-primary");
+  const resultNode = byId("stress-ladder");
+  resultNode.classList.add("hidden");
+  resultNode.innerHTML = "";
+  let actions = "";
+
+  if (lecture === "21") {
+    byId("stress-title").textContent = "一个例子走透：L0 裸循环";
+    byId("stress-subtitle").textContent = "同一份北极星目标与外部备注，只看动作流水和数据库终态";
+    actions = stress.worked_levels
+      .filter((level) => level.id === "L0")
+      .map(levelButton)
+      .join("");
+    primary.textContent = "运行 L0";
+    primary.onclick = () => runStress("L0");
+  } else if (lecture === "22") {
+    byId("stress-title").textContent = "工具边界消融：L0 → L2";
+    byId("stress-subtitle").textContent = "状态账与动作账同时核对，再把教学版放进四种生产压力";
+    actions = stress.worked_levels.map(levelButton).join("") + `
+      <button class="scenario-button pressure-button" id="stress-gaps-button" type="button">
+        四种生产压力
+      </button>`;
+    primary.textContent = "运行三层对照";
+    primary.onclick = runStressLadder;
+  } else {
+    const vector = stress.vectors.find((item) => item.lecture === lecture);
+    byId("stress-title").textContent = `${vector.id}-${vector.title}`;
+    byId("stress-subtitle").textContent = `同一刺激运行两种配置，以业务证据判断${vector.pattern}守住了什么`;
+    actions = `
+      <button class="scenario-button stress-vector-button" data-vector="${escapeHtml(vector.id)}" type="button">
+        运行${escapeHtml(vector.pattern)}前后对照
+      </button>
+      ${lecture === "25" ? '<button class="scenario-button" id="stress-matrix-button" type="button">运行全模块矩阵</button>' : ""}`;
+    primary.textContent = "运行本讲对照";
+    primary.onclick = () => runStressVector(vector.id);
+  }
+
+  byId("stress-actions").innerHTML = actions;
+  document.querySelectorAll(".stress-level-button").forEach((button) => {
+    button.addEventListener("click", () => runStress(button.dataset.level));
+  });
+  document.querySelectorAll(".stress-vector-button").forEach((button) => {
+    button.addEventListener("click", () => runStressVector(button.dataset.vector));
+  });
+  byId("stress-gaps-button")?.addEventListener("click", runStressGaps);
+  byId("stress-matrix-button")?.addEventListener("click", runStressMatrix);
+}
+
+function levelButton(level) {
+  return `
+    <button class="scenario-button stress-level-button" data-level="${escapeHtml(level.id)}"
+            type="button" title="${escapeHtml(level.note)}">
+      <strong>${escapeHtml(level.id)}</strong> ${escapeHtml(level.title)}
+    </button>`;
+}
+
+async function runStress(level) {
+  setBusy(true, `正在跑消融 ${level}`);
+  try {
+    const result = await api(`/api/stress/${level}`, { method: "POST" });
+    renderRunResult(result);
+    appState.database = result.after;
+    renderDatabaseState();
+    renderStressLevelResult(result);
+    toast(`消融 ${level} 运行完成 · ${result.verdict}`);
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function runStressLadder() {
+  const levels = appState.meta.stress.worked_levels;
+  setBusy(true, "正在跑全阶梯对照");
+  const rows = [];
+  let lastResult = null;
+  try {
+    for (const level of levels) {
+      const result = await api(`/api/stress/${level.id}`, { method: "POST" });
+      lastResult = result;
+      rows.push({
+        id: level.id,
+        title: level.title,
+        changes: result.after.change_count,
+        payments: result.evidence.payment_count,
+        disciplined: result.evidence.payments.every((payment) => payment.disciplined),
+        verdict: result.verdict,
+      });
+    }
+    if (lastResult) {
+      appState.database = lastResult.after;
+      renderDatabaseState();
+    }
+    const node = byId("stress-ladder");
+    node.classList.remove("hidden");
+    node.innerHTML = `
+      <table class="ladder-table">
+        <tr><th>层级</th><th>装上的控制</th><th>状态差异</th><th>出账流水</th><th>纪律</th><th>判定</th></tr>
+        ${rows
+          .map(
+            (row) => `
+          <tr class="ladder-${row.verdict === "守住" ? "clean" : "bad"}">
+            <td><strong>${escapeHtml(row.id)}</strong></td>
+            <td>${escapeHtml(row.title)}</td>
+            <td>${number.format(row.changes)} 行</td>
+            <td>${number.format(row.payments)} 笔</td>
+            <td>${row.disciplined ? "有" : "无"}</td>
+            <td><span class="verdict ${row.verdict === "守住" ? "safe" : "exposed"}">${escapeHtml(row.verdict)}</span></td>
+          </tr>`,
+          )
+          .join("")}
+      </table>
+      <p class="ladder-note">状态差异看数据库，双付看动作流水。L1 和 L2 都只改一条工资单状态，纪律却完全不同。</p>
+    `;
+    toast("全阶梯对照完成");
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    setBusy(false);
+  }
+}
+
+function renderStressLevelResult(result) {
+  const payments = result.evidence.payments;
+  const node = byId("stress-ladder");
+  node.classList.remove("hidden");
+  node.innerHTML = `
+    <div class="stress-metric-grid">
+      <div class="stress-metric"><span>本级判定</span><strong class="${result.verdict === "守住" ? "safe-text" : "exposed-text"}">${escapeHtml(result.verdict)}</strong></div>
+      <div class="stress-metric"><span>状态差异</span><strong>${number.format(result.after.change_count)} 行</strong></div>
+      <div class="stress-metric"><span>实际出账</span><strong>${number.format(result.evidence.payment_count)} 笔</strong></div>
+      <div class="stress-metric"><span>受保护字段</span><strong>${result.protected_fields_safe ? "保留" : "被改"}</strong></div>
+    </div>
+    <table class="ladder-table payment-table">
+      <tr><th>流水</th><th>员工</th><th>金额</th><th>先读后写</th><th>来源</th></tr>
+      ${payments.map((payment) => `
+        <tr><td>${payment.id}</td><td>${escapeHtml(payment.emp_id)}</td><td>¥${number.format(payment.amount)}</td>
+        <td>${payment.disciplined ? "是" : "否"}</td><td>${escapeHtml(payment.source)}</td></tr>`).join("")}
+    </table>`;
+}
+
+async function runStressVector(vectorId) {
+  setBusy(true, `正在运行 ${vectorId} 前后对照`);
+  try {
+    const result = await api(`/api/stress/vector/${vectorId}`, { method: "POST" });
+    if (result.after) {
+      appState.database = result.after;   // reset baseline, never a prior lecture's L0 damage
+      renderDatabaseState();
+    }
+    const comparison = result.comparison;
+    const rows = [comparison.without_pattern, comparison.with_pattern];
+    const node = byId("stress-ladder");
+    node.classList.remove("hidden");
+    node.innerHTML = `
+      <div class="stress-stimulus"><span>受控刺激</span><strong>${escapeHtml(comparison.vector.stimulus)}</strong></div>
+      <table class="ladder-table">
+        <tr><th>配置</th><th>判定</th><th>业务证据</th></tr>
+        ${rows.map((row) => `
+          <tr class="ladder-${row.safe ? "clean" : "bad"}">
+            <td>${escapeHtml(row.configuration || (row.defended ? `装上${row.pattern}` : "未装该模式"))}</td>
+            <td><span class="verdict ${row.safe ? "safe" : "exposed"}">${row.safe ? "守住" : "暴露"}</span></td>
+            <td>${escapeHtml(row.evidence)}</td>
+          </tr>`).join("")}
+      </table>`;
+    toast(`${vectorId} 前后对照完成`);
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function runStressGaps() {
+  setBusy(true, "正在运行生产压力台");
+  try {
+    const result = await api("/api/stress/gaps", { method: "POST" });
+    const node = byId("stress-ladder");
+    node.classList.remove("hidden");
+    node.innerHTML = `
+      <table class="ladder-table gap-table">
+        <tr><th>压力</th><th>缺口</th><th>结果</th><th>结构化证据</th></tr>
+        ${result.gaps.map((gap) => `
+          <tr class="ladder-${gap.leaked ? "bad" : "clean"}">
+            <td><strong>${escapeHtml(gap.id)}-${escapeHtml(gap.name)}</strong></td>
+            <td>${escapeHtml(gap.gap)}</td>
+            <td><span class="verdict ${gap.leaked ? "exposed" : "safe"}">${gap.leaked ? "暴露" : "守住"}</span></td>
+            <td><code>${escapeHtml(JSON.stringify(gap.evidence))}</code></td>
+          </tr>`).join("")}
+      </table>`;
+    toast("生产压力台运行完成");
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function runStressMatrix() {
+  setBusy(true, "正在逐格运行全模块矩阵");
+  try {
+    const result = await api("/api/stress/matrix", { method: "POST" });
+    const matrix = result.matrix;
+    const vectorIds = Object.keys(matrix.vectors);
+    const node = byId("stress-ladder");
+    node.classList.remove("hidden");
+    node.innerHTML = `
+      <div class="matrix-wrap"><table class="ladder-table matrix-table">
+        <tr><th>配置</th>${vectorIds.map((id) => `<th>${escapeHtml(id)}-${escapeHtml(matrix.vectors[id])}</th>`).join("")}<th>终态</th></tr>
+        ${matrix.levels.map((level) => `
+          <tr>
+            <td><strong>${escapeHtml(level.id)}</strong> ${escapeHtml(level.title)}</td>
+            ${vectorIds.map((id) => `<td><span class="verdict ${level.cells[id].safe ? "safe" : "exposed"}">${level.cells[id].safe ? "守住" : "暴露"}</span></td>`).join("")}
+            <td>${level.safe ? "全守住" : `${level.exposed.length} 类暴露`}</td>
+          </tr>`).join("")}
+      </table></div>
+      <p class="ladder-note">V1/V2 共用薪酬备注注入；V3-中途超时后整批重跑、V4-污染工件向后传递和 V5-高风险输入输出是边界不同的独立刺激。矩阵表示评测套件，不把它们伪装成一条万能提示词。</p>`;
+    toast("全模块矩阵运行完成");
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    setBusy(false);
+  }
 }
 
 function renderDatabaseState() {
@@ -285,23 +515,6 @@ async function loadTable() {
   renderTable();
 }
 
-async function runLecture(lecture) {
-  const label =
-    lecture === "all" ? "正在运行完整行动模块" : `正在运行第 ${lecture} 讲`;
-  setBusy(true, label);
-  try {
-    const result = await api(`/api/run/${lecture}`, { method: "POST" });
-    renderRunResult(result);
-    appState.database = result.after;
-    renderDatabaseState();
-    toast(`${result.meta.title}运行完成`);
-  } catch (error) {
-    toast(error.message, true);
-  } finally {
-    setBusy(false);
-  }
-}
-
 function switchView(view) {
   document.querySelectorAll(".view").forEach((node) => {
     node.classList.toggle("active", node.id === `view-${view}`);
@@ -333,13 +546,6 @@ function bindEvents() {
   document.querySelectorAll(".view-tab").forEach((button) => {
     button.addEventListener("click", () => switchView(button.dataset.view));
   });
-  byId("run-lecture").addEventListener("click", () =>
-    runLecture(appState.selectedLecture),
-  );
-  byId("run-all").addEventListener("click", () => runLecture("all"));
-  byId("inject-typo").addEventListener("click", () =>
-    mutateDatabase("/api/database/inject-typo", "正在注入 E0099 审批"),
-  );
   byId("reset-db").addEventListener("click", () => {
     if (window.confirm("恢复数据库基线？当前实验产生的状态会被清除。")) {
       mutateDatabase("/api/database/reset", "正在恢复数据库基线");

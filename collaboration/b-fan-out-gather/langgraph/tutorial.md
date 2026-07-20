@@ -54,7 +54,7 @@ from pydantic import BaseModel, Field
 from langgraph.graph import START, END, StateGraph
 from langgraph.types import Send
 
-from pattern import Reconciler, SourceResult   # the framework-agnostic gather
+from pattern import Reconciler, ReconciliationReport, SourceResult
 
 print("Imports ready")
 ```
@@ -99,7 +99,7 @@ class FanOutState(TypedDict):
     sources: list[str]                               # set by plan
     # The reducer. N workers append here in parallel; no reducer -> InvalidUpdateError.
     readings: Annotated[list[dict], operator.add]
-    report: dict
+    report: ReconciliationReport | None
 
 print("State ready — note the operator.add reducer on `readings`")
 ```
@@ -183,8 +183,14 @@ unexplained (human review).
 ```python
 def gather(state: FanOutState) -> dict:
     results = [
-        SourceResult(source=r["source"], line_items=r["line_items"],
-                     confidence=r.get("confidence", 1.0))
+        SourceResult.from_mapping(
+            source_id=r["source"],
+            snapshot_ref=f"snapshot://{r['source']}/2026-06-30T23:59:59Z",
+            period="2026-06",
+            unit="CNY",
+            line_items=r["line_items"],
+            confidence=r.get("confidence", 1.0),
+        )
         for r in state["readings"]
     ]
     report = Reconciler(tol=1.0).reconcile(results)   # the framework-agnostic gather
@@ -249,13 +255,13 @@ class _MockModel:
     def with_structured_output(self, schema): return _MockStructured(schema)
 
 app = build_graph(_MockModel())
-out = app.invoke({"rows": [{"id": "e1"}], "sources": [], "readings": [], "report": {}})
+out = app.invoke({"rows": [{"id": "e1"}], "sources": [], "readings": [], "report": None})
 rep = out["report"]
-print("agreed:     ", rep["agreed_items"])
-for rc in rep["root_causes"]:
-    print(f"located:     {rc['item']} gap {rc['gap']:,.0f}  "
-          f"[{rc['low_sources']} low vs {rc['high_sources']} high]")
-print("to_human:   ", [x["item"] for x in rep["to_human"]])
+print("agreed:     ", list(rep.agreed_items))
+for verdict in rep.attributable_divergences:
+    print(f"located:     {verdict.item} gap {verdict.gap:,.0f}  "
+          f"[{list(verdict.low_sources)} low vs {list(verdict.high_sources)} high]")
+print("to_human:   ", [verdict.item for verdict in rep.to_human])
 ```
 
     agreed:      ['基本工资']
@@ -278,8 +284,8 @@ from model_config import get_model      # registers CN providers; reads .env
 model = get_model()                     # each source worker; cheap model is fine
 if model:
     app = build_graph(model)
-    out = app.invoke({"rows": [{"id": "e1"}], "sources": [], "readings": [], "report": {}})
-    print(out["report"]["root_causes"])
+    out = app.invoke({"rows": [{"id": "e1"}], "sources": [], "readings": [], "report": None})
+    print(out["report"].attributable_divergences)
 else:
     print("No API key — set one in .env to run the real version.")
 ```

@@ -64,12 +64,12 @@ from shared import (
     INITIAL_DRAFT,
     LOW_SCORE_CRITIQUE_JSON,
     NEEDS_REVISION_CRITIQUE_JSON,
+    OPINION_ONLY_CRITIQUE_JSON,
     default_policy,
     parse_critique_json,
     print_trace,
     revise_with_evidence,
 )
-
 ```
 
 ## The generator and critic as LCEL pipes
@@ -123,48 +123,73 @@ def build_critic(model):
 
 LCEL does not show an `if` edge between the critic and the reviser. We make that branch a `RunnableLambda`: it reads `{artifact, critique}`, runs `AcceptancePolicy`, and returns a `ChainResult`.
 
-This is the pattern's control point. The policy sees structured evidence, not critic prose. A revision can be drafted for the operator or next pass, but the decision remains `needs_revision` so no revised text slips through as accepted.
+This is the pattern's control point. The policy sees structured evidence, not critic prose. The result preserves the exact `reviewed_artifact`; any replacement is stored separately as an unreviewed `revision_draft`. `build_review_chain(...)` starts a new pass from such a draft without running the generator again.
 
 
 ```python
-def make_policy_gate(*, policy=None, reviser=None) -> RunnableLambda:
+def make_policy_gate(
+    *,
+    policy=None,
+    reviser=None,
+    initial_trace: tuple[str, ...],
+) -> RunnableLambda:
     policy = policy or default_policy()
 
     def gate(state: dict) -> ChainResult:
-        artifact = state["artifact"]
+        reviewed_artifact = state["artifact"]
         critique = state["critique"]
-        trace = ["generated", "critiqued"]
+        trace = [*initial_trace, "critiqued"]
+        if critique.dropped_issues:
+            trace.append(f"dropped_opinions:{len(critique.dropped_issues)}")
 
         # The critic supplies evidence; deterministic policy code owns pass/fail.
         decision = policy.decide(critique)
         trace.append(decision.value)
 
+        revision_draft = None
         if decision is Decision.NEEDS_REVISION and reviser is not None:
-            # Draft a revision, but keep the decision as NEEDS_REVISION. A fresh
-            # generate/critique/gate pass is required before revised text passes.
-            artifact = reviser(artifact, critique)
+            # Keep the reviewed version unchanged. The new draft has not passed
+            # a critic yet, so it cannot inherit this pass's decision.
+            revision_draft = reviser(reviewed_artifact, critique)
             trace.append("revision_drafted")
 
-        return ChainResult(decision=decision, artifact=artifact, critique=critique, trace=trace)
+        return ChainResult(
+            decision=decision,
+            reviewed_artifact=reviewed_artifact,
+            critique=critique,
+            revision_draft=revision_draft,
+            trace=tuple(trace),
+        )
 
     return RunnableLambda(gate)
 
 
 def build_chain(model, *, policy=None, reviser=None):
-    """Compose generator -> critic -> deterministic gate.
-
-    `RunnablePassthrough.assign` is the LCEL trick: it keeps the running input
-    dict and adds one key at a time, so the critic can read the generated
-    artifact while the original prompt remains available for tracing/debugging.
-    """
+    """Compose generator -> critic -> deterministic gate."""
     generator = build_generator(model)
     critic = build_critic(model)
     return (
         RunnablePassthrough.assign(artifact=generator)
         | RunnablePassthrough.assign(critique=critic)
-        | make_policy_gate(policy=policy, reviser=reviser)
+        | make_policy_gate(
+            policy=policy,
+            reviser=reviser,
+            initial_trace=("generated",),
+        )
     )
 
+
+def build_review_chain(model, *, policy=None, reviser=None):
+    """Review an existing artifact without silently regenerating it."""
+    critic = build_critic(model)
+    return (
+        RunnablePassthrough.assign(critique=critic)
+        | make_policy_gate(
+            policy=policy,
+            reviser=reviser,
+            initial_trace=("artifact_received",),
+        )
+    )
 ```
 
 ## Deterministic fake model
@@ -195,9 +220,7 @@ show_graph(accepted_chain, alt="Generator-Critic LCEL")
 ```
 
 
-    
 ![png](tutorial_files/tutorial_11_0.png)
-    
 
 
 ## Mock run 1: clean critique accepts
@@ -214,14 +237,15 @@ print_trace(result)
     decision: accepted
     trace: generated -> critiqued -> accepted
     score: 0.9
+    score evidence: none
     issues: none
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
 
 
-## Mock run 2: blocker drafts a revision, but does not auto-accept
+## Mock run 2: a revision draft needs an explicit second review
 
-Same generated artifact, different critic evidence. The blocker issue makes the policy return `needs_revision`. The reviser adds evidence, but the result still ends as `needs_revision` because revised text has not been critiqued yet.
+The blocker makes pass 1 return `needs_revision`. The reviser creates a separate draft while preserving the artifact that was actually judged. Pass 2 starts from that draft with `build_review_chain(...)`; only its fresh critique can accept revision 1.
 
 
 ```python
@@ -229,17 +253,38 @@ revision_chain = build_chain(
     fake_model_for(NEEDS_REVISION_CRITIQUE_JSON),
     reviser=revise_with_evidence,
 )
-result = revision_chain.invoke({"prompt": DEFAULT_PROMPT})
-print_trace(result)
+first_pass = revision_chain.invoke({"prompt": DEFAULT_PROMPT})
+print("pass 1")
+print_trace(first_pass)
 
+second_review_chain = build_review_chain(
+    FakeListChatModel(responses=[GOOD_CRITIQUE_JSON]),
+    reviser=revise_with_evidence,
+)
+second_pass = second_review_chain.invoke({"artifact": first_pass.revision_draft})
+print()
+print("pass 2")
+print_trace(second_pass)
 ```
 
+    pass 1
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.74
+    score evidence: incident policy requires a cited status incident
     issues: ['blocker:incident_policy:sentence 2:impact claim lacks a cited source']
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+
+    pass 2
+    decision: accepted
+    trace: artifact_received -> critiqued -> accepted
+    score: 0.9
+    score evidence: none
+    issues: none
+    dropped: none
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
 ## Mock run 3: low score without blockers still fails
@@ -260,14 +305,36 @@ print_trace(result)
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.62
+    score evidence: support style rubric requires a concrete update window
     issues: ['warning:support_style_guide:sentence 3:next update timing is too vague']
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
-## Mock run 4: malformed critic output fails closed
+## Mock run 4: unsupported opinions cannot block
 
-The critic output is invalid JSON. The parser catches that and returns a blocker `Critique` with score `0.0`. This is the safest possible failure mode: a broken critic cannot become an approval path.
+The critic labels a style preference as a blocker but supplies no evidence. `Critique` removes it from the actionable issue list, preserves it in `dropped_issues` for audit, and the policy accepts the artifact. A severity label alone is not evidence.
+
+
+```python
+opinion_chain = build_chain(fake_model_for(OPINION_ONLY_CRITIQUE_JSON))
+result = opinion_chain.invoke({"prompt": DEFAULT_PROMPT})
+print_trace(result)
+```
+
+    decision: accepted
+    trace: generated -> critiqued -> dropped_opinions:1 -> accepted
+    score: 0.92
+    score evidence: none
+    issues: none
+    dropped: ['blocker:style_preference:body:the update feels too terse']
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+
+
+## Mock run 5: malformed critic output fails closed
+
+The critic output is invalid JSON. The parser catches that and returns an evidence-backed parser blocker with score `0.0`. A broken critic therefore takes the revision path instead of becoming an accidental approval.
 
 
 ```python
@@ -283,9 +350,11 @@ print_trace(result)
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.0
+    score evidence: critic output failed schema validation
     issues: ['blocker:parser:critic:critic output could not be parsed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)']
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
 ## Real backend
@@ -321,27 +390,26 @@ else:
 
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision
-    score: 0.25
-    issues: ['blocker:Template completeness check:Throughout: greeting, platform, times, date, status link, support contact, company name:Multiple placeholders remain unfilled, making the template unpublishable', 'blocker:Incident communication checklist:First paragraph:No specific incident window is provided', 'blocker:Incident communication checklist:First paragraph:Affected platform or website is not identified', 'warning:Incident communication best practices:What happened section:Incident description is vague and uninformative', 'warning:Incident communication best practices:Impact section:Impact is not quantified or scoped', "warning:Incident communication best practices:What we're doing section:No root cause or specific remediation actions are described", "warning:Incident communication best practices:What we're doing section:No expected resolution time or next update commitment is given", 'warning:Incident communication best practices:Contact/assistance section:No customer remediation or compensation details are offered']
+    score: 0.45
+    score evidence: Multiple unfilled template placeholders ([Date], [support email/phone], [Your Company Name]) render the message unpublishable; vague impact scope reduces trust and transparency
+    issues: ['blocker:Template completeness check:First paragraph, second sentence:Date placeholder [Date] is not filled in, making the incident timeline meaningless.', 'blocker:Template completeness check:Penultimate sentence:Contact information placeholder [support email/phone] is not filled in, preventing customers from reaching support.', 'blocker:Template completeness check:Sign-off line:Company name placeholder [Your Company Name] is not filled in, removing sender identity.', "warning:Incident communication best-practice rubric:First paragraph, second sentence:Impact description is vague ('some customers may have been unable') and does not quantify scope or specify affected transaction types.", 'warning:Incident communication best-practice rubric:Entire message:No incident identifier, status-page link, or reference number is provided for customers seeking more detail.']
     dropped: none
-    artifact: **Subject**: Checkout Issue Update – [Date/Time]
-    Hi [Customer Name/Valued Customer],
-    We’re notifying you of a temporary checkout issue on [Platform/Website] from [Start Time] to [End Time] on [Date]. Some customers may have been unable to complete purchases during this time.
-    **What happened**: A technical glitch disrupted our checkout process.
-    **Impact**: Transactions may have failed or been delayed.
-    **What we’re doing**: Our team is actively resolving the issue and implementing fixes to prevent recurrence.
-    We apologize for the inconvenience. For real-time updates, visit [Status Page Link], or contact [Support Email/Link] if you need assistance with an order.
-    Thank you for your patience.
+    reviewed artifact: **Subject**: Checkout Service Update – Resolved
+    Dear Valued Customer,
+    We experienced a technical issue affecting our checkout system from 10:00 AM to 12:30 PM [Date]. During this time, some customers may have been unable to complete purchases. We sincerely apologize for the inconvenience.
+    Our checkout system is now fully operational. All orders placed during the outage are being processed, and no action is required on your part. Our team is investigating the root cause and implementing measures to prevent future disruptions.
+    Thank you for your patience. If you have any questions, please contact our support team at [support email/phone].
+    Best regards,
     [Your Company Name]
 
 
 ## What to remember
 
 - The generator creates the artifact; the critic creates evidence; the policy decides.
-- The critic's prose is never the approval authority.
-- `RunnablePassthrough.assign` keeps LCEL compact by threading `{prompt, artifact, critique}` through the pipe.
-- `FakeListChatModel` is the correct LangChain fake because responses line up with model-call order.
-- A revision draft still needs a fresh critique before it can be accepted.
+- The result separates the artifact that was judged from any unreviewed revision draft.
+- A revision can be accepted only by an explicit `build_review_chain(...)` pass.
+- Unsupported opinions remain auditable in `dropped_issues`, but cannot trigger policy.
+- `FakeListChatModel` is the correct LCEL fake because responses line up with model-call order.
 
 ## Further reading
 

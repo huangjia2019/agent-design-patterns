@@ -1,61 +1,100 @@
-"""Runnable example: the June ledger that would not reconcile.
-
-    python collaboration/b-fan-out-gather/example.py
-
-No API key needed. Four mock workers stand in for real agents, each bound to one
-data source (payroll / social-security / attendance / GL). They all compute the
-*same* June total, and the fan-out sends the same roster to all four in
-parallel. The gather does NOT concatenate — it compares each line item across
-the four sources and sorts the divergence into three layers, so the gap locates
-itself to a subsystem instead of being guessed at.
-
-Swap the mock ``FanoutFn``s for LangGraph nodes or Claude Agent SDK subagents
-(see the two tutorials) and the reconciler under it never changes.
-"""
+"""Runnable Fan-out / Gather example with four deterministic ledgers."""
 from __future__ import annotations
 
 import asyncio
 
-from pattern import FanOutGather, Reconciler, SourceResult
+from pattern import (
+    AggregatorPolicy,
+    FanOutGather,
+    Reconciler,
+    SourceResult,
+    SourceSpec,
+    Strategy,
+    TaskContract,
+    bind_source_result,
+)
 
-ROSTER = [{"id": f"e{i}"} for i in range(800)]
 
-# Each source's view of the same June total. payroll & GL agree on everything;
-# social_security is 12万 low on 社保代扣 (base not synced this month); attendance
-# is 15万 high on 加班费 (overtime rule changed, payroll never got it). Those two
-# gaps ARE the missing 缺口 — the divergence points straight at the two systems.
+ROWS = ({"id": f"e{i}"} for i in range(800))
 LEDGER = {
-    "payroll":         {"基本工资": 3_100_000.0, "社保代扣": 120_000.0, "加班费": 100_000.0},
-    "gl":              {"基本工资": 3_100_000.0, "社保代扣": 120_000.0, "加班费": 100_000.0},
-    "social_security": {"基本工资": 3_100_000.0, "社保代扣": 108_000.0, "加班费": 100_000.0},
-    "attendance":      {"基本工资": 3_100_000.0, "社保代扣": 120_000.0, "加班费": 250_000.0},
+    "payroll": {"基本工资": 3_100_000.0, "社保代扣": 120_000.0, "加班费": 100_000.0},
+    "gl": {"基本工资": 3_100_000.0, "社保代扣": 120_000.0, "加班费": 100_000.0},
+    "social_security": {
+        "基本工资": 3_100_000.0,
+        "社保代扣": 108_000.0,
+        "加班费": 100_000.0,
+    },
+    "attendance": {
+        "基本工资": 3_100_000.0,
+        "社保代扣": 120_000.0,
+        "加班费": 250_000.0,
+    },
 }
 
 
-def build_source(name: str, items: dict):
-    async def fn(source: str, rows: list[dict]) -> SourceResult:
-        await asyncio.sleep(0.01)   # pretend the model is thinking
-        return SourceResult(source=name, line_items=items)
-    return fn
+def root_contract() -> TaskContract:
+    return TaskContract(
+        contract_id="june-ledger-reconciliation",
+        version=1,
+        objective="reconcile the June payroll ledger",
+        output_schema="ReconciliationReport",
+        accountable_owner="payroll-controller",
+        input_refs=("ledger://2026-06",),
+    )
+
+
+def build_source(source_id: str, items: dict[str, float]):
+    source = SourceSpec(
+        source_id=source_id,
+        snapshot_ref=f"snapshot://{source_id}/2026-06",
+        period="2026-06",
+        unit="CNY",
+        boundary=f"read only from {source_id}",
+        expected_items=tuple(items),
+        allowed_tools=(f"read_{source_id}",),
+        authority_scope=(f"read:{source_id}",),
+    )
+
+    async def worker(handoff, rows):
+        await asyncio.sleep(0.01)
+        result = SourceResult.from_mapping(
+            source_id=source.source_id,
+            snapshot_ref=source.snapshot_ref,
+            period=source.period,
+            unit=source.unit,
+            line_items=items,
+        )
+        return bind_source_result(
+            handoff,
+            result,
+            evidence_refs=(source.snapshot_ref,),
+        )
+
+    return source, worker
 
 
 async def main() -> None:
-    sources = {name: build_source(name, items) for name, items in LEDGER.items()}
-    fog = FanOutGather(sources, Reconciler(tol=1.0), max_concurrent=5)
+    sources = tuple(
+        build_source(source_id, items)
+        for source_id, items in LEDGER.items()
+    )
+    gather = FanOutGather(
+        sources,
+        Reconciler(AggregatorPolicy(strategy=Strategy.COMPETING), tol=1.0),
+        min_success_rate=1.0,
+    )
+    run = await gather.run(root_contract(), tuple(ROWS))
 
-    print(f"Fan-out: {len(sources)} data sources · same June total · {len(ROSTER)} employees\n")
-    result = await fog.run(ROSTER)
-
-    print(f"status: {result['status']}\n")
-    print(f"Agreed (gap is NOT here):   {result['agreed_items']}")
-    print("\nLocated root causes (divergence -> subsystem):")
-    for rc in result["root_causes"]:
-        lo, hi = ", ".join(rc["low_sources"]), ", ".join(rc["high_sources"])
-        print(f"  · {rc['item']}: gap {rc['gap']:,.0f}  "
-              f"[{lo} low  vs  {hi} high]")
-    print(f"\nUnexplained -> human review: {[x['item'] for x in result['to_human']]}")
-    print("\nNo agent guessed where the money went. Four sources computed the same "
-          "total; the two line items they disagreed on ARE the gap.")
+    print(f"status: {run.report.status.value}")
+    print(f"agreed: {list(run.report.agreed_items)}")
+    print("attributable divergences:")
+    for verdict in run.report.attributable_divergences:
+        print(
+            f"  {verdict.item}: gap={verdict.gap:,.0f} "
+            f"low={list(verdict.low_sources)} "
+            f"high={list(verdict.high_sources)}"
+        )
+    print(f"root receipt: {run.report_receipt.decision.value}")
 
 
 if __name__ == "__main__":

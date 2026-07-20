@@ -1,73 +1,136 @@
-"""Runnable example: an AI travel assistant, one blocker away from a broken trip.
-
-    python collaboration/c-adversarial-review/example.py
-
-No API key needed. A mock planner hands over an itinerary that looks fine — flight
-booked, hotel booked, airport taxi booked — but the taxi's ETA lands after
-boarding closes. A mock independent reviewer catches exactly that, the reviser
-books an earlier taxi, and the second review comes back clean, so the gate
-confirms. Swap the mocks for a LangGraph loop or Claude Agent SDK subagents (see
-the tutorials) and the review loop under it never changes.
-"""
+"""Small runnable example for the contract-bound Adversarial Review pattern."""
 from __future__ import annotations
 
 import asyncio
+import os
+import sys
+from dataclasses import dataclass, replace
 
-from pattern import AdversarialReview, Itinerary, Objection, Severity
 
-# The plan the travel assistant produced. The taxi picks up too late to make
-# boarding — a mistake a confident planner ships, and a reviewer must catch.
-INITIAL = Itinerary(
-    legs=[
-        {"type": "flight", "code": "MU5102", "depart": "20:00", "boarding": "19:30"},
-        {"type": "taxi", "provider": "didi", "pickup": "19:10", "airport_eta": "19:40"},
-        {"type": "hotel", "provider": "ctrip", "checkin": "2026-07-02", "nights": 2},
-    ],
-    total_price=3180.0,
+sys.path.insert(0, os.path.dirname(__file__))
+
+from pattern import (  # noqa: E402
+    AdversarialReview,
+    ArtifactEnvelope,
+    Objection,
+    ReviewPanel,
+    ReviewPolicy,
+    ReviewerSpec,
+    ReviserSpec,
+    Severity,
+    TaskContract,
 )
 
 
-async def reviewer(plan: Itinerary) -> list[Objection]:
-    """Independent critic. Sees ONLY the plan (context isolation), and returns
-    objections — never an approval. Here it checks the taxi against boarding."""
-    await asyncio.sleep(0.01)
-    objs: list[Objection] = []
-    taxi = next((l for l in plan.legs if l["type"] == "taxi"), None)
-    flight = next((l for l in plan.legs if l["type"] == "flight"), None)
-    if taxi and flight and taxi["airport_eta"] > flight["boarding"]:
-        objs.append(Objection(
-            Severity.BLOCKER, "taxi",
-            f"taxi arrives {taxi['airport_eta']} but boarding closes {flight['boarding']}",
-        ))
-    return objs
+@dataclass(frozen=True)
+class TravelPlan:
+    taxi_eta: str
+    boarding: str
+    total_price: float
 
 
-async def reviser(plan: Itinerary, blockers: list[Objection]) -> Itinerary:
-    """Books an earlier taxi to clear the blocker. In production this is the
-    planner agent, re-invoked with the objections in hand."""
-    await asyncio.sleep(0.01)
-    legs = []
-    for leg in plan.legs:
-        if leg["type"] == "taxi":
-            leg = {**leg, "pickup": "18:30", "airport_eta": "19:00"}   # earlier
-        legs.append(leg)
-    return Itinerary(legs=legs, total_price=plan.total_price + 20.0)    # earlier ride costs a bit more
+def contract() -> TaskContract:
+    return TaskContract(
+        contract_id="confirm-trip",
+        version=1,
+        objective="confirm one reviewed itinerary",
+        output_schema="TravelPlan",
+        accountable_owner="travel-controller",
+        boundary="the reviewer may object; only the gate may confirm",
+    )
+
+
+def artifact(plan: TravelPlan, revision: int, producer: str):
+    return ArtifactEnvelope(
+        artifact_id=f"travel-plan-r{revision}",
+        contract_digest=contract().digest,
+        schema=contract().output_schema,
+        produced_by=producer,
+        payload=plan,
+        evidence_refs=("booking://flight-42", "booking://taxi-7"),
+    )
+
+
+async def review_boarding(request):
+    plan = request.artifact.payload
+    if plan.taxi_eta <= plan.boarding:
+        return ()
+    return (
+        Objection(
+            code="taxi_after_boarding",
+            rule_id="boarding-time",
+            severity=Severity.BLOCKER,
+            field="taxi_eta",
+            claim=f"taxi_eta={plan.taxi_eta} boarding={plan.boarding}",
+            evidence_refs=("booking://flight-42", "booking://taxi-7"),
+        ),
+    )
+
+
+async def revise(request, blockers):
+    plan = replace(
+        request.artifact.payload,
+        taxi_eta="19:00",
+        total_price=request.artifact.payload.total_price + 20.0,
+    )
+    return artifact(plan, request.artifact_revision + 1, "travel-reviser")
 
 
 async def main() -> None:
-    review = AdversarialReview(reviewer=reviewer, reviser=reviser, max_rounds=3)
-    result = await review.run(INITIAL)
+    panel = ReviewPanel(
+        "travel-review-panel",
+        (
+            ReviewerSpec(
+                reviewer_id="boarding-reviewer",
+                actor_id="travel-risk-agent",
+                rule_ids=("boarding-time",),
+                evidence_scope=("read:flight", "read:taxi"),
+                review=review_boarding,
+            ),
+        ),
+    )
+    system = AdversarialReview(
+        panel,
+        ReviewPolicy(
+            rubric_version="travel-release-v1",
+            required_rule_ids=("boarding-time",),
+            max_rounds=3,
+        ),
+        author_actor_id="travel-author",
+        fingerprint=lambda plan: (
+            f"{plan.taxi_eta}|{plan.boarding}|{plan.total_price:.2f}"
+        ),
+        reviser=ReviserSpec(
+            reviser_id="travel-reviser",
+            actor_id="travel-reviser",
+            revise=revise,
+        ),
+    )
+    result = await system.run(
+        contract(),
+        artifact(
+            TravelPlan("19:40", "19:30", 3180.0),
+            revision=0,
+            producer="travel-author",
+        ),
+    )
 
-    print(f"Outcome: {result['outcome'].value}\n")
-    for i, r in enumerate(result["rounds"], 1):
-        print(f"  round {i}: revision {r['revision']} · "
-              f"{r['objections']} objection(s), {r['blockers']} blocker(s)")
-    taxi = next(l for l in result["plan"].legs if l["type"] == "taxi")
-    print(f"\nFinal taxi ETA: {taxi['airport_eta']} (boarding 19:30) · "
-          f"total ¥{result['plan'].total_price:,.0f}")
-    print("\nThe planner never got to grade its own homework. An independent "
-          "reviewer found the blocker; only after it raised no blocker did the "
-          "gate confirm.")
+    print(f"Outcome: {result.outcome.value}")
+    for item in result.rounds:
+        print(
+            f"  round {item.round_number}: "
+            f"artifact={item.receipt.artifact_id} "
+            f"blockers={len(item.receipt.blockers)}"
+        )
+    plan = result.artifact.payload
+    print(
+        f"Final taxi ETA: {plan.taxi_eta} "
+        f"(boarding {plan.boarding}) · total ¥{plan.total_price:,.0f}"
+    )
+    print(
+        f"Acceptance: {result.acceptance_receipt.decision.value} "
+        f"for {result.acceptance_receipt.artifact_id}"
+    )
 
 
 if __name__ == "__main__":

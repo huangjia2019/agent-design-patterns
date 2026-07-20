@@ -1,0 +1,705 @@
+:root {
+  color-scheme: light;
+  --ink: #14212b;
+  --muted: #667580;
+  --line: #d7e0e5;
+  --surface: #ffffff;
+  --canvas: #f3f6f7;
+  --sidebar: #1c282e;
+  --sidebar-line: #35434a;
+  --cyan: #176d83;
+  --cyan-soft: #e3f2f5;
+  --green: #23734f;
+  --green-soft: #e8f4ed;
+  --red: #a7453e;
+  --red-soft: #f8ece9;
+  --amber: #9b6b18;
+  --amber-soft: #f7f1e5;
+  --shadow: 0 1px 2px rgba(20, 33, 43, 0.08);
+  font-family: Inter, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--ink);
+  background: var(--canvas);
+  letter-spacing: 0;
+}
+
+button {
+  font: inherit;
+}
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 18px;
+  color: #e9f0f2;
+  background: var(--sidebar);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px 20px;
+  border-bottom: 1px solid var(--sidebar-line);
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 5px;
+  color: #12333d;
+  background: #d9f0f3;
+  font-weight: 800;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.brand span {
+  margin-top: 3px;
+  color: #9db2bc;
+  font-size: 12px;
+}
+
+.side-label {
+  padding: 22px 7px 9px;
+  color: #8fa5af;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.lecture-nav {
+  display: grid;
+  gap: 4px;
+}
+
+.lecture-link {
+  width: 100%;
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 8px 9px;
+  color: #c7d4d9;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lecture-link:hover {
+  background: #26343b;
+}
+
+.lecture-link.active {
+  border-color: #4b626d;
+  color: #ffffff;
+  background: #314047;
+}
+
+.lecture-number {
+  color: #75c4d6;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lecture-name strong,
+.lecture-name span {
+  display: block;
+}
+
+.lecture-name strong {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.lecture-name span {
+  margin-top: 4px;
+  color: #90abb6;
+  font-size: 11px;
+}
+
+.side-actions {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid var(--sidebar-line);
+}
+
+.db-indicator {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 5px 0;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #67d39a;
+}
+
+.db-indicator strong,
+.db-indicator span {
+  display: block;
+}
+
+.db-indicator strong {
+  font-size: 11px;
+}
+
+.db-indicator span {
+  margin-top: 3px;
+  color: #8fa5af;
+  font-size: 10px;
+}
+
+.main {
+  min-height: 100vh;
+  margin-left: 260px;
+}
+
+.topbar {
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.tabs {
+  display: flex;
+  align-self: stretch;
+  gap: 28px;
+}
+
+.tab {
+  position: relative;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: var(--ink);
+}
+
+.tab.active::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  content: "";
+  background: var(--cyan);
+}
+
+.button {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 0 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.button-primary {
+  color: #ffffff;
+  border-color: var(--cyan);
+  background: var(--cyan);
+}
+
+.button-primary:hover {
+  background: #125d70;
+}
+
+.button-secondary {
+  color: #33464f;
+  border-color: #cbd6db;
+  background: #ffffff;
+}
+
+.button-secondary:hover {
+  background: #eef3f5;
+}
+
+.button-wide {
+  width: 100%;
+}
+
+.view {
+  display: none;
+  padding: 32px 34px 44px;
+}
+
+.view.active {
+  display: block;
+}
+
+.lecture-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 22px;
+}
+
+.lecture-head.compact {
+  align-items: center;
+}
+
+.lecture-head h1 {
+  margin: 5px 0 5px;
+  font-size: 27px;
+  line-height: 1.25;
+}
+
+.lecture-head p {
+  max-width: 780px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.eyebrow,
+.panel-kicker {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.lecture-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 9px;
+}
+
+.stage-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.stage {
+  position: relative;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px;
+  border-right: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.stage:last-child {
+  border-right: 0;
+}
+
+.stage-index {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #31525e;
+  background: #e1edf0;
+  font-size: 10px;
+}
+
+.metric-band {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.metric {
+  min-height: 96px;
+  padding: 18px 20px;
+  border-right: 1px solid var(--line);
+}
+
+.metric:last-child {
+  border-right: 0;
+}
+
+.metric span,
+.metric strong,
+.metric small {
+  display: block;
+}
+
+.metric span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.metric strong {
+  margin: 7px 0 4px;
+  font-size: 21px;
+}
+
+.metric small {
+  color: #87959c;
+  font-size: 10px;
+}
+
+.comparison-section,
+.evidence-section {
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-heading h2 {
+  margin: 4px 0 0;
+  font-size: 17px;
+}
+
+.run-status {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.comparison-panel {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+
+.comparison-panel.danger {
+  border-left-color: var(--red);
+  background: var(--red-soft);
+}
+
+.comparison-panel.warning {
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.comparison-panel.success {
+  border-left-color: var(--green);
+  background: var(--green-soft);
+}
+
+.comparison-panel h3 {
+  margin: 5px 0 15px;
+  font-size: 15px;
+}
+
+.comparison-panel dl {
+  margin: 0;
+}
+
+.comparison-panel dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(60, 79, 86, 0.12);
+}
+
+.comparison-panel dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.comparison-panel dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.comparison-arrow {
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  font-size: 24px;
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8eb;
+  font-size: 11px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: #5e7079;
+  background: #f4f7f8;
+  font-weight: 800;
+}
+
+td {
+  color: #2c4049;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+.empty {
+  height: 88px;
+  color: #89979d;
+  text-align: center;
+}
+
+.table-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 18px 0 12px;
+}
+
+.table-tab {
+  min-height: 34px;
+  border: 1px solid #cbd6db;
+  border-radius: 4px;
+  padding: 0 12px;
+  color: #4c5e66;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.table-tab.active {
+  color: #ffffff;
+  border-color: var(--cyan);
+  background: var(--cyan);
+}
+
+.database-table {
+  max-height: calc(100vh - 220px);
+}
+
+.architecture-flow {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) 34px minmax(150px, 1fr) 34px minmax(150px, 1fr) 34px minmax(150px, 1fr);
+  align-items: center;
+  margin-top: 24px;
+}
+
+.architecture-node {
+  min-height: 146px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--cyan);
+  border-radius: 5px;
+  padding: 20px;
+  background: #ffffff;
+}
+
+.architecture-node span,
+.architecture-node strong,
+.architecture-node small {
+  display: block;
+}
+
+.architecture-node span {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.architecture-node strong {
+  margin: 10px 0 7px;
+  font-size: 15px;
+}
+
+.architecture-node small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.architecture-join {
+  color: var(--cyan);
+  font-size: 20px;
+  text-align: center;
+}
+
+.contract-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.contract-list div {
+  padding: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.contract-list div:last-child {
+  border-right: 0;
+}
+
+.contract-list strong,
+.contract-list span {
+  display: block;
+}
+
+.contract-list strong {
+  font-size: 13px;
+}
+
+.contract-list span {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 1050px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    min-height: auto;
+  }
+
+  .lecture-nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .side-actions {
+    display: none;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+
+  .architecture-flow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .architecture-join {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    padding: 14px;
+  }
+
+  .lecture-nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .topbar {
+    padding: 0 16px;
+  }
+
+  .view {
+    padding: 22px 16px 34px;
+  }
+
+  .lecture-head {
+    display: block;
+  }
+
+  .lecture-actions {
+    margin-top: 16px;
+  }
+
+  .stage-strip,
+  .metric-band,
+  .contract-list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stage:nth-child(2),
+  .metric:nth-child(2) {
+    border-right: 0;
+  }
+
+  .stage:nth-child(-n+2),
+  .metric:nth-child(-n+2) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .comparison-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .comparison-arrow {
+    transform: rotate(90deg);
+  }
+}

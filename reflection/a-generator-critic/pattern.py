@@ -1,22 +1,16 @@
-"""Generator-Critic pattern.
+"""Generator-Critic reference interface.
 
-Framework-agnostic reference implementation of the Reflection x Chain pattern.
-One role generates an artifact. A separate role critiques it. A deterministic
-gate decides whether the artifact is accepted or needs revision.
+Generator-Critic is the Reflect x Chain pattern. One pass has a fixed shape:
 
-The topology is intentionally one pass:
+    generate -> critique -> policy gate -> optional revision draft
 
-    generate -> critique -> gate -> optional revision draft
+The critic reports evidence about the artifact. It does not approve the artifact.
+The deterministic policy owns acceptance. A revision produced at the end of the
+pass is explicitly unreviewed and therefore cannot be accepted by the same pass.
 
-There is no re-critique loop here. If a revision draft is produced, it is still
-marked ``NEEDS_REVISION`` until another explicit pass critiques it. That keeps
-Generator-Critic distinct from the sibling Self-Heal Loop pattern.
-
-The critic's useful power comes from external signals. Every actionable issue
-names the check or source that produced it and carries evidence such as a schema
-key, policy clause, test failure, ledger count, or database observation. Issues
-without evidence are retained as dropped opinions, but they cannot trigger a
-revision.
+Repeating review and repair until a deterministic signal turns green belongs to
+the sibling Self-Heal Loop pattern. An outer workflow may schedule another
+Generator-Critic pass, but the loop is not hidden inside this interface.
 """
 from __future__ import annotations
 
@@ -26,7 +20,7 @@ from typing import Callable
 
 
 class Severity(str, Enum):
-    """How strongly an evidence-backed critic issue should affect the gate."""
+    """How strongly an issue should affect the policy gate."""
 
     BLOCKER = "blocker"
     WARNING = "warning"
@@ -34,7 +28,7 @@ class Severity(str, Enum):
 
 
 class Decision(str, Enum):
-    """Deterministic gate result."""
+    """Deterministic result for the artifact that was actually reviewed."""
 
     ACCEPTED = "accepted"
     NEEDS_REVISION = "needs_revision"
@@ -42,27 +36,36 @@ class Decision(str, Enum):
 
 @dataclass(frozen=True)
 class Issue:
-    """One concrete critic finding.
+    """One concrete issue reported by the critic.
 
-    `source` names the check that produced the finding. `evidence` records what
-    the check actually saw. Empty source/evidence means the finding is only an
-    opinion; `Critique` keeps it in `dropped_issues` so the trace is auditable,
-    but acceptance policy ignores it.
+    Evidence records what the check observed, such as a ledger query, schema
+    clause, source citation, or quoted span. A policy can require evidence before
+    an issue is allowed to trigger an automatic revision.
     """
 
     severity: Severity
     message: str
     location: str = ""
-    source: str = ""
     evidence: str = ""
+    check: str = ""
+
+    @property
+    def grounded(self) -> bool:
+        return bool(self.check.strip() and self.evidence.strip())
+
+    @property
+    def source(self) -> str:
+        """Compatibility name used by the notebook JSON schema."""
+
+        return self.check
 
     def is_evidence_backed(self) -> bool:
-        return bool(self.source.strip() and self.evidence.strip())
+        return self.grounded
 
 
 @dataclass(frozen=True)
 class Artifact:
-    """The generated object under critique."""
+    """The generated object under review."""
 
     content: str
     revision: int = 0
@@ -82,78 +85,106 @@ class Critique:
     score: float
     issues: list[Issue]
     summary: str
+    score_evidence: str = ""
     dropped_issues: list[Issue] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.score <= 1.0:
             raise ValueError("score must be between 0.0 and 1.0")
 
-        evidence_backed: list[Issue] = []
+        grounded: list[Issue] = []
         dropped = list(self.dropped_issues)
         for issue in self.issues:
-            if issue.is_evidence_backed():
-                evidence_backed.append(issue)
+            if issue.grounded:
+                grounded.append(issue)
             else:
                 dropped.append(issue)
 
-        object.__setattr__(self, "issues", evidence_backed)
+        object.__setattr__(self, "issues", grounded)
         object.__setattr__(self, "dropped_issues", dropped)
 
-    def blockers(self) -> list[Issue]:
-        return [issue for issue in self.issues if issue.severity is Severity.BLOCKER]
+    def blockers(self, *, include_dropped: bool = False) -> list[Issue]:
+        issues = self.issues + self.dropped_issues if include_dropped else self.issues
+        return [issue for issue in issues if issue.severity is Severity.BLOCKER]
 
-    def warnings(self) -> list[Issue]:
-        return [issue for issue in self.issues if issue.severity is Severity.WARNING]
+    def warnings(self, *, include_dropped: bool = False) -> list[Issue]:
+        issues = self.issues + self.dropped_issues if include_dropped else self.issues
+        return [issue for issue in issues if issue.severity is Severity.WARNING]
+
+    def ungrounded(self) -> list[Issue]:
+        return list(self.dropped_issues)
 
 
 @dataclass(frozen=True)
 class AcceptancePolicy:
-    """Deterministic gate between critic evidence and shipping decision."""
+    """Deterministic gate between critic evidence and a shipping decision."""
 
     min_score: float = 0.8
     allow_warnings: bool = True
+    require_evidence: bool = True
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.min_score <= 1.0:
             raise ValueError("min_score must be between 0.0 and 1.0")
 
+    def _score_is_actionable(self, critique: Critique) -> bool:
+        if critique.score >= self.min_score:
+            return False
+        if not self.require_evidence:
+            return True
+        return bool(critique.score_evidence.strip())
+
     def decide(self, critique: Critique) -> Decision:
-        if critique.blockers():
+        include_dropped = not self.require_evidence
+        if critique.blockers(include_dropped=include_dropped):
             return Decision.NEEDS_REVISION
-        if not self.allow_warnings and critique.warnings():
+        if not self.allow_warnings and critique.warnings(
+            include_dropped=include_dropped
+        ):
             return Decision.NEEDS_REVISION
-        if critique.score < self.min_score:
+        if self._score_is_actionable(critique):
             return Decision.NEEDS_REVISION
         return Decision.ACCEPTED
 
 
 Generator = Callable[[str], Artifact]
-Critic = Callable[[Artifact], Critique]
+CriticFn = Callable[[Artifact], Critique]
 Reviser = Callable[[Artifact, Critique], Artifact]
 
 
 @dataclass(frozen=True)
 class ChainResult:
-    """Auditable output of one Generator-Critic pass."""
+    """Auditable output of exactly one Generator-Critic pass."""
 
     decision: Decision
-    artifact: Artifact
+    reviewed_artifact: Artifact
     critique: Critique
-    trace: list[str]
+    revision_draft: Artifact | None
+    trace: tuple[str, ...]
+
+    @property
+    def artifact(self) -> Artifact:
+        """Compatibility view: the newest artifact produced by this pass."""
+
+        return self.revision_draft or self.reviewed_artifact
+
+    @property
+    def requires_re_review(self) -> bool:
+        return self.revision_draft is not None
 
 
 class GeneratorCriticChain:
-    """Run one generate -> critique -> gate pass.
+    """Run one bounded Generator-Critic pass.
 
-    The critic's job is to produce evidence. The policy owns acceptance. This
-    split prevents the common failure mode where a critic is prompted into
-    saying "looks good" and the harness treats that as approval.
+    run starts from a prompt and invokes the generator. review starts from an
+    existing artifact, which is useful when an outer workflow explicitly submits
+    a revision for another pass. Neither method contains a retry loop.
     """
 
     def __init__(
         self,
         generator: Generator,
-        critic: Critic,
+        critic: CriticFn,
         reviser: Reviser | None = None,
         policy: AcceptancePolicy | None = None,
     ) -> None:
@@ -163,9 +194,13 @@ class GeneratorCriticChain:
         self.policy = policy or AcceptancePolicy()
 
     def run(self, prompt: str) -> ChainResult:
-        trace = ["generated"]
         artifact = self.generator(prompt)
+        return self._review(artifact, trace=["generated"])
 
+    def review(self, artifact: Artifact) -> ChainResult:
+        return self._review(artifact, trace=["artifact_received"])
+
+    def _review(self, artifact: Artifact, *, trace: list[str]) -> ChainResult:
         critique = self.critic(artifact)
         trace.append("critiqued")
         if critique.dropped_issues:
@@ -174,13 +209,15 @@ class GeneratorCriticChain:
         decision = self.policy.decide(critique)
         trace.append(decision.value)
 
+        revision_draft = None
         if decision is Decision.NEEDS_REVISION and self.reviser is not None:
-            artifact = self.reviser(artifact, critique)
+            revision_draft = self.reviser(artifact, critique)
             trace.append("revision_drafted")
 
         return ChainResult(
             decision=decision,
-            artifact=artifact,
+            reviewed_artifact=artifact,
             critique=critique,
-            trace=trace,
+            revision_draft=revision_draft,
+            trace=tuple(trace),
         )

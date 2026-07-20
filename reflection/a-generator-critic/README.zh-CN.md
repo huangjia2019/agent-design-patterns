@@ -1,80 +1,86 @@
-# a · 生成-批评 Generator-Critic
+# 生成批评
 
-> 专栏第 **06-02** 讲 · 模式 · 反思 × Chain
+> 专栏第 **06-02** 讲 · 模式 · 反思行 × 链式列
 >
 > [English README](README.md)
 
-## 问题
+## 模式契约
 
-一个 Agent 起草客户可见的故障更新，或者生成一份月末薪酬报告。文字可以很自信，但关键判断
-必须来自外部信号：状态页事件、schema、SQL 对账、测试结果或策略条款。如果同一个生成步骤
-还能顺手说一句「看起来没问题」，这套 harness 并没有真正反思，只是让模型给自己背书。
-
-生成-批评把这几件事拆开：
-
-- **生成者** 产出 artifact。
-- **批评者** 只产出关于 artifact 的证据：分数、问题、阻断项、警告。
-- **策略闸门** 用确定性代码决定能不能通过。
-
-核心判断是：**批评者的成色取决于接进来的外部信号**。无证据的批评意见会被记录到
-`dropped_issues`，但不能触发修订；只有带 `source` 和 `evidence` 的 finding 才能作为事实信号
-进入闸门。
-
-## 模式边界
-
-拓扑是一条短链：
+生成批评只审一份产出，只走一遍有界链：
 
 ```text
-generate -> critique -> gate -> optional revision draft
+生成 -> 批评 -> 策略裁决 -> 可选的修订草稿
 ```
 
-关键边界在最后一步。如果 reviser 起草了一个更好的版本，结果仍然是 `NEEDS_REVISION`；这个
-模式不会在没有再次批评的情况下自动接受修改稿。要演示第二轮，应由 runner 显式再调用一次
-Generator-Critic pass，并留下两次独立 trace。
+批评者负责报告问题和证据，没有放行权。确定性的 `AcceptancePolicy`
+根据有依据的问题和分数，对本遍真正审过的产出作出 `ACCEPTED` 或
+`NEEDS_REVISION` 裁决。
 
-这也把生成-批评和自愈循环区分开：生成-批评是固定边界、可审计的评审链；Self-Heal Loop 才由
-停止条件驱动持续修复。
+一个可执行的问题必须同时带命名检查 `check`（notebook JSON 中叫
+`source`）和 `evidence`。缺少任一项的意见会进入 `dropped_issues`，
+保留在审计轨迹中，但不能触发自动修订。低分也遵守同一规则：启用证据
+要求时，只有同时给出 `Critique.score_evidence`，低分才能进入策略闸门。
 
-## 实现
+如果 reviser 生成了新稿，这份稿件明确处于未复审状态。
+`ChainResult.reviewed_artifact` 指明本遍真正审过的版本，
+`ChainResult.revision_draft` 必须由外层流程再次调用 `review()`，才能获得
+新的裁决。
 
-| 构件 | 作用 |
+这条边界决定了它位于反思行、链式列。由 test、lint、build 或 CI 红灯
+强制驱动、一直修到转绿或熔断的结构，属于相邻的
+[自愈循环](../d-self-heal-loop/README.zh-CN.md)。
+
+## 快速开始
+
+```bash
+python3 reflection/a-generator-critic/example.py
+python3 reflection/payroll-lab/generator_critic_lab.py
+python3 reflection/payroll-lab/generator_critic_lab.py --rubber-stamp
+
+uv run pytest reflection/a-generator-critic/test_pattern.py -q
+```
+
+薪酬 Lab 中，月报声称 800 张工资单已支付，而 SQLite 里的事实是 798 张
+`PAID`、2 张 `REVERSED`。标准批评者挂接账本与 schema 证据，第一遍只
+生成待复审的修订稿，第二遍显式提交后才可能放行。`--rubber-stamp`
+移除这些外部事实，展示一位文风漂亮的批评者如何批准错误月报。
+
+## 参考接口
+
+| 构件 | 责任 |
 |---|---|
-| `Artifact` | 被评审的生成物。 |
-| `Issue` | 一个批评 finding：`severity`、`message`、`location`、命名来源 `source`、外部证据 `evidence`。 |
-| `Critique` | 分数、summary、证据支持的 `issues`，以及被证据闸丢弃的 `dropped_issues`。 |
-| `AcceptancePolicy` | 确定性闸门。blocker、warning 和分数阈值都由代码判断。 |
-| `GeneratorCriticChain` | 单次 `generate -> critique -> gate`。可选 reviser 只产出修改稿，不自动放行。 |
+| `Artifact` | 生成物及其修订元数据。 |
+| `Issue` | 带严重级别、位置、命名检查和证据的问题。 |
+| `Critique` | 有依据的问题、被丢弃的意见、摘要、分数和分数依据。 |
+| `AcceptancePolicy` | 确定性的证据与严重级别闸门。 |
+| `ChainResult` | 把本遍已审产出和未复审的修订草稿明确分开。 |
+| `GeneratorCriticChain` | 从 prompt 运行一遍，或显式复审已有 artifact。 |
 
 ## 文件
 
 | 文件 | 内容 |
 |---|---|
-| [`pattern.py`](pattern.py) | 框架无关参照实现：数据结构、证据闸门和单次 Chain primitive。 |
-| [`shared.py`](shared.py) | 两套 reference notebook 共享的解析器、策略、mock 数据、reviser 和 trace 辅助函数。 |
-| [`example.py`](example.py) | 用 mock critic 和可选 reviser 跑一条故障更新草稿。无需 API key。 |
-| [`test_pattern.py`](test_pattern.py) | 覆盖分数阈值、证据闸、blocker/warning、严格解析失败、trace 顺序、修改稿不能自动放行等不变量。 |
-| [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | StateGraph 实现：显式 `generate -> critique -> gate -> revise` 节点和条件路由。 |
-| [`langchain/tutorial.ipynb`](langchain/tutorial.ipynb) | LangChain LCEL 实现：更短的 runnable pipe，复用同一套解析器和策略闸门。 |
-| [`../payroll-lab/generator_critic_lab.py`](../payroll-lab/generator_critic_lab.py) | 第 27 讲 Payroll Lab：接外部信号的批评链、橡皮图章、轮次耗尽交人工。重复 pass 由 runner 显式完成。 |
+| [`pattern.py`](pattern.py) | 框架无关参照接口和单遍边界。 |
+| [`shared.py`](shared.py) | 两套 notebook 共享的 JSON 解析器、策略、确定性 fixture、reviser 和 trace。 |
+| [`example.py`](example.py) | 对客户故障更新做两遍显式评审；无需 API key。 |
+| [`test_pattern.py`](test_pattern.py) | 证据、分数、解析、版本边界和可选依赖不变量。 |
+| [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | 用 StateGraph 节点和条件路由表达同一契约。 |
+| [`langchain/tutorial.ipynb`](langchain/tutorial.ipynb) | 用 LCEL 表达同一套解析器、策略、fixture 和术语。 |
+| [`../payroll-lab/generator_critic_lab.py`](../payroll-lab/generator_critic_lab.py) | 接账本证据的批评者与橡皮图章批评者对照。 |
 
-## 运行
+## Notebook 验证
+
+两套 notebook 都先运行确定性的 fake-model 场景，最后的可选真实后端区段
+直接调用 `get_model()`，不需要额外的 fake/real 环境变量。
 
 ```bash
-python reflection/a-generator-critic/example.py
-pytest reflection/a-generator-critic/test_pattern.py -v
-
-# Payroll Lab：三场景，无需 API key
-python reflection/payroll-lab/generator_critic_lab.py
-python reflection/payroll-lab/generator_critic_lab.py --stubborn
-
-# reference notebooks —— mock cell 无需 API key；配置好 .env 后 real backend cell 会直接运行
-pytest --nbmake --nbmake-timeout=120 \
+env OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
+  uv run pytest --nbmake --nbmake-timeout=120 \
   reflection/a-generator-critic/langgraph/tutorial.ipynb \
   reflection/a-generator-critic/langchain/tutorial.ipynb
 ```
 
-## 它在双轴里的位置
+## 矩阵位置
 
-反思（认知功能）× Chain（执行拓扑）。最近的邻居是自愈循环，它会重复批评/修改路径；另一个
-近邻是协作模块的对抗评审，它把「自己反思」推进到「独立评审者攻击」。见
+这个模式坐落在 **反思 × 链式** 的交点。相邻模式见
 [双轴矩阵](../../README.zh-CN.md#28-个模式的矩阵)。

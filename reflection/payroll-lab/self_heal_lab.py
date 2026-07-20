@@ -2,9 +2,9 @@
 
 Uses the pattern from ../d-self-heal-loop/pattern.py on the payroll
 bench. July's payout script fails its reconciliation tests in CI; the
-healer diagnoses, patches, re-runs -- bounded by the triple stop
-(3 rounds hard cap, critic gate on every patch, regression check +
-full rollback). Three scenes:
+healer diagnoses, patches, re-runs -- bounded by four non-success
+outcomes (critic block, no progress, regression, round budget), all
+of which restore the transaction ledger before handoff. Three scenes:
 
     scene 1  convergence: two real defects surface one after the other
              (REVERSED payslips included in the payout, then a stale
@@ -16,10 +16,10 @@ full rollback). Three scenes:
              test instead of fixing the code; the critic checkpoint
              blocks it before apply and hands the case to a human.
     scene 3  run with --meltdown: the same symptom-chasing fixer, first
-             in a naive unbounded loop (the main-branch incident in
-             miniature: nine overlapping edits, no atomic commits,
-             nothing to roll back to), then under the triple stop
-             (regression detected in round 1, full rollback, clean).
+             in a controlled incident re-enactment (nine overlapping
+             edits, no atomic commits, nothing to roll back to), then
+             under the bounded stop policy (regression detected after
+             round 2 verification, full rollback, clean).
 
 Run `python3 self_heal_lab.py` (add --meltdown for scene 3).
 """
@@ -29,7 +29,11 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE.parent / "d-self-heal-loop"))
 from pattern import (  # noqa: E402
-    FailureSignal, Patch, SelfHealLoop, propose_guard)
+    FailureSignal,
+    Patch,
+    SelfHealLoop,
+    propose_guard,
+)
 import bench  # noqa: E402
 
 MELTDOWN = "--meltdown" in sys.argv
@@ -50,12 +54,16 @@ def run_ci() -> FailureSignal | None:
             "test",
             f"reconcile_payout: payout list includes REVERSED payslips "
             f"{','.join(REVERSED_IDS)}",
-            affected_files=["payout.py"])
+            affected_files=["payout.py"],
+            code="PAYROLL_REVERSED_IN_PAYOUT",
+        )
     if not script["membership_check"]:
         return FailureSignal(
             "test",
             "batch_membership: E0012 bound to stale department Finance",
-            affected_files=["batch.py"])
+            affected_files=["batch.py"],
+            code="PAYROLL_STALE_DEPARTMENT_BINDING",
+        )
     return None
 
 
@@ -112,12 +120,18 @@ def rollback(commit_id: str) -> None:
 
 def show(trace):
     for r in trace.rounds:
-        print(f"   round {r.round_no}: RED  {r.failure.error_text}")
+        signal_id = r.failure.code or r.failure.signature
+        print(f"   round {r.round_no}: RED  [{signal_id}] {r.failure.error_text}")
         print(f"      diagnosis: {r.diagnosis}")
-        print(f"      patch: {r.patch.description}  (touches {r.patch.touches})")
+        print(
+            f"      patch: {r.patch.description} "
+            f"(id={r.patch.fingerprint}, touches={r.patch.touches})"
+        )
         print(f"      critic: {r.critic_verdict}"
               + (f"   applied as {r.commit_id}" if r.commit_id else ""))
     print(f"   status: {trace.status.upper()}")
+    if trace.status.value != "fixed":
+        print(f"   baseline_restored: {str(trace.baseline_restored).lower()}")
 
 
 if not MELTDOWN:
@@ -130,8 +144,8 @@ if not MELTDOWN:
 
     guard = propose_guard(
         signature=trace.rounds[0].failure.signature,
-        months_seen=["2026-06", "2026-07"])
-    print("\n   same failure class healed two months running ->")
+        runs_seen=["teaching-run-2026-06", "teaching-run-2026-07"])
+    print("\n   teaching recurrence fixture: same failure class in two runs ->")
     print(f"   propose guard: {guard}")
     print("   (status=proposed: a human review promotes it to enforced;")
     print("    healing rescues this month, the guard blocks next month.)")
@@ -146,7 +160,7 @@ if not MELTDOWN:
     print("      money; the case goes to a human with the blocked patch.")
 
 else:
-    print("== scene 3 (--meltdown): the incident, then the triple stop ==")
+    print("== scene 3 (--meltdown): the incident, then bounded repair ==")
     # The same symptom-chasing fixer, scripted: every round the error
     # mutates and the patch touches more files.
     SPRAWL = [
@@ -169,14 +183,27 @@ else:
     ]
     print("   naive loop (no critic, no signature check, no atomic commits):")
     touched: set = set()
+    failure_classes: dict[str, list[int]] = {}
     for n, (err, files) in enumerate(SPRAWL, 1):
         touched.update(files)
-        print(f"      round {n}: RED  {err}  -> edit {files}")
+        signature = FailureSignal("test", err).signature
+        failure_classes.setdefault(signature, []).append(n)
+        print(
+            f"      round {n}: RED  [{signature}] {err}  -> edit {files}"
+        )
     print(f"   after 9 rounds: {len(touched)} files edited in overlapping,")
     print("   non-atomic changes -- payslip_gen.py and tax_calc.py had")
     print("   nothing wrong. There is no clean state to roll back to.")
+    print(f"   distinct failure classes: {len(failure_classes)}")
+    repeated = [
+        (signature, rounds)
+        for signature, rounds in failure_classes.items()
+        if len(rounds) > 1
+    ]
+    for signature, rounds in repeated:
+        print(f"      repeated class {signature}: rounds {rounds}")
 
-    print("\n   same fixer under the triple stop:")
+    print("\n   same fixer under the bounded stop policy:")
     sprawl_iter = iter(SPRAWL[1:])
 
     def sprawl_verify():

@@ -1,9 +1,4 @@
-"""Runnable example for the Generator-Critic pattern.
-
-Scenario: a support agent drafts a customer-facing incident update. The critic
-checks whether the draft has evidence and a useful next step. A deterministic
-policy decides whether the draft can ship.
-"""
+"""Minimal runnable example for the Generator-Critic pattern."""
 from __future__ import annotations
 
 from pattern import (
@@ -16,73 +11,51 @@ from pattern import (
 )
 
 
-def draft_incident_update(prompt: str) -> Artifact:
+def generate_update(prompt: str) -> Artifact:
     return Artifact(
-        content=(
-            "We identified elevated checkout errors. "
-            "Impact is limited to card payments. "
-            "Next update in 30 minutes."
-        ),
+        content="Checkout errors affected card payments. Next update in 30 minutes.",
         metadata={"prompt": prompt},
     )
 
 
 def critique_update(artifact: Artifact) -> Critique:
-    issues: list[Issue] = []
-    if "Impact" not in artifact.content:
+    issues = []
+    if "INC-42" not in artifact.content:
         issues.append(
             Issue(
-                Severity.BLOCKER,
-                "missing customer impact",
-                "body",
-                "incident_update_schema",
-                "customer update schema requires an impact statement",
+                severity=Severity.BLOCKER,
+                message="impact claim has no incident evidence",
+                location="sentence 1",
+                evidence="status dashboard incident INC-42",
+                check="incident_source",
             )
         )
-    if "Next update" not in artifact.content:
-        issues.append(
-            Issue(
-                Severity.WARNING,
-                "missing next-update promise",
-                "body",
-                "support_policy",
-                "policy SUP-12 requires a next-update window",
-            )
-        )
-    if "dashboard" not in artifact.content:
-        issues.append(
-            Issue(
-                Severity.BLOCKER,
-                "no evidence link",
-                "body",
-                "incident_policy",
-                "customer-visible impact claims require a status incident ID",
-            )
-        )
-
-    score = 0.86 if not any(issue.severity is Severity.BLOCKER for issue in issues) else 0.62
-    return Critique(score=score, issues=issues, summary=f"{len(issues)} issue(s) found")
-
-
-def revise_update(artifact: Artifact, critique: Critique) -> Artifact:
-    issue_text = "; ".join(issue.message for issue in critique.issues)
-    revised = (
-        f"{artifact.content} Evidence: status dashboard incident INC-42. "
-        f"Revision addressed: {issue_text}."
+    return Critique(
+        score=0.62 if issues else 0.92,
+        issues=issues,
+        summary=f"{len(issues)} issue(s)",
+        score_evidence="one grounded blocker" if issues else "",
     )
-    return artifact.revise(revised, note="added evidence from critic feedback")
+
+
+def revise_update(artifact: Artifact, _critique: Critique) -> Artifact:
+    return artifact.revise(
+        artifact.content + " Evidence: status dashboard incident INC-42.",
+        note="attached incident evidence",
+    )
 
 
 if __name__ == "__main__":
     chain = GeneratorCriticChain(
-        generator=draft_incident_update,
+        generator=generate_update,
         critic=critique_update,
         reviser=revise_update,
         policy=AcceptancePolicy(min_score=0.8),
     )
 
-    result = chain.run("draft checkout incident update")
-    print("Decision:", result.decision.value)
-    print("Trace:", " -> ".join(result.trace))
-    print("Critique:", result.critique.summary)
-    print("Artifact:", result.artifact.content)
+    first_pass = chain.run("draft checkout incident update")
+    print("pass 1:", first_pass.decision.value, "->", " -> ".join(first_pass.trace))
+    print("revision:", first_pass.revision_draft.content)
+
+    second_pass = chain.review(first_pass.revision_draft)
+    print("pass 2:", second_pass.decision.value, "->", " -> ".join(second_pass.trace))

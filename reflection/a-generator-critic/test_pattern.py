@@ -1,21 +1,18 @@
-"""Tests for the Generator-Critic pattern.
-
-Run: pytest reflection/a-generator-critic/test_pattern.py -v
-
-No API key needed. Deterministic generator, critic, and reviser callables stand
-in for model roles so the pattern invariants are visible and repeatable.
-"""
+"""Invariant tests for the Generator-Critic reference interface."""
 from __future__ import annotations
 
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
-_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, _REPO_ROOT)
-sys.path.insert(0, os.path.dirname(__file__))
+
+HERE = Path(__file__).parent
+REPO_ROOT = HERE.parents[1]
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(HERE))
 sys.modules.pop("pattern", None)
 
 import example  # noqa: E402
@@ -32,41 +29,42 @@ from pattern import (  # noqa: E402
 )
 
 
-def test_policy_accepts_clean_high_score_artifact() -> None:
-    policy = AcceptancePolicy(min_score=0.8)
-    critique = Critique(score=0.92, issues=[], summary="clear")
-
-    assert policy.decide(critique) is Decision.ACCEPTED
-
-
-def test_policy_requires_revision_when_score_is_too_low() -> None:
-    policy = AcceptancePolicy(min_score=0.8)
-    critique = Critique(score=0.71, issues=[], summary="thin evidence")
-
-    assert policy.decide(critique) is Decision.NEEDS_REVISION
-
-
-def test_policy_requires_revision_when_any_blocker_exists() -> None:
-    policy = AcceptancePolicy(min_score=0.8)
-    critique = Critique(
-        score=0.95,
-        issues=[
-            Issue(
-                severity=Severity.BLOCKER,
-                message="claim lacks a cited source",
-                location="paragraph 2",
-                source="citation_check",
-                evidence="paragraph 2 has no source marker",
-            )
-        ],
-        summary="good prose, unsafe evidence",
+def grounded_blocker(message: str = "missing evidence") -> Issue:
+    return Issue(
+        Severity.BLOCKER,
+        message,
+        "report",
+        evidence="ledger query returned a conflicting count",
+        check="ledger_reconciliation",
     )
 
-    assert policy.decide(critique) is Decision.NEEDS_REVISION
+
+def test_policy_accepts_clean_high_score_artifact() -> None:
+    critique = Critique(score=0.92, issues=[], summary="clear")
+
+    assert AcceptancePolicy().decide(critique) is Decision.ACCEPTED
 
 
-def test_policy_can_be_configured_to_hold_warnings() -> None:
-    policy = AcceptancePolicy(min_score=0.8, allow_warnings=False)
+def test_policy_requires_evidence_for_low_score() -> None:
+    unsupported = Critique(score=0.71, issues=[], summary="thin")
+    grounded = Critique(
+        score=0.71,
+        issues=[],
+        summary="thin",
+        score_evidence="rubric completeness=0.71",
+    )
+
+    assert AcceptancePolicy().decide(unsupported) is Decision.ACCEPTED
+    assert AcceptancePolicy().decide(grounded) is Decision.NEEDS_REVISION
+
+
+def test_policy_requires_revision_for_grounded_blocker() -> None:
+    critique = Critique(score=0.95, issues=[grounded_blocker()], summary="unsafe")
+
+    assert AcceptancePolicy().decide(critique) is Decision.NEEDS_REVISION
+
+
+def test_policy_can_hold_grounded_warnings() -> None:
     critique = Critique(
         score=0.9,
         issues=[
@@ -74,133 +72,126 @@ def test_policy_can_be_configured_to_hold_warnings() -> None:
                 Severity.WARNING,
                 "tone is too broad",
                 "headline",
-                "style_guide",
-                "style guide R-7 rejects broad headlines",
+                evidence="style guide R-7 rejects broad headlines",
+                check="style_guide",
             )
         ],
         summary="minor issue",
     )
 
+    policy = AcceptancePolicy(min_score=0.8, allow_warnings=False)
+
     assert policy.decide(critique) is Decision.NEEDS_REVISION
 
 
-def test_policy_drops_unevidenced_blocker_opinions() -> None:
-    policy = AcceptancePolicy(min_score=0.8)
-    critique = Critique(
-        score=0.92,
-        issues=[
-            Issue(
-                Severity.BLOCKER,
-                "this feels risky",
-                "body",
-                "vibe_check",
-                "",
-            )
-        ],
-        summary="one opinion with no evidence",
-    )
+def test_ungrounded_opinion_is_dropped_and_cannot_trigger_revision() -> None:
+    opinion = Issue(Severity.BLOCKER, "the report feels thin", "body", check="vibe")
+    critique = Critique(score=0.92, issues=[opinion], summary="one opinion")
 
     assert critique.issues == []
-    assert len(critique.dropped_issues) == 1
-    assert policy.decide(critique) is Decision.ACCEPTED
+    assert critique.dropped_issues == [opinion]
+    assert AcceptancePolicy(require_evidence=True).decide(critique) is Decision.ACCEPTED
+    assert (
+        AcceptancePolicy(require_evidence=False).decide(critique)
+        is Decision.NEEDS_REVISION
+    )
 
 
 def test_critique_score_must_be_unit_interval() -> None:
     with pytest.raises(ValueError, match="score"):
-        Critique(score=1.2, issues=[], summary="impossible")
+        Critique(score=1.2, issues=[], summary="invalid")
 
 
-def test_chain_runs_generator_then_critic_and_accepts_clean_artifact() -> None:
+def test_chain_calls_critic_once_and_accepts_reviewed_artifact() -> None:
     calls: list[str] = []
 
     def generator(prompt: str) -> Artifact:
         calls.append(f"generate:{prompt}")
-        return Artifact(content="three sourced bullets")
+        return Artifact("sourced report")
 
     def critic(artifact: Artifact) -> Critique:
         calls.append(f"critic:{artifact.content}")
-        return Critique(score=0.91, issues=[], summary="ready")
+        return Critique(0.92, [], "ready")
 
-    chain = GeneratorCriticChain(generator=generator, critic=critic)
-
-    result = chain.run("summarize the incident")
+    result = GeneratorCriticChain(generator, critic).run("monthly report")
 
     assert result.decision is Decision.ACCEPTED
-    assert result.artifact.content == "three sourced bullets"
-    assert calls == [
-        "generate:summarize the incident",
-        "critic:three sourced bullets",
-    ]
-    assert result.trace == ["generated", "critiqued", "accepted"]
+    assert result.reviewed_artifact.content == "sourced report"
+    assert result.revision_draft is None
+    assert result.artifact is result.reviewed_artifact
+    assert calls == ["generate:monthly report", "critic:sourced report"]
+    assert result.trace == ("generated", "critiqued", "accepted")
 
 
-def test_chain_with_reviser_drafts_revision_but_does_not_auto_accept_it() -> None:
-    def generator(_prompt: str) -> Artifact:
-        return Artifact(content="uncited claim")
+def test_revision_draft_is_separate_and_never_auto_accepted() -> None:
+    critic_calls = 0
 
     def critic(_artifact: Artifact) -> Critique:
-        return Critique(
-            score=0.6,
-            issues=[
-                Issue(
-                    Severity.BLOCKER,
-                    "missing citation",
-                    "sentence 1",
-                    "citation_check",
-                    "sentence 1 contains no source marker",
-                )
-            ],
-            summary="needs evidence",
-        )
+        nonlocal critic_calls
+        critic_calls += 1
+        return Critique(0.4, [grounded_blocker("paid count mismatch")], "wrong")
 
-    def reviser(artifact: Artifact, critique: Critique) -> Artifact:
-        assert critique.blockers()[0].message == "missing citation"
-        return artifact.revise("cited claim [source]", note="added source")
-
-    chain = GeneratorCriticChain(generator=generator, critic=critic, reviser=reviser)
-
-    result = chain.run("draft a claim")
-
-    assert result.decision is Decision.NEEDS_REVISION
-    assert result.artifact.content == "cited claim [source]"
-    assert result.artifact.revision == 1
-    assert result.trace == ["generated", "critiqued", "needs_revision", "revision_drafted"]
-
-
-def test_chain_without_reviser_returns_original_artifact_for_revision() -> None:
-    def generator(_prompt: str) -> Artifact:
-        return Artifact(content="underspecified plan")
-
-    def critic(_artifact: Artifact) -> Critique:
-        return Critique(score=0.5, issues=[], summary="too vague")
-
-    chain = GeneratorCriticChain(generator=generator, critic=critic)
-
-    result = chain.run("make a plan")
-
-    assert result.decision is Decision.NEEDS_REVISION
-    assert result.artifact.content == "underspecified plan"
-    assert result.trace == ["generated", "critiqued", "needs_revision"]
-
-
-def test_example_missing_evidence_drafts_revision_instead_of_accepting() -> None:
     chain = GeneratorCriticChain(
-        generator=example.draft_incident_update,
+        generator=lambda _prompt: Artifact("paid=800"),
+        critic=critic,
+        reviser=lambda artifact, _critique: artifact.revise(
+            "paid=798", note="reconciled with ledger"
+        ),
+    )
+
+    result = chain.run("report")
+
+    assert result.decision is Decision.NEEDS_REVISION
+    assert result.reviewed_artifact.content == "paid=800"
+    assert result.revision_draft.content == "paid=798"
+    assert result.requires_re_review is True
+    assert critic_calls == 1
+    assert result.trace[-1] == "revision_drafted"
+
+
+def test_revision_is_accepted_only_by_explicit_second_pass() -> None:
+    def critic(artifact: Artifact) -> Critique:
+        if artifact.revision == 1:
+            return Critique(0.95, [], "reconciled")
+        return Critique(0.4, [grounded_blocker()], "wrong")
+
+    chain = GeneratorCriticChain(
+        generator=lambda _prompt: Artifact("paid=800"),
+        critic=critic,
+        reviser=lambda artifact, _critique: artifact.revise("paid=798"),
+    )
+
+    first = chain.run("report")
+    second = chain.review(first.revision_draft)
+
+    assert first.decision is Decision.NEEDS_REVISION
+    assert second.decision is Decision.ACCEPTED
+    assert second.reviewed_artifact.revision == 1
+    assert second.trace == ("artifact_received", "critiqued", "accepted")
+
+
+def test_example_drafts_then_explicitly_reviews_revision() -> None:
+    chain = GeneratorCriticChain(
+        generator=example.generate_update,
         critic=example.critique_update,
         reviser=example.revise_update,
         policy=AcceptancePolicy(min_score=0.8),
     )
 
-    result = chain.run("draft checkout incident update")
+    first = chain.run("draft checkout incident update")
+    second = chain.review(first.revision_draft)
 
-    assert result.decision is Decision.NEEDS_REVISION
-    assert result.trace == ["generated", "critiqued", "needs_revision", "revision_drafted"]
-    assert "Evidence: status dashboard incident INC-42." in result.artifact.content
+    assert first.decision is Decision.NEEDS_REVISION
+    assert first.reviewed_artifact.revision == 0
+    assert "INC-42" in first.revision_draft.content
+    assert second.decision is Decision.ACCEPTED
+    assert second.reviewed_artifact.revision == 1
 
 
-def test_shared_low_score_fixture_stays_below_default_policy_threshold() -> None:
+def test_shared_low_score_fixture_has_grounded_score_evidence() -> None:
     critique = shared.parse_critique_json(shared.LOW_SCORE_CRITIQUE_JSON)
 
+    assert critique.score_evidence
     assert shared.default_policy().decide(critique) is Decision.NEEDS_REVISION
 
 
@@ -214,7 +205,7 @@ def test_shared_low_score_fixture_stays_below_default_policy_threshold() -> None
         '{"score": 0.95, "summary": "ready", "issues": [{"severity": "warning"}]}',
     ],
 )
-def test_shared_parser_fails_closed_when_critique_schema_is_incomplete(raw_json: str) -> None:
+def test_shared_parser_fails_closed_for_incomplete_schema(raw_json: str) -> None:
     critique = shared.parse_critique_json(raw_json)
 
     assert critique.score == 0.0
@@ -250,7 +241,9 @@ def test_shared_parser_drops_unsupported_opinions(raw_json: str) -> None:
     assert shared.default_policy().decide(critique) is Decision.ACCEPTED
 
 
-def test_model_loader_can_be_forced_off_for_deterministic_notebook_runs(tmp_path, monkeypatch) -> None:
+def test_model_loader_can_be_forced_off_for_deterministic_notebook_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     (tmp_path / ".env").write_text(
         "MODEL_PROVIDER=ernie\nOPENAI_API_KEY=real-key-in-dotenv\n",
         encoding="utf-8",
@@ -285,7 +278,7 @@ assert model_config.get_model() is None
 
     result = subprocess.run(
         [sys.executable, "-c", code],
-        cwd=_REPO_ROOT,
+        cwd=REPO_ROOT,
         env=env,
         capture_output=True,
         text=True,

@@ -24,9 +24,11 @@ REVISION_EVIDENCE = "Evidence: status dashboard incident INC-42."
 
 CRITIC_SYSTEM_PROMPT = (
     "Critique the incident update. Return only valid JSON, no markdown. "
-    'Use this schema: {"score": number from 0 to 1, "summary": string, '
+    'Use this schema: {"score": number from 0 to 1, "score_evidence": string, '
+    '"summary": string, '
     '"issues": [{"severity": "blocker" or "warning", "message": string, '
     '"location": string, "source": string, "evidence": string}]}. '
+    '"score_evidence" names the rubric or check result behind a low score. '
     '"source" names the check or external signal. "evidence" records what '
     'that check saw. Use severity "blocker" only for evidence-backed facts '
     'that must be fixed before publishing; use "warning" for polish issues.'
@@ -43,6 +45,7 @@ GOOD_CRITIQUE_JSON = json.dumps(
 NEEDS_REVISION_CRITIQUE_JSON = json.dumps(
     {
         "score": 0.74,
+        "score_evidence": "incident policy requires a cited status incident",
         "summary": "The draft needs one evidence link before it can ship.",
         "issues": [
             {
@@ -59,6 +62,7 @@ NEEDS_REVISION_CRITIQUE_JSON = json.dumps(
 LOW_SCORE_CRITIQUE_JSON = json.dumps(
     {
         "score": 0.62,
+        "score_evidence": "support style rubric requires a concrete update window",
         "summary": "Readable, but too vague to publish safely.",
         "issues": [
             {
@@ -73,6 +77,22 @@ LOW_SCORE_CRITIQUE_JSON = json.dumps(
 )
 
 BAD_CRITIQUE_JSON = "{not valid json"
+
+OPINION_ONLY_CRITIQUE_JSON = json.dumps(
+    {
+        "score": 0.92,
+        "summary": "One stylistic opinion was reported without supporting evidence.",
+        "issues": [
+            {
+                "severity": "blocker",
+                "message": "the update feels too terse",
+                "location": "body",
+                "source": "style_preference",
+                "evidence": "",
+            }
+        ],
+    }
+)
 
 
 def default_policy() -> AcceptancePolicy:
@@ -102,8 +122,8 @@ def parse_critique_json(raw: str) -> Critique:
                 severity=Severity(item["severity"]),
                 message=str(item["message"]),
                 location=str(item["location"]),
-                source=str(item.get("source") or ""),
                 evidence=str(item.get("evidence") or ""),
+                check=str(item.get("source") or ""),
             )
             for item in payload["issues"]
         ]
@@ -111,26 +131,32 @@ def parse_critique_json(raw: str) -> Critique:
             score=float(payload["score"]),
             issues=issues,
             summary=str(payload["summary"]),
+            score_evidence=str(payload.get("score_evidence") or ""),
         )
     except Exception as exc:  # noqa: BLE001 - parser failure must not become a pass
         return Critique(
             score=0.0,
             issues=[
                 Issue(
-                    Severity.BLOCKER,
-                    f"critic output could not be parsed: {type(exc).__name__}: {exc}",
-                    "critic",
-                    "parser",
-                    raw,
+                    severity=Severity.BLOCKER,
+                    message=(
+                        f"critic output could not be parsed: "
+                        f"{type(exc).__name__}: {exc}"
+                    ),
+                    location="critic",
+                    evidence=raw,
+                    check="parser",
                 )
             ],
             summary="critic output parse failed",
+            score_evidence="critic output failed schema validation",
         )
 
 
 def critique_to_dict(critique: Critique) -> dict[str, Any]:
     return {
         "score": critique.score,
+        "score_evidence": critique.score_evidence,
         "summary": critique.summary,
         "issues": [
             {
@@ -185,14 +211,22 @@ def print_trace(result: ChainResult) -> None:
         f"{issue.severity.value}:{issue.source or 'unknown'}:{issue.location}:{issue.message}"
         for issue in result.critique.dropped_issues
     ]
-    artifact = "\n".join(
+    reviewed_artifact = "\n".join(
         line.rstrip()
-        for line in result.artifact.content.splitlines()
+        for line in result.reviewed_artifact.content.splitlines()
         if line.strip()
     )
     print("decision:", result.decision.value)
     print("trace:", " -> ".join(result.trace))
     print("score:", result.critique.score)
+    print("score evidence:", result.critique.score_evidence or "none")
     print("issues:", issues or "none")
     print("dropped:", dropped or "none")
-    print("artifact:", artifact)
+    print("reviewed artifact:", reviewed_artifact)
+    if result.revision_draft is not None:
+        revision_draft = "\n".join(
+            line.rstrip()
+            for line in result.revision_draft.content.splitlines()
+            if line.strip()
+        )
+        print("revision draft (unreviewed):", revision_draft)

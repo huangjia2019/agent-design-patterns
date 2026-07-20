@@ -1,199 +1,436 @@
-"""Tests for the Fan-out-Gather pattern.
-
-Run: pytest collaboration/b-fan-out-gather/test_pattern.py -v
-
-No API key needed — a mock ``FanoutFn`` stands in for a real worker agent, so
-every test is deterministic. The tutorials swap the mock for LangGraph / the
-Claude Agent SDK; the reconciler under test never changes.
-"""
+"""Invariants for the Fan-out / Gather pattern."""
 from __future__ import annotations
 
 import asyncio
 import os
 import sys
+from dataclasses import replace
+
+import pytest
+
 
 sys.path.insert(0, os.path.dirname(__file__))
-sys.modules.pop("pattern", None)   # ensure we pick up THIS folder's pattern.py
+sys.modules.pop("pattern", None)
 
-from pattern import (   # noqa: E402
+from pattern import (  # noqa: E402
+    AcceptanceDecision,
+    AggregationBoundary,
     AggregatorPolicy,
+    ConflictResolution,
+    ContributionRule,
     FanOutGather,
     Layer,
     Reconciler,
+    ReconciliationStatus,
+    SourceAdmissionPolicy,
     SourceResult,
+    SourceSpec,
     Strategy,
+    TaskContract,
+    Tolerance,
+    bind_source_result,
 )
+
 
 ROWS = [{"id": "e1"}, {"id": "e2"}]
 
 
-def _source(name: str, items: dict, ok: bool = True):
-    async def fn(source: str, rows: list[dict]) -> SourceResult:
-        await asyncio.sleep(0)   # yield, proving concurrent scheduling
-        return SourceResult(source=name, line_items=items, ok=ok)
-    return fn
+def root_contract() -> TaskContract:
+    return TaskContract(
+        contract_id="payroll-reconciliation",
+        version=1,
+        objective="reconcile June payroll by department",
+        output_schema="ReconciliationReport",
+        accountable_owner="payroll-controller",
+        input_refs=("sqlite://payroll.db?month=2026-06",),
+    )
 
 
-# ----- Fan-out: parallel dispatch + failure isolation + the compliance floor --
+def spec(
+    source_id: str,
+    *,
+    required: bool = True,
+    expected_items: tuple[str, ...] = ("base",),
+) -> SourceSpec:
+    return SourceSpec(
+        source_id=source_id,
+        snapshot_ref=f"snapshot://{source_id}/2026-06",
+        period="2026-06",
+        unit="CNY",
+        boundary=f"read only from {source_id}",
+        required=required,
+        expected_items=expected_items,
+        allowed_tools=(f"read_{source_id}",),
+        authority_scope=(f"read:{source_id}",),
+    )
 
-def test_run_dispatches_every_source_in_parallel():
-    seen: list[str] = []
 
-    def track(name):
-        async def fn(source, rows):
-            seen.append(name)
-            await asyncio.sleep(0)
-            return SourceResult(source=name, line_items={"x": 1.0})
-        return fn
+def reading(
+    source_id: str,
+    items: dict[str, float],
+    *,
+    confidence: float = 1.0,
+) -> SourceResult:
+    source = spec(source_id, expected_items=())
+    return SourceResult.from_mapping(
+        source_id=source_id,
+        snapshot_ref=source.snapshot_ref,
+        period=source.period,
+        unit=source.unit,
+        line_items=items,
+        confidence=confidence,
+    )
 
-    fog = FanOutGather({"a": track("a"), "b": track("b"), "c": track("c")})
-    asyncio.run(fog.run(ROWS))
-    assert sorted(seen) == ["a", "b", "c"]
+
+def worker(
+    source: SourceSpec,
+    items: dict[str, float],
+    *,
+    confidence: float = 1.0,
+):
+    async def run(handoff, rows):
+        result = SourceResult.from_mapping(
+            source_id=source.source_id,
+            snapshot_ref=source.snapshot_ref,
+            period=source.period,
+            unit=source.unit,
+            line_items=items,
+            confidence=confidence,
+        )
+        return bind_source_result(
+            handoff,
+            result,
+            evidence_refs=(source.snapshot_ref,),
+        )
+
+    return run
 
 
-def test_worker_exception_is_isolated_not_fatal():
-    async def boom(source, rows):
+def test_source_contracts_bind_identity_snapshot_and_scope() -> None:
+    source = spec("gl")
+    fanout = FanOutGather(((source, worker(source, {"base": 100.0})),))
+
+    handoff = fanout.handoff_for(root_contract(), source)
+
+    assert handoff.contract.contract_id == "source::gl"
+    assert handoff.contract.input_refs == (source.snapshot_ref,)
+    assert handoff.contract.allowed_tools == ("read_gl",)
+    assert handoff.contract.authority_scope == ("read:gl",)
+
+
+def test_source_admission_consumes_binding_evidence_and_confidence() -> None:
+    source = spec("gl")
+    fanout = FanOutGather(
+        ((source, worker(source, {"base": 100.0}, confidence=0.4)),),
+        source_policy=SourceAdmissionPolicy(min_confidence=0.8),
+    )
+
+    run = asyncio.run(fanout.run(root_contract(), ROWS))
+    codes = {finding.code for finding in run.source_receipts[0].findings}
+
+    assert "confidence_below_floor" in codes
+    assert run.report.status is ReconciliationStatus.INSUFFICIENT_SOURCES
+
+
+@pytest.mark.parametrize(
+    ("mutate", "finding_code"),
+    [
+        (
+            lambda artifact: replace(artifact, contract_digest="wrong"),
+            "contract_digest_mismatch",
+        ),
+        (
+            lambda artifact: replace(artifact, schema="WrongSchema"),
+            "schema_mismatch",
+        ),
+        (
+            lambda artifact: replace(artifact, evidence_refs=()),
+            "missing_evidence",
+        ),
+    ],
+)
+def test_source_admission_rejects_unbound_or_unevidenced_artifacts(
+    mutate,
+    finding_code: str,
+) -> None:
+    source = spec("gl")
+    fanout = FanOutGather(((source, worker(source, {"base": 100.0})),))
+    handoff = fanout.handoff_for(root_contract(), source)
+    artifact = asyncio.run(worker(source, {"base": 100.0})(handoff, tuple(ROWS)))
+
+    receipt = fanout.source_policy.evaluate(source, handoff, mutate(artifact))
+
+    assert receipt.decision is AcceptanceDecision.ESCALATED
+    assert finding_code in {finding.code for finding in receipt.findings}
+
+
+def test_run_dispatches_sources_concurrently() -> None:
+    started: list[str] = []
+    release = asyncio.Event()
+
+    def tracking_worker(source: SourceSpec):
+        async def run(handoff, rows):
+            started.append(source.source_id)
+            if len(started) == 3:
+                release.set()
+            await asyncio.wait_for(release.wait(), timeout=1)
+            return await worker(source, {"base": 100.0})(handoff, rows)
+
+        return run
+
+    sources = tuple(
+        (source, tracking_worker(source))
+        for source in (spec("a"), spec("b"), spec("c"))
+    )
+
+    asyncio.run(FanOutGather(sources).run(root_contract(), ROWS))
+
+    assert sorted(started) == ["a", "b", "c"]
+
+
+def test_worker_failure_is_evidenced_and_required_source_blocks_report() -> None:
+    live = spec("live")
+    dead = spec("dead")
+
+    async def boom(handoff, rows):
         raise RuntimeError("source crashed")
 
-    fog = FanOutGather(
-        {"a": _source("a", {"x": 10.0}), "b": _source("b", {"x": 10.0}),
-         "c": _source("c", {"x": 10.0}), "dead": boom},
-        min_success_rate=0.5,
+    run = asyncio.run(
+        FanOutGather(
+            (
+                (live, worker(live, {"base": 100.0})),
+                (dead, boom),
+            ),
+            min_success_rate=0.5,
+        ).run(root_contract(), ROWS)
     )
-    result = asyncio.run(fog.run(ROWS))
-    # One crash did not blow up the run; it was isolated and the rest reconciled.
-    assert result["status"] == "reconciled"
-
-
-def test_min_success_floor_refuses_a_verdict():
-    async def boom(source, rows):
-        raise RuntimeError("down")
-
-    fog = FanOutGather(
-        {"a": _source("a", {"x": 10.0}), "dead1": boom, "dead2": boom, "dead3": boom},
-        min_success_rate=0.95,
+    failed = next(
+        artifact.payload
+        for artifact in run.source_artifacts
+        if artifact.payload.source_id == "dead"
     )
-    result = asyncio.run(fog.run(ROWS))
-    assert result["status"] == "insufficient_sources"
-    assert result["got"] == 1
+
+    assert failed.failure_code == "RuntimeError: source crashed"
+    assert run.report.status is ReconciliationStatus.INSUFFICIENT_SOURCES
+    assert run.report.missing_required_sources == ("dead",)
 
 
-# ----- Gather · COMPETING: the three divergence layers ------------------------
+def test_optional_source_can_fail_when_success_floor_still_holds() -> None:
+    live = spec("live")
+    optional = spec("optional", required=False)
 
-def test_agreement_lands_in_layer_one():
-    r = Reconciler(tol=1.0)
-    results = [
-        SourceResult("payroll", {"社保代扣": 120_000.0}),
-        SourceResult("gl", {"社保代扣": 120_000.5}),
-        SourceResult("ss", {"社保代扣": 120_000.0}),
-    ]
-    report = r.reconcile(results)
-    assert "社保代扣" in report["agreed_items"]
-    assert not report["root_causes"]
+    async def boom(handoff, rows):
+        raise RuntimeError("optional source crashed")
 
+    run = asyncio.run(
+        FanOutGather(
+            (
+                (live, worker(live, {"base": 100.0})),
+                (optional, boom),
+            ),
+            min_success_rate=0.5,
+        ).run(root_contract(), ROWS)
+    )
 
-def test_two_sided_divergence_is_attributable_to_a_source():
-    r = Reconciler(tol=1.0)
-    # payroll & gl agree; social_security is 12万 low -> the gap points at ss.
-    results = [
-        SourceResult("payroll", {"社保代扣": 120_000.0}),
-        SourceResult("gl", {"社保代扣": 120_000.0}),
-        SourceResult("social_security", {"社保代扣": 108_000.0}),
-    ]
-    report = r.reconcile(results)
-    assert not report["agreed_items"]
-    assert len(report["root_causes"]) == 1
-    rc = report["root_causes"][0]
-    assert rc["item"] == "社保代扣"
-    assert rc["gap"] == 12_000.0
-    assert rc["low_sources"] == ["social_security"]
-    assert set(rc["high_sources"]) == {"payroll", "gl"}
+    assert run.report.status is ReconciliationStatus.RECONCILED
 
 
-def test_three_way_scatter_goes_to_human():
-    r = Reconciler(tol=1.0)
-    results = [
-        SourceResult("a", {"加班费": 100_000.0}),
-        SourceResult("b", {"加班费": 250_000.0}),
-        SourceResult("c", {"加班费": 400_000.0}),
-    ]
-    report = r.reconcile(results)
-    assert not report["agreed_items"]
-    assert not report["root_causes"]
-    assert report["to_human"][0]["item"] == "加班费"
-    assert report["to_human"][0]["reason"] == "unexplained-divergence"
+def test_empty_or_duplicate_source_sets_are_rejected() -> None:
+    with pytest.raises(ValueError, match="at least one source"):
+        FanOutGather(())
+
+    duplicate = spec("same")
+    with pytest.raises(ValueError, match="unique"):
+        FanOutGather(
+            (
+                (duplicate, worker(duplicate, {"base": 1.0})),
+                (duplicate, worker(duplicate, {"base": 1.0})),
+            )
+        )
 
 
-def test_single_source_item_cannot_be_reconciled():
-    r = Reconciler(tol=1.0)
-    results = [
-        SourceResult("payroll", {"孤项": 5000.0}),
-        SourceResult("gl", {"社保代扣": 1.0}),
-        SourceResult("ss", {"社保代扣": 1.0}),
-    ]
-    report = r.reconcile(results)
-    lonely = [x for x in report["to_human"] if x["item"] == "孤项"]
-    assert lonely and lonely[0]["reason"] == "single-source"
+def test_competing_agreement_and_two_cluster_divergence_are_typed() -> None:
+    report = Reconciler(tol=1.0).reconcile(
+        (
+            reading("payroll", {"base": 100.0, "tax": 120.0}),
+            reading("gl", {"base": 100.5, "tax": 120.0}),
+            reading("bank", {"base": 100.0, "tax": 108.0}),
+        )
+    )
+
+    assert report.agreed_items == ("base",)
+    (tax,) = report.attributable_divergences
+    assert tax.item == "tax"
+    assert tax.layer is Layer.ATTRIBUTABLE
+    assert tax.gap == 12.0
+    assert tax.low_sources == ("bank",)
+    assert set(tax.high_sources) == {"payroll", "gl"}
 
 
-# ----- Gather · ADDITIVE: merge facets, de-duplicate aliases (Q3) -------------
+def test_conflict_resolver_is_executable_policy() -> None:
+    def prefer_gl(verdict):
+        return ConflictResolution(
+            selected_value=verdict.values["gl"],
+            rule="source-priority",
+            evidence="policy://payroll/gl-is-book-of-record",
+        )
 
-def test_additive_sums_distinct_facets():
-    r = Reconciler(AggregatorPolicy(strategy=Strategy.ADDITIVE))
-    results = [
-        SourceResult("a", {"base": 100.0}),
-        SourceResult("b", {"bonus": 40.0}),
-    ]
-    report = r.reconcile(results)
-    assert report["total"] == 140.0
+    report = Reconciler(
+        AggregatorPolicy(conflict_resolver=prefer_gl),
+        tol=1.0,
+    ).reconcile(
+        (
+            reading("payroll", {"tax": 120.0}),
+            reading("gl", {"tax": 120.0}),
+            reading("bank", {"tax": 108.0}),
+        )
+    )
 
-
-def test_additive_dedup_collapses_aliased_items():
-    # Two workers name the same risk differently; dedup_key canonicalises them.
-    r = Reconciler(AggregatorPolicy(
-        strategy=Strategy.ADDITIVE,
-        dedup_key=lambda s: "earnout" if s in ("对赌条款增加", "earnout扩大") else s,
-    ))
-    results = [
-        SourceResult("a", {"对赌条款增加": 1.0}),
-        SourceResult("b", {"earnout扩大": 1.0}),
-    ]
-    report = r.reconcile(results)
-    assert report["deduped"] == 1
-    assert report["merged"]["earnout"] == 2.0
+    (verdict,) = report.attributable_divergences
+    assert verdict.resolution is not None
+    assert verdict.resolution.selected_value == 120.0
+    assert report.to_human == ()
 
 
-# ----- Gather · Q4: the seam reviewer reads the whole, not a slice ------------
+def test_single_source_and_three_way_scatter_go_to_human() -> None:
+    report = Reconciler(tol=1.0).reconcile(
+        (
+            reading("a", {"single": 5.0, "scatter": 100.0}),
+            reading("b", {"scatter": 200.0}),
+            reading("c", {"scatter": 300.0}),
+        )
+    )
 
-def test_seam_reviewer_surfaces_cross_worker_findings():
-    def reviewer(report: dict) -> list[str]:
-        # A finding only visible across workers: two root causes on linked systems.
-        if len(report.get("root_causes", [])) >= 2:
-            return ["加班规则改动同时冲击考勤与工资系统 — 需一并回归"]
-        return []
-
-    r = Reconciler(AggregatorPolicy(seam_reviewer=reviewer), tol=1.0)
-    results = [
-        SourceResult("payroll", {"社保代扣": 120_000.0, "加班费": 100_000.0}),
-        SourceResult("gl", {"社保代扣": 120_000.0, "加班费": 100_000.0}),
-        SourceResult("ss", {"社保代扣": 108_000.0, "加班费": 100_000.0}),
-        SourceResult("attendance", {"社保代扣": 120_000.0, "加班费": 250_000.0}),
-    ]
-    report = r.reconcile(results)
-    assert report["seam_findings"]
-
-
-def test_end_to_end_ledger_reconciliation_locates_the_gap():
-    # Four data sources, same June total; two attributable gaps should surface.
-    sources = {
-        "payroll": _source("payroll", {"社保代扣": 120_000.0, "加班费": 100_000.0}),
-        "gl": _source("gl", {"社保代扣": 120_000.0, "加班费": 100_000.0}),
-        "social_security": _source("social_security",
-                                   {"社保代扣": 108_000.0, "加班费": 100_000.0}),
-        "attendance": _source("attendance", {"社保代扣": 120_000.0, "加班费": 250_000.0}),
+    assert {verdict.reason for verdict in report.to_human} == {
+        "single-source",
+        "unexplained-divergence",
     }
-    fog = FanOutGather(sources, Reconciler(tol=1.0))
-    result = asyncio.run(fog.run(ROWS))
-    assert result["status"] == "reconciled"
-    located = {rc["item"] for rc in result["root_causes"]}
-    assert located == {"社保代扣", "加班费"}
+
+
+def test_clustering_uses_full_range_not_single_link_chaining() -> None:
+    report = Reconciler(tol=1.0).reconcile(
+        (
+            reading("a", {"x": 0.0}),
+            reading("b", {"x": 0.9}),
+            reading("c", {"x": 1.8}),
+        )
+    )
+
+    assert report.agreed_items == ()
+    assert report.attributable_divergences[0].gap == 1.8
+
+
+@pytest.mark.parametrize(
+    ("rule", "expected"),
+    [
+        (ContributionRule.SUM, 6.0),
+        (ContributionRule.MAX, 3.0),
+        (ContributionRule.COUNT_SOURCES, 3.0),
+    ],
+)
+def test_additive_contribution_rule_is_explicit(
+    rule: ContributionRule,
+    expected: float,
+) -> None:
+    report = Reconciler(
+        AggregatorPolicy(
+            strategy=Strategy.ADDITIVE,
+            identity_key=lambda key: "risk" if key.startswith("risk") else key,
+            contribution_rule=rule,
+        )
+    ).reconcile(
+        (
+            reading("a", {"risk-a": 1.0}),
+            reading("b", {"risk-b": 2.0}),
+            reading("c", {"risk-c": 3.0}),
+        )
+    )
+
+    assert report.merged == {"risk": expected}
+    assert report.merged_items[0].raw_keys == ("risk-a", "risk-b", "risk-c")
+
+
+def test_seam_reviewer_reads_the_assembled_typed_report() -> None:
+    def reviewer(report):
+        if len(report.attributable_divergences) >= 2:
+            return ("linked systems require joint sign-off",)
+        return ()
+
+    report = Reconciler(
+        AggregatorPolicy(seam_reviewer=reviewer),
+        tol=1.0,
+    ).reconcile(
+        (
+            reading("a", {"tax": 100.0, "overtime": 50.0}),
+            reading("b", {"tax": 100.0, "overtime": 50.0}),
+            reading("c", {"tax": 90.0, "overtime": 70.0}),
+        )
+    )
+
+    assert report.seam_findings == ("linked systems require joint sign-off",)
+
+
+def test_root_receipt_escalates_unresolved_divergence() -> None:
+    a = spec("a")
+    b = spec("b")
+    run = asyncio.run(
+        FanOutGather(
+            (
+                (a, worker(a, {"base": 100.0})),
+                (b, worker(b, {"base": 90.0})),
+            ),
+            min_success_rate=1.0,
+        ).run(root_contract(), ROWS)
+    )
+
+    assert run.report_receipt.decision is AcceptanceDecision.ESCALATED
+    assert {
+        finding.code for finding in run.report_receipt.findings
+    } == {"unresolved_line_item"}
+
+
+@pytest.mark.parametrize(
+    ("mutate", "finding_code"),
+    [
+        (
+            lambda artifact: replace(artifact, produced_by="unknown-controller"),
+            "report_producer_mismatch",
+        ),
+        (
+            lambda artifact: replace(artifact, evidence_refs=()),
+            "report_evidence_missing",
+        ),
+    ],
+)
+def test_root_receipt_checks_producer_and_evidence(
+    mutate,
+    finding_code: str,
+) -> None:
+    source = spec("gl")
+    run = asyncio.run(
+        FanOutGather(((source, worker(source, {"base": 100.0})),)).run(
+            root_contract(),
+            ROWS,
+        )
+    )
+
+    receipt = AggregationBoundary().evaluate(
+        run.root_contract,
+        mutate(run.report_artifact),
+    )
+
+    assert receipt.decision is AcceptanceDecision.ESCALATED
+    assert finding_code in {finding.code for finding in receipt.findings}
+
+
+def test_source_configuration_is_validated() -> None:
+    with pytest.raises(ValueError, match="identity"):
+        SourceSpec(
+            source_id="",
+            snapshot_ref="snapshot://x",
+            period="2026-06",
+            unit="CNY",
+            boundary="read only",
+        )
+    with pytest.raises(ValueError, match="tolerances"):
+        Tolerance(absolute=-1)

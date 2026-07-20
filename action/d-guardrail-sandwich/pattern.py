@@ -42,8 +42,10 @@ Three named failure modes from the lecture:
   records which rule ran; production still needs schema-version
   matching and fail-closed handling for unknown versions.
 """
+
 from __future__ import annotations
 
+import copy
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -58,8 +60,8 @@ class HookPhase(Enum):
 
 class HookResult(Enum):
     PASS = "pass"
-    BLOCK = "block"      # pre: never invoke tool. post: mark for rollback.
-    WARN = "warn"        # log and continue
+    BLOCK = "block"  # pre: never invoke tool. post: mark for rollback.
+    WARN = "warn"  # log and continue
 
 
 def _now_iso() -> str:
@@ -99,7 +101,7 @@ class HookSpec:
     fn: HookFn
     priority: int = 100
     blocks: bool = True
-    applies_to: set[str] | None = None     # None = all tools
+    applies_to: set[str] | None = None  # None = all tools
     policy_owner: str = "unassigned"
     policy_version: str = "v1"
 
@@ -120,13 +122,20 @@ class SandwichTrace:
     """One sandwiched call's audit record."""
 
     tool_name: str
+    # Preserve both what the caller requested and what PRE hooks actually
+    # handed to the tool after normalization.
     args: dict[str, Any]
+    effective_args: dict[str, Any] = field(default_factory=dict)
     pre_outcomes: list[HookOutcome] = field(default_factory=list)
+    # Raw output stays inside the trace for audit and compensation analysis.
+    # Callers should consume `released_output`, which is populated only after
+    # every blocking post-hook passes.
     tool_output: Any = None
+    released_output: Any = None
     tool_error: str | None = None
     post_outcomes: list[HookOutcome] = field(default_factory=list)
     rollback_marked: bool = False
-    final_status: str = "pending"      # passed | blocked_pre | tool_failed | blocked_post
+    final_status: str = "pending"  # passed | blocked_pre | tool_failed | blocked_post
     started_at: str = field(default_factory=_now_iso)
     completed_at: str | None = None
 
@@ -163,7 +172,15 @@ class GuardrailSandwich:
     # ----- execution ---------------------------------------------------
 
     def run(self, tool_name: str, args: dict[str, Any]) -> SandwichTrace:
-        trace = SandwichTrace(tool_name=tool_name, args=dict(args))
+        # Tool arguments are expected to be JSON-like. Deep copies keep nested
+        # PRE-hook normalization from rewriting the caller's request record.
+        requested_args = copy.deepcopy(args)
+        effective_args = copy.deepcopy(args)
+        trace = SandwichTrace(
+            tool_name=tool_name,
+            args=requested_args,
+            effective_args=copy.deepcopy(effective_args),
+        )
         if tool_name not in self.tools:
             trace.final_status = "tool_failed"
             trace.tool_error = f"unknown tool {tool_name!r}"
@@ -172,7 +189,13 @@ class GuardrailSandwich:
 
         # 1. Pre-hook chain.
         for hook in self._applicable_hooks(tool_name, HookPhase.PRE):
-            outcome = self._run_hook(hook, tool_name, args, tool_output=None)
+            outcome = self._run_hook(
+                hook,
+                tool_name,
+                effective_args,
+                tool_output=None,
+            )
+            trace.effective_args = copy.deepcopy(effective_args)
             trace.pre_outcomes.append(outcome)
             if outcome.result == HookResult.BLOCK and hook.blocks:
                 trace.final_status = "blocked_pre"
@@ -181,7 +204,7 @@ class GuardrailSandwich:
 
         # 2. Tool execution.
         try:
-            trace.tool_output = self.tools[tool_name](**args)
+            trace.tool_output = self.tools[tool_name](**effective_args)
         except Exception as e:
             trace.tool_error = f"{type(e).__name__}: {e}"
             trace.final_status = "tool_failed"
@@ -191,7 +214,12 @@ class GuardrailSandwich:
         # 3. Post-hook chain.
         rollback = False
         for hook in self._applicable_hooks(tool_name, HookPhase.POST):
-            outcome = self._run_hook(hook, tool_name, args, tool_output=trace.tool_output)
+            outcome = self._run_hook(
+                hook,
+                tool_name,
+                dict(trace.effective_args),
+                tool_output=trace.tool_output,
+            )
             trace.post_outcomes.append(outcome)
             if outcome.result == HookResult.BLOCK and hook.blocks:
                 rollback = True
@@ -199,6 +227,8 @@ class GuardrailSandwich:
 
         trace.rollback_marked = rollback
         trace.final_status = "blocked_post" if rollback else "passed"
+        if not rollback:
+            trace.released_output = trace.tool_output
         trace.completed_at = _now_iso()
         return trace
 
@@ -206,7 +236,8 @@ class GuardrailSandwich:
 
     def _applicable_hooks(self, tool_name: str, phase: HookPhase) -> list[HookSpec]:
         return [
-            h for h in self.hooks
+            h
+            for h in self.hooks
             if h.phase == phase and (h.applies_to is None or tool_name in h.applies_to)
         ]
 
@@ -222,21 +253,16 @@ class GuardrailSandwich:
             result, reason = hook.fn(tool_name, args, tool_output)
         except Exception as e:
             # Hook itself crashed — fail closed.
-            return HookOutcome(
-                hook_name=hook.name, phase=hook.phase,
-                result=HookResult.BLOCK,
-                reason=f"hook crashed: {type(e).__name__}: {e}",
-                elapsed_ms=int((time.monotonic() - start) * 1000),
-                policy_owner=hook.policy_owner,
-                policy_version=hook.policy_version,
-            )
+            result = HookResult.BLOCK
+            reason = f"hook crashed: {type(e).__name__}: {e}"
 
         # If the hook is in shadow mode (`blocks=False`), downgrade BLOCK to WARN
         # in the recorded outcome. The reason is preserved so dashboards still
         # see the original signal.
         if result == HookResult.BLOCK and not hook.blocks:
             return HookOutcome(
-                hook_name=hook.name, phase=hook.phase,
+                hook_name=hook.name,
+                phase=hook.phase,
                 result=HookResult.WARN,
                 reason=f"[shadow] {reason}",
                 elapsed_ms=int((time.monotonic() - start) * 1000),
@@ -245,8 +271,10 @@ class GuardrailSandwich:
             )
 
         return HookOutcome(
-            hook_name=hook.name, phase=hook.phase,
-            result=result, reason=reason,
+            hook_name=hook.name,
+            phase=hook.phase,
+            result=result,
+            reason=reason,
             elapsed_ms=int((time.monotonic() - start) * 1000),
             policy_owner=hook.policy_owner,
             policy_version=hook.policy_version,
@@ -267,6 +295,7 @@ def amount_threshold_hook(
     policy_version: str = "v1",
 ) -> HookSpec:
     """Block when args[field] exceeds the threshold."""
+
     def fn(tool_name, args, _output):
         amount = args.get(field)
         if amount is None:
@@ -274,9 +303,16 @@ def amount_threshold_hook(
         if amount > max_amount:
             return HookResult.BLOCK, f"{field}={amount} exceeds {max_amount}"
         return HookResult.PASS, f"{field}={amount} within limit"
-    return HookSpec(name=name, phase=HookPhase.PRE, fn=fn,
-                    priority=priority, blocks=blocks,
-                    policy_owner=policy_owner, policy_version=policy_version)
+
+    return HookSpec(
+        name=name,
+        phase=HookPhase.PRE,
+        fn=fn,
+        priority=priority,
+        blocks=blocks,
+        policy_owner=policy_owner,
+        policy_version=policy_version,
+    )
 
 
 def blocklist_hook(
@@ -290,14 +326,22 @@ def blocklist_hook(
     policy_version: str = "v1",
 ) -> HookSpec:
     """Block when args[field] is on the blocklist (e.g. OFAC sanctions)."""
+
     def fn(tool_name, args, _output):
         value = str(args.get(field, ""))
         if value in blocklist:
             return HookResult.BLOCK, f"{field}={value!r} on blocklist"
         return HookResult.PASS, f"{field} clear"
-    return HookSpec(name=name, phase=HookPhase.PRE, fn=fn,
-                    priority=priority, blocks=blocks,
-                    policy_owner=policy_owner, policy_version=policy_version)
+
+    return HookSpec(
+        name=name,
+        phase=HookPhase.PRE,
+        fn=fn,
+        priority=priority,
+        blocks=blocks,
+        policy_owner=policy_owner,
+        policy_version=policy_version,
+    )
 
 
 def output_schema_hook(
@@ -310,6 +354,7 @@ def output_schema_hook(
     policy_version: str = "v1",
 ) -> HookSpec:
     """Post-hook: tool output must be a dict containing required keys."""
+
     def fn(tool_name, args, output):
         if not isinstance(output, dict):
             return HookResult.BLOCK, f"output is {type(output).__name__}, expected dict"
@@ -317,9 +362,16 @@ def output_schema_hook(
         if missing:
             return HookResult.BLOCK, f"output missing keys: {missing}"
         return HookResult.PASS, "output schema valid"
-    return HookSpec(name=name, phase=HookPhase.POST, fn=fn,
-                    priority=priority, blocks=blocks,
-                    policy_owner=policy_owner, policy_version=policy_version)
+
+    return HookSpec(
+        name=name,
+        phase=HookPhase.POST,
+        fn=fn,
+        priority=priority,
+        blocks=blocks,
+        policy_owner=policy_owner,
+        policy_version=policy_version,
+    )
 
 
 def pii_redaction_hook(
@@ -333,6 +385,7 @@ def pii_redaction_hook(
 ) -> HookSpec:
     """Post-hook: scan tool output string representation for PII patterns."""
     import re
+
     compiled = [re.compile(p) for p in patterns]
 
     def fn(tool_name, args, output):
@@ -341,6 +394,13 @@ def pii_redaction_hook(
             if pat.search(text):
                 return HookResult.BLOCK, f"PII pattern {pat.pattern!r} found in output"
         return HookResult.PASS, "no PII detected"
-    return HookSpec(name=name, phase=HookPhase.POST, fn=fn,
-                    priority=priority, blocks=blocks,
-                    policy_owner=policy_owner, policy_version=policy_version)
+
+    return HookSpec(
+        name=name,
+        phase=HookPhase.POST,
+        fn=fn,
+        priority=priority,
+        blocks=blocks,
+        policy_owner=policy_owner,
+        policy_version=policy_version,
+    )

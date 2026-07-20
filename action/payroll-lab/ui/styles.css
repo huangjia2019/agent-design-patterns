@@ -91,6 +91,20 @@ button { cursor: pointer; }
 }
 .lesson-heading h1, .page-heading h1 { margin: 8px 0 7px; font-size: 28px; line-height: 1.2; letter-spacing: 0; }
 .lesson-heading p, .page-heading p { margin: 0; color: var(--muted); font-size: 14px; }
+.scenario-console {
+  display: flex; align-items: center; gap: 18px; margin: 0 0 16px; padding: 12px 0;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.scenario-title { flex: 0 0 auto; padding-right: 18px; border-right: 1px solid var(--line); }
+.scenario-title span, .scenario-title strong { display: block; }
+.scenario-title span { color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.scenario-title strong { margin-top: 3px; font-size: 12px; }
+.scenario-actions { display: flex; flex: 1; flex-wrap: wrap; gap: 7px; }
+.scenario-button {
+  min-height: 34px; padding: 7px 11px; color: #34454e; background: #ffffff;
+  border: 1px solid #cbd5da; border-radius: 5px; font-size: 10px; font-weight: 750;
+}
+.scenario-button:hover { color: #0f5d76; background: #eef7fa; border-color: #83adba; }
 .coordinate { color: var(--blue); font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .run-button { min-width: 116px; height: 42px; }
 .stage-strip {
@@ -174,6 +188,19 @@ button { cursor: pointer; }
 .event.control::before { background: var(--blue); }
 .event.reasoning::before { background: var(--violet); }
 .event.action::before { background: var(--blue); }
+.event.experiment { background: #eef6f1; }
+.event.experiment::before { background: var(--green); }
+.event.experiment .event-text { color: #23553a; font-weight: 700; }
+.event.north-star { background: #eef5f8; }
+.event.north-star::before { background: #326c7d; }
+.event.north-star .event-text { color: #214f5d; font-weight: 800; }
+.event.injection { background: #fff3ec; }
+.event.injection::before { background: #c7522a; }
+.event.injection .event-text { color: #8b351c; font-weight: 700; }
+.event.proposal::before { background: var(--violet); }
+.event.recovery { background: #f2f7ed; }
+.event.recovery::before { background: var(--green); }
+.event.recovery .event-text { color: #315b2d; font-weight: 700; }
 .raw-output { margin-top: 16px; border: 1px solid var(--line); border-radius: 5px; }
 .raw-output summary { padding: 11px 14px; color: #50606a; background: #f6f8f9; font-size: 11px; font-weight: 700; }
 .raw-output pre { max-height: 380px; margin: 0; padding: 16px; overflow: auto; color: #dbe3e7; background: #1e2529; font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; line-height: 1.65; white-space: pre-wrap; }
@@ -260,6 +287,10 @@ button { cursor: pointer; }
   .lesson-heading, .page-heading { align-items: stretch; flex-direction: column; }
   .lesson-heading h1, .page-heading h1 { font-size: 24px; }
   .run-button, .table-search { width: 100%; }
+  .scenario-console { align-items: stretch; flex-direction: column; gap: 10px; }
+  .scenario-title { padding: 0 0 8px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .scenario-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scenario-button { width: 100%; }
   .stage-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stage:nth-child(2) { border-right: 0; }
   .stage:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
@@ -272,4 +303,52 @@ button { cursor: pointer; }
   .data-table-wrap { min-height: 360px; }
   .boundary-band > div { grid-template-columns: 1fr; }
   .boundary-band p { min-height: auto; }
+}
+
+/* --- Action stress workbench --- */
+.stress-console {
+  margin: 0 0 18px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: #f8fafb;
+}
+.stress-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 12px; }
+.stress-heading h2 { margin: 3px 0 4px; font-size: 16px; letter-spacing: 0; }
+.stress-heading p { margin: 0; color: var(--muted); font-size: 11px; }
+.stress-level-button strong { color: #9a6428; margin-right: 4px; }
+.pressure-button { color: #7d2d24; border-color: #d9aaa3; background: #fff8f6; }
+.stress-ladder { margin-top: 12px; }
+.ladder-table { width: 100%; border-collapse: collapse; font-size: 12px; background: #ffffff; }
+.ladder-table th, .ladder-table td {
+  text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top;
+}
+.ladder-table th { color: #596971; background: #eef2f4; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.ladder-clean td:first-child { border-left: 3px solid #4b9b68; }
+.ladder-bad td:first-child { border-left: 3px solid #c75a4a; }
+.ladder-note { margin: 9px 2px 0; font-size: 11px; color: #68777f; }
+.verdict { display: inline-block; min-width: 42px; padding: 2px 7px; border: 1px solid; border-radius: 4px; text-align: center; font-size: 10px; font-weight: 800; }
+.verdict.safe { color: #28633e; background: #edf7f0; border-color: #a8cfb4; }
+.verdict.exposed { color: #8b3027; background: #fff1ef; border-color: #e2aaa4; }
+.stress-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.stress-metric { min-height: 58px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: #ffffff; }
+.stress-metric span, .stress-metric strong { display: block; }
+.stress-metric span { color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.stress-metric strong { margin-top: 6px; color: #26363e; font-size: 15px; }
+.safe-text { color: #28633e !important; }
+.exposed-text { color: #9a352b !important; }
+.stress-stimulus { display: flex; gap: 12px; margin-bottom: 9px; padding: 9px 11px; border-left: 3px solid #c08a39; background: #fffaf1; font-size: 11px; }
+.stress-stimulus span { color: #8a642c; font-weight: 800; }
+.stress-stimulus strong { color: #3f474b; }
+.gap-table code { color: #43535b; font-size: 10px; white-space: normal; overflow-wrap: anywhere; }
+.matrix-wrap { overflow-x: auto; }
+.matrix-table { min-width: 820px; }
+.matrix-table td:not(:first-child) { text-align: center; }
+
+@media (max-width: 720px) {
+  .stress-heading { align-items: stretch; flex-direction: column; }
+  .stress-heading .button { width: 100%; }
+  .stress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .payment-table { min-width: 620px; }
+  .stress-ladder { overflow-x: auto; }
 }

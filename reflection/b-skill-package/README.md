@@ -12,9 +12,10 @@ skills.** Every skill enters as TRIAL — human-written or distilled — and
 is promoted only when a set of golden questions (deterministic
 input → expected-output checks) all pass. Post-reuse success rates feed
 back: a verified skill that starts failing is demoted to TRIAL and must
-re-verify, which is the staleness guard. Distillation thresholds follow
-Hermes (enough distinct tool calls to be worth freezing); distillation
-earns storage, never trust.
+re-verify, which is the staleness guard. Hermes inspires the successful,
+multi-step-task trigger; this reference interface additionally requires
+several distinct tools to filter trivial traces. Distillation earns storage,
+never trust.
 
 ## Quick start
 

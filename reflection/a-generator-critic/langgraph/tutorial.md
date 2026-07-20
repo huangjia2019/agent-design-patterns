@@ -62,6 +62,7 @@ from shared import (
     GOOD_CRITIQUE_JSON,
     LOW_SCORE_CRITIQUE_JSON,
     NEEDS_REVISION_CRITIQUE_JSON,
+    OPINION_ONLY_CRITIQUE_JSON,
     default_policy,
     parse_critique_json,
     print_trace,
@@ -69,26 +70,24 @@ from shared import (
     scripted_critic,
     scripted_generator,
 )
-
 ```
 
 ## State and role interfaces
 
-The graph state is small on purpose:
+The graph keeps the review boundary visible in state:
 
-- `prompt` is the user request for the artifact.
-- `artifact` is the generated or revised `Artifact`.
-- `critique` is the parsed evidence from the critic.
-- `decision` is the deterministic policy verdict.
-- `trace` is a short audit path for the tutorial output.
+- `artifact` is the exact version submitted to the critic.
+- `revision_draft` is an optional replacement produced after the decision.
+- `critique`, `decision`, and `trace` form the audit record.
 
-The graph accepts plain Python callables for each role. That is why the fake roles in this notebook are framework-agnostic functions instead of LangChain fake chat models.
+`build_graph(generator, critic, ...)` starts from a prompt. Passing `generator=None` starts an explicit review pass from an existing `artifact`; it never disguises a second review as generation.
 
 
 ```python
 class ReviewState(TypedDict, total=False):
     prompt: str
     artifact: Artifact
+    revision_draft: Artifact
     critique: Critique
     decision: Decision
     trace: list[str]
@@ -97,24 +96,18 @@ class ReviewState(TypedDict, total=False):
 GeneratorFn = Callable[[str], Artifact]
 CriticFn = Callable[[Artifact], Critique]
 ReviserFn = Callable[[Artifact, Critique], Artifact]
-
 ```
 
 ## Core nodes
 
-Each node owns exactly one role:
+Each node owns exactly one role. `generate` starts a prompt-driven pass; `receive` starts an explicit re-review from an existing artifact. Both converge on `critique`. The critic records grounded evidence and any dropped opinions, the deterministic gate decides, and `revise` writes only `revision_draft`.
 
-- `generate_node` calls the generator and starts the trace.
-- `critique_node` calls the critic and appends evidence to state.
-- `gate_node` runs `AcceptancePolicy`; it does not ask the LLM to decide.
-- `revise_node` drafts a revised artifact when requested.
-
-The conditional edge after `gate` is the whole safety boundary. If the artifact needs revision and a reviser exists, the graph routes to `revise`; otherwise it ends. The `revise` node also ends the graph, so revised text cannot be accepted in the same pass.
+The conditional edge after `gate` is the safety boundary. `revise` ends at `END`, so the graph cannot accept text that its critic never saw.
 
 
 ```python
 def build_graph(
-    generator: GeneratorFn,
+    generator: GeneratorFn | None,
     critic: CriticFn,
     reviser: ReviserFn | None = None,
     *,
@@ -126,22 +119,33 @@ def build_graph(
         artifact = generator(state["prompt"])
         return {"artifact": artifact, "trace": ["generated"]}
 
+    def receive_node(_state: ReviewState) -> dict:
+        # A review-only pass records its own entry event; callers provide only
+        # the artifact and cannot accidentally omit the audit boundary.
+        return {"trace": ["artifact_received"]}
+
     def critique_node(state: ReviewState) -> dict:
         critique = critic(state["artifact"])
-        return {"critique": critique, "trace": state.get("trace", []) + ["critiqued"]}
+        trace = state["trace"] + ["critiqued"]
+        if critique.dropped_issues:
+            trace.append(f"dropped_opinions:{len(critique.dropped_issues)}")
+        return {"critique": critique, "trace": trace}
 
     def gate_node(state: ReviewState) -> dict:
         # The critic provides evidence; AcceptancePolicy owns the decision.
         decision = policy.decide(state["critique"])
-        return {"decision": decision, "trace": state.get("trace", []) + [decision.value]}
+        return {"decision": decision, "trace": state["trace"] + [decision.value]}
 
     def revise_node(state: ReviewState) -> dict:
         if reviser is None:
             return {}
-        # Revision is a draft artifact only. The graph ends here so the revised
-        # text cannot be accepted without a separate generate/critique/gate pass.
-        artifact = reviser(state["artifact"], state["critique"])
-        return {"artifact": artifact, "trace": state.get("trace", []) + ["revision_drafted"]}
+        # Do not overwrite the reviewed artifact. The replacement remains an
+        # unreviewed draft when this bounded graph pass reaches END.
+        revision_draft = reviser(state["artifact"], state["critique"])
+        return {
+            "revision_draft": revision_draft,
+            "trace": state["trace"] + ["revision_drafted"],
+        }
 
     def route_after_gate(state: ReviewState) -> str:
         if state["decision"] is Decision.NEEDS_REVISION and reviser is not None:
@@ -149,12 +153,17 @@ def build_graph(
         return "done"
 
     builder = StateGraph(ReviewState)
-    builder.add_node("generate", generate_node)
+    if generator is None:
+        builder.add_node("receive", receive_node)
+        builder.add_edge(START, "receive")
+        builder.add_edge("receive", "critique")
+    else:
+        builder.add_node("generate", generate_node)
+        builder.add_edge(START, "generate")
+        builder.add_edge("generate", "critique")
     builder.add_node("critique", critique_node)
     builder.add_node("gate", gate_node)
     builder.add_node("revise", revise_node)
-    builder.add_edge(START, "generate")
-    builder.add_edge("generate", "critique")
     builder.add_edge("critique", "gate")
     builder.add_conditional_edges("gate", route_after_gate, {"revise": "revise", "done": END})
     builder.add_edge("revise", END)
@@ -164,11 +173,11 @@ def build_graph(
 def result_from_state(state: ReviewState) -> ChainResult:
     return ChainResult(
         decision=state["decision"],
-        artifact=state["artifact"],
+        reviewed_artifact=state["artifact"],
         critique=state["critique"],
-        trace=state["trace"],
+        revision_draft=state.get("revision_draft"),
+        trace=tuple(state["trace"]),
     )
-
 ```
 
 ## Deterministic fake roles
@@ -192,9 +201,7 @@ show_graph(accepted_graph, alt="Generator-Critic LangGraph")
 ```
 
 
-    
 ![png](tutorial_files/tutorial_9_0.png)
-    
 
 
 ## Mock run 1: clean critique accepts
@@ -211,14 +218,15 @@ print_trace(result_from_state(state))
     decision: accepted
     trace: generated -> critiqued -> accepted
     score: 0.9
+    score evidence: none
     issues: none
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
 
 
-## Mock run 2: blocker drafts a revision, but does not auto-accept
+## Mock run 2: a revision draft needs an explicit second review
 
-The blocker issue routes through `revise`, and the reviser adds evidence to the artifact. The decision remains `needs_revision`; the revision is a draft for the next pass, not an accepted result.
+The blocker routes pass 1 through `revise`, which stores a separate draft and ends. Pass 2 builds a review-only graph (`generator=None`) and submits that draft directly to the critic. Only this new decision can accept revision 1.
 
 
 ```python
@@ -227,17 +235,36 @@ revision_graph = build_graph(
     scripted_critic(NEEDS_REVISION_CRITIQUE_JSON),
     reviser=revise_with_evidence,
 )
-state = revision_graph.invoke({"prompt": DEFAULT_PROMPT})
-print_trace(result_from_state(state))
+first_state = revision_graph.invoke({"prompt": DEFAULT_PROMPT})
+first_pass = result_from_state(first_state)
+print("pass 1")
+print_trace(first_pass)
 
+second_review_graph = build_graph(None, scripted_critic(GOOD_CRITIQUE_JSON))
+second_state = second_review_graph.invoke({"artifact": first_pass.revision_draft})
+print()
+print("pass 2")
+print_trace(result_from_state(second_state))
 ```
 
+    pass 1
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.74
+    score evidence: incident policy requires a cited status incident
     issues: ['blocker:incident_policy:sentence 2:impact claim lacks a cited source']
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+
+    pass 2
+    decision: accepted
+    trace: artifact_received -> critiqued -> accepted
+    score: 0.9
+    score evidence: none
+    issues: none
+    dropped: none
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
 ## Mock run 3: low score without blockers still fails
@@ -259,14 +286,39 @@ print_trace(result_from_state(state))
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.62
+    score evidence: support style rubric requires a concrete update window
     issues: ['warning:support_style_guide:sentence 3:next update timing is too vague']
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
-## Mock run 4: malformed critic output fails closed
+## Mock run 4: unsupported opinions cannot block
 
-The critic returns invalid JSON. The shared parser converts that parse failure into a blocker `Critique`, so the graph takes the revision branch instead of accidentally accepting the artifact.
+The critic labels a style preference as a blocker but provides no evidence. The critique retains it in `dropped_issues` for audit, while the policy accepts the artifact because unsupported opinions are not control signals.
+
+
+```python
+opinion_graph = build_graph(
+    scripted_generator,
+    scripted_critic(OPINION_ONLY_CRITIQUE_JSON),
+)
+state = opinion_graph.invoke({"prompt": DEFAULT_PROMPT})
+print_trace(result_from_state(state))
+```
+
+    decision: accepted
+    trace: generated -> critiqued -> dropped_opinions:1 -> accepted
+    score: 0.92
+    score evidence: none
+    issues: none
+    dropped: ['blocker:style_preference:body:the update feels too terse']
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+
+
+## Mock run 5: malformed critic output fails closed
+
+The critic returns invalid JSON. The shared parser converts that failure into an evidence-backed parser blocker, so the graph takes the revision branch instead of accidentally accepting the artifact.
 
 
 ```python
@@ -283,9 +335,11 @@ print_trace(result_from_state(state))
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.0
+    score evidence: critic output failed schema validation
     issues: ['blocker:parser:critic:critic output could not be parsed: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)']
     dropped: none
-    artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
+    reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
+    revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
 ## Real backend
@@ -335,13 +389,17 @@ else:
 
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision
-    score: 0.3
-    issues: ['blocker:Template completeness check:Subject line:Subject line contains unresolved [Date] placeholder', 'blocker:Template completeness check:Contact information section:Contact information section contains unresolved [contact info] placeholder', 'blocker:Template completeness check:Signature:Signature contains unresolved [Your Company Name] placeholder', "warning:Clarity check:Body text:Vague time references ('earlier today', 'now', 'shortly') reduce clarity", "warning:Precision check:Body text:Weak impact language ('potentially disrupting') lacks precision"]
+    score: 0.35
+    score evidence: Missing critical incident communication elements per standard incident update rubric: no timeline, no root cause, no impact scope, no incident ID, no specific remediation steps, no verification of resolution, and vague empathetic language.
+    issues: ['blocker:Incident communication best practices (timeline transparency):Body paragraph 1:No incident timeline provided (start time, duration, resolution time)', 'blocker:Incident post-mortem standards (root cause disclosure):Body paragraph 2:No root cause or technical explanation of the failure', 'blocker:Incident impact reporting standards:Body paragraph 1:No quantified impact scope (number of affected customers, transactions, revenue)', 'blocker:Incident management documentation standards:Header/Subject line:No incident identifier or reference number for tracking', 'blocker:Incident communication completeness checklist:Body paragraph 3:Remediation steps are vague and non-specific', 'warning:Customer communication tone guidelines:Opening and closing:No explicit apology or acknowledgment of customer impact', 'warning:Communication readiness check:Body paragraph 4:Contact information is a placeholder, not actual details', 'warning:Incident resolution verification standards:Body paragraph 2:No mention of monitoring or verification that the fix is holding']
     dropped: none
-    artifact: **Subject**: Checkout System Update – [Date]
+    reviewed artifact: **Subject**: Checkout System Update – Issue Resolved
     Dear Valued Customer,
-    A temporary technical issue affected our checkout system earlier today, potentially disrupting some purchases. Our team is resolving this now, and we expect normal service to resume shortly.
-    If you encountered problems, please try again or contact support at [contact info]. We apologize for the inconvenience.
+    - We experienced a technical issue with our checkout system earlier today, which may have prevented some customers from completing their purchases.
+    - Our team has resolved the issue, and the system is now fully operational.
+    - We are taking steps to prevent this from happening again.
+    - If you encountered any issues, please contact our support team at [support email/phone] for assistance.
+    Thank you for your patience.
     Sincerely,
     [Your Company Name]
 
@@ -365,10 +423,10 @@ That composition point is why the revision boundary matters. If `generator_criti
 ## What to remember
 
 - `StateGraph` makes the safety boundary visible: `generate -> critique -> gate -> revise -> END`.
-- The critic returns evidence, not approval authority.
-- `AcceptancePolicy` owns both score threshold and blocker logic.
-- Parser failures fail closed as blocker critiques.
-- A revision draft is not accepted until another pass critiques it.
+- The result keeps the reviewed artifact separate from any unreviewed revision draft.
+- Passing `generator=None` creates an explicit second review instead of silently regenerating.
+- Unsupported opinions stay in the audit trail but cannot drive policy.
+- Parser failures fail closed as grounded blocker critiques.
 
 ## Further reading
 

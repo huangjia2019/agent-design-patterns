@@ -1,4 +1,5 @@
 """Invariants for the Guardrail Sandwich pattern."""
+
 from __future__ import annotations
 
 import os
@@ -9,10 +10,9 @@ import pytest
 sys.path.insert(0, os.path.dirname(__file__))
 sys.modules.pop("pattern", None)
 
-from pattern import (   # noqa: E402
+from pattern import (  # noqa: E402
     GuardrailSandwich,
     GuardrailViolation,
-    HookOutcome,
     HookPhase,
     HookResult,
     HookSpec,
@@ -115,6 +115,7 @@ def test_no_hooks_means_tool_runs_unchanged() -> None:
     trace = s.run("echo", {"hello": "world"})
     assert trace.final_status == "passed"
     assert trace.tool_output == {"echoed": {"hello": "world"}}
+    assert trace.released_output == trace.tool_output
     assert trace.pre_outcomes == []
     assert trace.post_outcomes == []
 
@@ -135,6 +136,7 @@ def test_pre_hook_block_prevents_tool_invocation() -> None:
     def explode(**kwargs):
         called[0] = True
         return None
+
     s.tools["echo"] = explode
 
     trace = s.run("echo", {})
@@ -150,6 +152,7 @@ def test_pre_hooks_run_in_priority_order() -> None:
         def fn(t, a, o):
             order.append(name)
             return HookResult.PASS, "ok"
+
         return HookSpec(name=name, phase=HookPhase.PRE, fn=fn, priority=priority)
 
     s.add_hook(make_hook("third", 300))
@@ -165,13 +168,38 @@ def test_shadow_mode_downgrades_block_to_warn() -> None:
     def shadow_block(name, args, output):
         return HookResult.BLOCK, "would block in enforcement mode"
 
-    s.add_hook(HookSpec(
-        name="shadow", phase=HookPhase.PRE, fn=shadow_block, blocks=False,
-    ))
+    s.add_hook(
+        HookSpec(
+            name="shadow",
+            phase=HookPhase.PRE,
+            fn=shadow_block,
+            blocks=False,
+        )
+    )
     trace = s.run("echo", {})
     assert trace.final_status == "passed"
     assert trace.pre_outcomes[0].result == HookResult.WARN
     assert "[shadow]" in trace.pre_outcomes[0].reason
+
+
+def test_shadow_hook_crash_is_recorded_as_warn_and_continues() -> None:
+    s = _make_sandwich_with_simple_tool()
+
+    def buggy_shadow_hook(name, args, output):
+        raise RuntimeError("shadow dependency unavailable")
+
+    s.add_hook(
+        HookSpec(
+            name="buggy-shadow",
+            phase=HookPhase.PRE,
+            fn=buggy_shadow_hook,
+            blocks=False,
+        )
+    )
+    trace = s.run("echo", {})
+    assert trace.final_status == "passed"
+    assert trace.pre_outcomes[0].result == HookResult.WARN
+    assert "[shadow] hook crashed" in trace.pre_outcomes[0].reason
 
 
 def test_pre_hook_crash_fails_closed() -> None:
@@ -186,6 +214,51 @@ def test_pre_hook_crash_fails_closed() -> None:
     assert "hook crashed" in trace.pre_outcomes[0].reason
 
 
+def test_pre_normalization_records_requested_and_effective_args() -> None:
+    s = GuardrailSandwich()
+    observed: list[int] = []
+    s.register_tool("pay", lambda amount: observed.append(amount) or {"amount": amount})
+
+    def normalize_amount(name, args, output):
+        args["amount"] = int(args["amount"])
+        return HookResult.PASS, "amount normalized"
+
+    s.add_hook(
+        HookSpec(
+            name="normalize-amount",
+            phase=HookPhase.PRE,
+            fn=normalize_amount,
+        )
+    )
+    trace = s.run("pay", {"amount": "200"})
+    assert observed == [200]
+    assert trace.args == {"amount": "200"}
+    assert trace.effective_args == {"amount": 200}
+
+
+def test_pre_normalization_preserves_nested_requested_args() -> None:
+    s = GuardrailSandwich()
+    s.register_tool("pay", lambda payment: {"payment": payment})
+
+    def normalize_currency(name, args, output):
+        args["payment"]["currency"] = args["payment"]["currency"].upper()
+        return HookResult.PASS, "currency normalized"
+
+    s.add_hook(
+        HookSpec(
+            name="normalize-currency",
+            phase=HookPhase.PRE,
+            fn=normalize_currency,
+        )
+    )
+    requested = {"payment": {"amount": 200, "currency": "cny"}}
+    trace = s.run("pay", requested)
+
+    assert requested["payment"]["currency"] == "cny"
+    assert trace.args["payment"]["currency"] == "cny"
+    assert trace.effective_args["payment"]["currency"] == "CNY"
+
+
 # ---- Post-hook behavior --------------------------------------------------
 
 
@@ -196,6 +269,7 @@ def test_post_hook_block_marks_rollback_but_tool_already_ran() -> None:
     def tool_run(**kwargs):
         called[0] = True
         return {"out": 1}
+
     s.tools["echo"] = tool_run
 
     def post_block(name, args, output):
@@ -203,7 +277,9 @@ def test_post_hook_block_marks_rollback_but_tool_already_ran() -> None:
 
     s.add_hook(HookSpec(name="post_block", phase=HookPhase.POST, fn=post_block))
     trace = s.run("echo", {})
-    assert called[0] is True       # tool DID run
+    assert called[0] is True  # tool DID run
+    assert trace.tool_output == {"out": 1}
+    assert trace.released_output is None
     assert trace.rollback_marked is True
     assert trace.final_status == "blocked_post"
 
@@ -215,6 +291,7 @@ def test_post_hooks_all_run_even_after_block() -> None:
 
     def block_hook(name, args, output):
         return HookResult.BLOCK, "issue 1"
+
     def warn_hook(name, args, output):
         return HookResult.WARN, "issue 2"
 
@@ -232,9 +309,11 @@ def test_tool_exception_skips_post_hooks_and_records_error() -> None:
 
     def explode(**kwargs):
         raise RuntimeError("downstream failure")
+
     s.register_tool("ex", explode)
 
     post_calls = [0]
+
     def post(name, args, output):
         post_calls[0] += 1
         return HookResult.PASS, "ok"
@@ -255,14 +334,19 @@ def test_applies_to_scopes_hook_to_specific_tools() -> None:
     s.register_tool("b", lambda: "out-b")
 
     seen: list[str] = []
+
     def watcher(name, args, output):
         seen.append(name)
         return HookResult.PASS, "ok"
 
-    s.add_hook(HookSpec(
-        name="scoped", phase=HookPhase.PRE, fn=watcher,
-        applies_to={"a"},
-    ))
+    s.add_hook(
+        HookSpec(
+            name="scoped",
+            phase=HookPhase.PRE,
+            fn=watcher,
+            applies_to={"a"},
+        )
+    )
     s.run("a", {})
     s.run("b", {})
     assert seen == ["a"]
@@ -284,13 +368,15 @@ def test_trace_carries_policy_owner_and_version() -> None:
     def policy_hook(name, args, output):
         return HookResult.WARN, "observed"
 
-    s.add_hook(HookSpec(
-        name="versioned-policy",
-        phase=HookPhase.PRE,
-        fn=policy_hook,
-        policy_owner="risk-team",
-        policy_version="2026-07",
-    ))
+    s.add_hook(
+        HookSpec(
+            name="versioned-policy",
+            phase=HookPhase.PRE,
+            fn=policy_hook,
+            policy_owner="risk-team",
+            policy_version="2026-07",
+        )
+    )
     trace = s.run("echo", {})
     outcome = trace.pre_outcomes[0]
     assert outcome.policy_owner == "risk-team"
