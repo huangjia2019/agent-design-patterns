@@ -19,6 +19,7 @@ from pattern import (  # noqa: E402
     ContainmentError,
     ContainmentScope,
     ControlDecision,
+    EffectStatus,
     LeaseStatus,
     Reversibility,
     RiskLevel,
@@ -261,6 +262,157 @@ def test_kill_switch_revokes_existing_leases_and_blocks_new_ones() -> None:
             scope_id="operations",
             at="2026-07-17T10:01:00+00:00",
         )
+
+
+def test_each_external_effect_consumes_a_one_use_live_permit() -> None:
+    control = controller()
+    item = proposal()
+    lease = control.reserve(
+        item,
+        scope_id="engineering",
+        allowed_refs=("E0001",),
+        at="2026-07-17T10:00:00+00:00",
+    )
+
+    permit = control.begin_effect(
+        lease,
+        item,
+        effect_ref="E0001",
+        amount=1_000_000,
+        idempotency_key="pay-E0001",
+        at="2026-07-17T10:00:01+00:00",
+    )
+    snapshot = control.snapshot()["company"]
+
+    assert control.effect_authorizes(permit, item)
+    assert snapshot["reserved_amount"] == 4_000_000
+    assert snapshot["in_flight_amount"] == 1_000_000
+    with pytest.raises(ContainmentError, match="idempotency"):
+        control.begin_effect(
+            lease,
+            item,
+            effect_ref="E0001",
+            amount=1_000_000,
+            idempotency_key="pay-E0001",
+            at="2026-07-17T10:00:02+00:00",
+        )
+    with pytest.raises(ContainmentError, match="reference"):
+        control.begin_effect(
+            lease,
+            item,
+            effect_ref="E0001",
+            amount=1_000_000,
+            idempotency_key="retry-E0001",
+            at="2026-07-17T10:00:03+00:00",
+        )
+
+
+def test_kill_switch_quarantines_in_flight_effect_without_releasing_its_budget() -> None:
+    control = controller()
+    item = proposal()
+    lease = control.reserve(
+        item,
+        scope_id="engineering",
+        allowed_refs=("E0001",),
+        at="2026-07-17T10:00:00+00:00",
+    )
+    permit = control.begin_effect(
+        lease,
+        item,
+        effect_ref="E0001",
+        amount=1_000_000,
+        idempotency_key="pay-E0001",
+        at="2026-07-17T10:00:01+00:00",
+    )
+
+    control.trip_kill_switch(
+        "company",
+        at="2026-07-17T10:00:02+00:00",
+    )
+    snapshot = control.snapshot()["company"]
+
+    assert not control.effect_authorizes(permit, item)
+    assert control.effect_status[permit.permit_id] is EffectStatus.UNKNOWN
+    assert control.lease_status[lease.lease_id] is LeaseStatus.RECONCILING
+    assert snapshot["reserved_amount"] == 0
+    assert snapshot["unknown_amount"] == 1_000_000
+
+    receipt = control.confirm_effect(
+        permit.permit_id,
+        succeeded=True,
+        at="2026-07-17T10:01:00+00:00",
+    )
+    snapshot = control.snapshot()["company"]
+
+    assert receipt.decision is ControlDecision.ALLOWED
+    assert snapshot["unknown_amount"] == 0
+    assert snapshot["committed_amount"] == 1_000_000
+
+
+def test_confirmed_failure_returns_capacity_to_a_live_lease() -> None:
+    control = controller()
+    item = proposal()
+    lease = control.reserve(
+        item,
+        scope_id="engineering",
+        allowed_refs=("E0001",),
+        at="2026-07-17T10:00:00+00:00",
+    )
+    permit = control.begin_effect(
+        lease,
+        item,
+        effect_ref="E0001",
+        amount=1_000_000,
+        idempotency_key="pay-E0001-attempt-1",
+        at="2026-07-17T10:00:01+00:00",
+    )
+
+    control.confirm_effect(
+        permit.permit_id,
+        succeeded=False,
+        at="2026-07-17T10:00:02+00:00",
+    )
+    retry = control.begin_effect(
+        lease,
+        item,
+        effect_ref="E0001",
+        amount=1_000_000,
+        idempotency_key="pay-E0001-attempt-2",
+        at="2026-07-17T10:00:03+00:00",
+    )
+
+    assert control.effect_authorizes(retry, item)
+    assert control.effect_status[permit.permit_id] is EffectStatus.RELEASED
+
+
+def test_last_permit_releases_unused_amount_instead_of_leaking_reservation() -> None:
+    control = controller()
+    item = proposal()
+    lease = control.reserve(
+        item,
+        scope_id="engineering",
+        allowed_refs=("E0001",),
+        at="2026-07-17T10:00:00+00:00",
+    )
+    permit = control.begin_effect(
+        lease,
+        item,
+        effect_ref="E0001",
+        amount=1_000_000,
+        idempotency_key="pay-E0001",
+        at="2026-07-17T10:00:01+00:00",
+    )
+
+    control.confirm_effect(
+        permit.permit_id,
+        succeeded=True,
+        at="2026-07-17T10:00:02+00:00",
+    )
+    snapshot = control.snapshot()["company"]
+
+    assert control.lease_status[lease.lease_id] is LeaseStatus.COMMITTED
+    assert snapshot["reserved_amount"] == 0
+    assert snapshot["committed_amount"] == 1_000_000
 
 
 def test_idempotency_returns_the_same_lease_for_the_same_proposal() -> None:

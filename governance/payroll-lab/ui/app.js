@@ -69,8 +69,8 @@ const presentation = {
     digestLabel: "回执摘要",
   },
   "38": {
-    eyebrow: "HIERARCHICAL BUDGET",
-    title: "三个部门都合规，为什么第三个仍被拦",
+    eyebrow: "BOUNDED EFFECTS",
+    title: "先看组合边界，再触发一次重试风暴",
     left: {
       kicker: "叶子作用域",
       title: "每个部门都守住自己的额度",
@@ -83,9 +83,9 @@ const presentation = {
       labels: ["窗口总额", "已预留", "剩余额度", "第三批状态"],
       tone: "warning",
     },
-    evidenceEyebrow: "RESERVATION TIMELINE",
-    evidenceTitle: "预算预留时间线",
-    digestLabel: "租约摘要",
+    evidenceEyebrow: "CONTAINMENT TIMELINE",
+    evidenceTitle: "预算与效果时间线",
+    digestLabel: "租约或许可",
   },
   "39": {
     eyebrow: "EVIDENCE-BOUND AUTHORITY",
@@ -328,6 +328,46 @@ function renderBlastRadius(result) {
   renderEvents(result.timeline);
 }
 
+function renderBlastRadiusRetryStorm(result) {
+  $("#comparison-eyebrow").textContent = "RETRY STORM ABLATION";
+  $("#comparison-title").textContent = "同一个重试 Bug，两种执行边界";
+  $("#stage-strip").innerHTML = [
+    "层级预留",
+    "逐笔许可",
+    "外部效果",
+    "确认或对账",
+  ].map((stage, index) => `
+    <div class="stage">
+      <span class="stage-index">${index + 1}</span>
+      <span>${stage}</span>
+    </div>
+  `).join("");
+
+  $("#left-kicker").textContent = "只看执行前申报";
+  $("#left-title").textContent = "Ops 整批多跑四遍";
+  setLabels("left", ["批准金额", "实际流出", "超付金额", "付款次数"]);
+  $("#comparison-left").className = "comparison-panel danger";
+  $("#naive-acceptance").textContent = money(result.unbounded.approved_amount);
+  $("#naive-receipts").textContent = money(result.unbounded.money_out);
+  $("#naive-payment").textContent = money(result.unbounded.overpay);
+  $("#naive-audit").textContent = `${result.unbounded.payment_count} 笔`;
+
+  $("#right-kicker").textContent = "层级租约 + 一次性许可";
+  $("#right-title").textContent = "重复动作在执行边界前停住";
+  setLabels("right", ["根信封", "实际流出", "成功付款", "拒绝提款"]);
+  $("#comparison-right").className = "comparison-panel success";
+  $("#governed-approval").textContent = money(result.policy.root_amount_limit);
+  $("#governed-radius").textContent = money(result.bounded.money_out);
+  $("#governed-authority").textContent = `${result.bounded.payment_count} 笔`;
+  $("#governed-audit").textContent = `${result.bounded.refused_draws} 次`;
+  $("#metric-events").textContent = result.timeline.length;
+  $("#trace-status").textContent = "重试风暴证据";
+  $("#evidence-eyebrow").textContent = "PER-EFFECT EVIDENCE";
+  $("#evidence-title").textContent = "逐笔许可消费记录";
+  $("#evidence-digest-label").textContent = "租约或许可";
+  renderEvents(result.timeline);
+}
+
 function renderProgressiveCommitment(result) {
   const windows = result.evidence_windows;
   const windowValue = (index) => {
@@ -450,6 +490,10 @@ function renderComparison(payload) {
   }
   if (result.mode === "approval-gate" || result.mode === "approval-changed") {
     renderApprovalGate(result);
+    return;
+  }
+  if (result.mode === "blast-radius-retry-storm") {
+    renderBlastRadiusRetryStorm(result);
     return;
   }
   if (result.mode === "blast-radius" || result.mode === "blast-radius-overflow") {

@@ -54,8 +54,8 @@ def test_approval_variant_rejects_a_changed_proposal() -> None:
     assert payload["state"]["payment_count"] == 0
 
 
-def test_containment_variant_blocks_before_payment() -> None:
-    payload = run_lecture("38", variant=True)
+def test_containment_standard_scene_blocks_third_department_before_payment() -> None:
+    payload = run_lecture("38")
 
     assert payload["result"]["mode"] == "blast-radius-overflow"
     assert payload["result"]["batches"][2]["leaf_legal"]
@@ -64,16 +64,17 @@ def test_containment_variant_blocks_before_payment() -> None:
     assert payload["state"]["payment_count"] == 0
 
 
-def test_containment_standard_scene_reserves_two_real_department_batches() -> None:
-    payload = run_lecture("38")
+def test_containment_variant_bounds_the_retry_storm_per_effect() -> None:
+    payload = run_lecture("38", variant=True)
 
-    assert payload["result"]["mode"] == "blast-radius"
-    assert [item["department"] for item in payload["result"]["batches"]] == [
-        "Engineering",
-        "Finance",
-    ]
-    assert payload["result"]["snapshot"]["payroll-window::2026-06"]["reserved_amount"] == 5_465_137
-    assert payload["state"]["receipt_count"] == 2
+    result = payload["result"]
+    assert result["mode"] == "blast-radius-retry-storm"
+    assert result["unbounded"]["money_out"] == 24_701_937
+    assert result["unbounded"]["overpay"] == 10_995_840
+    assert result["bounded"]["money_out"] == 13_706_097
+    assert result["bounded"]["payment_count"] == 798
+    assert result["bounded"]["refused_draws"] == 640
+    assert result["snapshot"]["payroll-window::2026-06"]["unknown_amount"] == 0
 
 
 def test_progressive_variant_demotes_and_clears_evidence() -> None:

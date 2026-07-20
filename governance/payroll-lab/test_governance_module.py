@@ -22,6 +22,7 @@ run_changed_after_approval = governance_lab.run_changed_after_approval
 run_approval_gate = governance_lab.run_approval_gate
 run_approval_policy_change = governance_lab.run_approval_policy_change
 run_blast_radius = governance_lab.run_blast_radius
+run_blast_radius_retry_storm = governance_lab.run_blast_radius_retry_storm
 run_governed = governance_lab.run_governed
 run_naive = governance_lab.run_naive
 run_progressive_commitment = governance_lab.run_progressive_commitment
@@ -76,6 +77,25 @@ def test_changed_proposal_cannot_reuse_old_approval() -> None:
     assert not result["old_approval_authorizes"]
     assert "invalid receipts: approval-gate" in result["adapter_result"]
     assert result["state"]["payment_count"] == 0
+
+
+def test_retry_storm_is_bounded_by_one_use_effect_permits() -> None:
+    result = run_blast_radius_retry_storm()
+
+    assert result["unbounded"] == {
+        "approved_amount": 13_706_097.0,
+        "payment_count": 1438,
+        "money_out": 24_701_937.0,
+        "overpay": 10_995_840.0,
+    }
+    assert result["bounded"]["payment_count"] == 798
+    assert result["bounded"]["money_out"] == 13_706_097.0
+    assert result["bounded"]["refused_draws"] == 640
+    root = result["snapshot"]["payroll-window::2026-06"]
+    assert root["reserved_amount"] == 0
+    assert root["in_flight_amount"] == 0
+    assert root["unknown_amount"] == 0
+    assert root["committed_amount"] == 13_706_097.0
 
 
 def test_approval_scene_exposes_route_roles_and_bound_receipt() -> None:
@@ -240,6 +260,57 @@ def test_payment_adapter_rechecks_active_policy_binding() -> None:
                 "progressive-commitment": authority[1],
             },
             at=TIMES["effect"],
+        )
+
+
+def test_payment_adapter_rechecks_live_containment_after_kill_switch() -> None:
+    bench.prepare()
+    item = bench.release_department_proposal("Engineering")
+    control = governance_lab.department_containment_controller(("Engineering",))
+    lease = control.reserve(
+        item,
+        scope_id="department::engineering",
+        allowed_refs=(item.artifact_id,),
+        at=TIMES["reserve"],
+    )
+    reservation = control.reservation_receipt(
+        lease,
+        item,
+        at=TIMES["reserve"],
+    )
+    permit = control.begin_effect(
+        lease,
+        item,
+        effect_ref=item.artifact_id,
+        amount=item.amount,
+        subject_count=item.subject_count,
+        idempotency_key=f"{item.idempotency_key}::effect",
+        at=TIMES["effect"],
+    )
+    approval_receipt, approval_policy = governance_lab._supporting_control(
+        "approval-gate",
+        item,
+    )
+    authority_receipt, authority_policy = governance_lab._supporting_control(
+        "progressive-commitment",
+        item,
+    )
+    control.trip_kill_switch(
+        "payroll-window::2026-06",
+        at=TIMES["effect"],
+    )
+
+    with pytest.raises(PermissionError, match="live containment permit"):
+        bench.execute_payment(
+            item,
+            receipts=(approval_receipt, reservation, authority_receipt),
+            active_policies={
+                "approval-gate": approval_policy,
+                "blast-radius": control.policy_ref,
+                "progressive-commitment": authority_policy,
+            },
+            at=TIMES["effect"],
+            live_containment=(control, permit),
         )
 
 

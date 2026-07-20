@@ -494,6 +494,182 @@ def run_blast_radius(*, include_third: bool = False) -> dict:
     return result
 
 
+def run_blast_radius_retry_storm() -> dict:
+    """Compare an unbounded executor with one-use permits on the same payroll."""
+    bench.prepare()
+    batches = bench.payroll_payment_batches()
+    proposals = {
+        department: bench.release_department_proposal(department)
+        for department, _rows in batches
+    }
+    root_scope = f"payroll-window::{bench.MONTH}"
+    approved = sum(
+        amount
+        for _department, rows in batches
+        for _employee_id, amount in rows
+    )
+    subject_count = sum(len(rows) for _department, rows in batches)
+
+    controller = blast.BlastRadiusController()
+    controller.register_scope(
+        blast.ContainmentScope(
+            root_scope,
+            blast.BlastBudget(
+                approved,
+                subject_count,
+                subject_count,
+                ("payroll.disburse",),
+                (f"payroll:{bench.MONTH}:department:", "bank:"),
+            ),
+        )
+    )
+    for department, rows in batches:
+        amount = sum(item[1] for item in rows)
+        controller.register_scope(
+            blast.ContainmentScope(
+                f"department::{department.lower()}",
+                blast.BlastBudget(
+                    amount,
+                    len(rows),
+                    len(rows),
+                    ("payroll.disburse",),
+                    (
+                        f"payroll:{bench.MONTH}:department:{department}",
+                        "bank:payroll",
+                    ),
+                ),
+                parent_id=root_scope,
+            )
+        )
+
+    leases: dict[str, object] = {}
+    envelope_rows: list[dict] = []
+    for sequence, (department, rows) in enumerate(batches, start=1):
+        proposal = proposals[department]
+        lease = controller.reserve(
+            proposal,
+            scope_id=f"department::{department.lower()}",
+            effect_count=len(rows),
+            allowed_refs=tuple(employee_id for employee_id, _amount in rows),
+            at=f"2026-07-17T10:04:{sequence:02d}+00:00",
+        )
+        leases[department] = lease
+        envelope_rows.append(
+            {
+                "department": department,
+                "amount": proposal.amount,
+                "subject_count": proposal.subject_count,
+                "effect_count": len(rows),
+                "lease_id": lease.lease_id,
+            }
+        )
+
+    retry_department = "Ops"
+    extra_runs = 4
+    unbounded_payments: list[tuple[str, str, float]] = []
+    bounded_payments: list[tuple[str, str, float]] = []
+    refusals: list[dict] = []
+    for department, rows in batches:
+        runs = 1 + (extra_runs if department == retry_department else 0)
+        proposal = proposals[department]
+        lease = leases[department]
+        for run_number in range(1, runs + 1):
+            for employee_id, amount in rows:
+                unbounded_payments.append((department, employee_id, amount))
+                try:
+                    permit = controller.begin_effect(
+                        lease,
+                        proposal,
+                        effect_ref=employee_id,
+                        amount=amount,
+                        idempotency_key=(
+                            f"{proposal.idempotency_key}::{employee_id}"
+                            f"::attempt-{run_number}"
+                        ),
+                        at="2026-07-17T10:06:00+00:00",
+                    )
+                except blast.ContainmentError as error:
+                    refusals.append(
+                        {
+                            "department": department,
+                            "employee_id": employee_id,
+                            "run_number": run_number,
+                            "reason": str(error),
+                        }
+                    )
+                    continue
+                if not controller.effect_authorizes(permit, proposal):
+                    raise AssertionError("a newly issued permit must be live")
+                bounded_payments.append((department, employee_id, amount))
+                controller.confirm_effect(
+                    permit.permit_id,
+                    succeeded=True,
+                    at="2026-07-17T10:06:01+00:00",
+                )
+
+    unbounded_total = sum(item[2] for item in unbounded_payments)
+    bounded_total = sum(item[2] for item in bounded_payments)
+    snapshot = controller.snapshot()
+    bench.persist_budget(snapshot)
+    timeline = [
+        {
+            "sequence": index,
+            "event_type": "containment.envelope_committed",
+            "control": f"department::{item['department'].lower()}",
+            "decision": "committed",
+            "summary": (
+                f"{item['department']} consumed "
+                f"{item['subject_count']} one-use permits"
+            ),
+            "event_hash": item["lease_id"],
+        }
+        for index, item in enumerate(envelope_rows, start=1)
+    ]
+    timeline.append(
+        {
+            "sequence": len(timeline) + 1,
+            "event_type": "containment.retry_storm_blocked",
+            "control": f"department::{retry_department.lower()}",
+            "decision": "blocked",
+            "summary": (
+                f"{len(refusals)} repeated draws were refused; "
+                f"bounded money out stayed at {bounded_total:,.0f}"
+            ),
+            "event_hash": "-",
+        }
+    )
+    return {
+        "mode": "blast-radius-retry-storm",
+        "policy": {
+            "digest": controller.policy_ref.digest,
+            "root_scope": root_scope,
+            "root_amount_limit": approved,
+            "root_subject_limit": subject_count,
+            "root_effect_limit": subject_count,
+        },
+        "retry": {
+            "department": retry_department,
+            "extra_runs": extra_runs,
+        },
+        "unbounded": {
+            "approved_amount": approved,
+            "payment_count": len(unbounded_payments),
+            "money_out": unbounded_total,
+            "overpay": unbounded_total - approved,
+        },
+        "bounded": {
+            "payment_count": len(bounded_payments),
+            "money_out": bounded_total,
+            "refused_draws": len(refusals),
+            "first_refusal": refusals[0],
+        },
+        "envelopes": envelope_rows,
+        "timeline": tuple(timeline),
+        "snapshot": snapshot,
+        "state": bench.state(),
+    }
+
+
 def _record_level_evidence(progressive_control, credential) -> object:
     slices = bench.payroll_department_slices()
     day = credential.authority_version * 2
@@ -580,6 +756,7 @@ def _real_upstream_receipts(proposal) -> tuple[object, object]:
         proposal,
         scope_id=f"month::{bench.MONTH}",
         at=TIMES["reserve"],
+        allowed_refs=(proposal.artifact_id,),
         parent_receipts=(final.receipt.digest,),
     )
     reservation = radius.reservation_receipt(
@@ -938,6 +1115,15 @@ def run_governed() -> dict:
         receipt_digest=authority_receipt.digest,
     )
 
+    effect_permit = radius.begin_effect(
+        lease,
+        proposal,
+        effect_ref=proposal.artifact_id,
+        amount=proposal.amount,
+        subject_count=proposal.subject_count,
+        idempotency_key=f"{proposal.idempotency_key}::effect",
+        at=TIMES["effect"],
+    )
     payment = bench.execute_payment(
         proposal,
         receipts=(final.receipt, reservation, authority_receipt),
@@ -947,6 +1133,7 @@ def run_governed() -> dict:
             "progressive-commitment": commitment.policy.ref,
         },
         at=TIMES["effect"],
+        live_containment=(radius, effect_permit),
     )
     _emit(
         harness,
@@ -962,8 +1149,9 @@ def run_governed() -> dict:
         decision="allowed",
     )
 
-    containment_receipt = radius.commit(
-        lease.lease_id,
+    containment_receipt = radius.confirm_effect(
+        effect_permit.permit_id,
+        succeeded=True,
         at=TIMES["commit"],
     )
     bench.persist_receipt(containment_receipt)

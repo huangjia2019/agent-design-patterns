@@ -18,13 +18,16 @@ must never widen it. Capacity is reserved across the complete leaf-to-root path
 before execution:
 
 ```text
-reserve -> effect -> commit
-              \-> cancel / revoke
+reserve -> begin_effect -> external effect -> confirm_effect
+                    \-> unknown -> reconcile
 ```
 
 Sibling actions therefore compete for the same parent capacity. Stable
-idempotency keys prevent duplicate reservations. An independent kill switch
-revokes active leases and blocks new ones.
+idempotency keys prevent duplicate reservations. Every real external effect
+must also exchange part of the reservation for a one-use `EffectPermit`, which
+the final adapter rechecks against live controller state. A kill switch releases
+unused capacity but keeps uncertain in-flight effects on the `UNKNOWN` ledger
+until reconciliation.
 
 A child resource prefix may narrow a parent prefix. For example, a parent that
 allows `payroll:` can delegate only
@@ -39,7 +42,8 @@ the same business ID.
 | `BlastBudget` | Amount, subject, count, action, and resource limits |
 | `ContainmentScope` | One node in the parent-child control tree |
 | `ContainmentLease` | Capacity reserved before an effect |
-| `BlastRadiusController` | Register, reserve, commit, cancel, and stop |
+| `EffectPermit` | Live one-use authority for one external effect |
+| `BlastRadiusController` | Register, reserve, consume, confirm, reconcile, and stop |
 | `GovernanceReceipt` | Pre-effect reservation and post-effect commit evidence |
 
 ## Run
@@ -49,12 +53,15 @@ python3 governance/b-blast-radius/example.py
 pytest governance/b-blast-radius/test_pattern.py -q
 python3 governance/payroll-lab/blast_radius_lab.py
 python3 governance/payroll-lab/blast_radius_lab.py --overflow
+python3 governance/payroll-lab/blast_radius_lab.py --retry-storm
 ```
 
 The payroll lab reads real Engineering, Finance, and Ops totals from SQLite.
 The first two sibling batches reserve successfully. The third remains legal in
 its leaf but is rejected because their aggregate crosses the shared parent
-window.
+window. The retry-storm scene reruns Ops four extra times. Without one-use
+permits it overpays 10,995,840; with live permits money out stays at the approved
+13,706,097 and all 640 repeated draws are refused before an external effect.
 
 ## Where this pattern sits
 

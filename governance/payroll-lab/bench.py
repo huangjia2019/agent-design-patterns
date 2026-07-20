@@ -129,10 +129,16 @@ def prepare() -> dict:
             CREATE TABLE budget_usage (
                 scope_id TEXT PRIMARY KEY,
                 reserved_amount REAL NOT NULL,
+                in_flight_amount REAL NOT NULL,
+                unknown_amount REAL NOT NULL,
                 committed_amount REAL NOT NULL,
                 reserved_subjects INTEGER NOT NULL,
+                in_flight_subjects INTEGER NOT NULL,
+                unknown_subjects INTEGER NOT NULL,
                 committed_subjects INTEGER NOT NULL,
                 reserved_effects INTEGER NOT NULL,
+                in_flight_effects INTEGER NOT NULL,
+                unknown_effects INTEGER NOT NULL,
                 committed_effects INTEGER NOT NULL,
                 killed INTEGER NOT NULL
             );
@@ -242,6 +248,33 @@ def payroll_department_slices(
     if missing:
         raise ValueError(f"unknown payroll departments: {sorted(missing)}")
     return tuple(by_department[department] for department in departments)
+
+
+def payroll_payment_batches() -> tuple[
+    tuple[str, tuple[tuple[str, float], ...]],
+    ...,
+]:
+    """Return deterministic PAID rows grouped by the executor's department batch."""
+    payroll_db = ACTION_LAB / "payroll.db"
+    if not payroll_db.exists():
+        prepare()
+    with sqlite3.connect(payroll_db) as con:
+        rows = con.execute(
+            "SELECT e.dept, p.emp_id, e.base_salary "
+            "FROM payroll p JOIN employees e ON e.emp_id=p.emp_id "
+            "WHERE p.month=? AND p.status='PAID' "
+            "ORDER BY e.dept, p.emp_id",
+            (MONTH,),
+        ).fetchall()
+    batches: dict[str, list[tuple[str, float]]] = {}
+    for department, employee_id, amount in rows:
+        batches.setdefault(str(department), []).append(
+            (str(employee_id), float(amount))
+        )
+    return tuple(
+        (department, tuple(items))
+        for department, items in batches.items()
+    )
 
 
 def payroll_cohort(*, cohort_id: str, limit: int) -> PayrollCohort:
@@ -521,14 +554,21 @@ def persist_budget(snapshot: dict) -> None:
     with sqlite3.connect(CONTROL_DB) as con:
         for scope_id, usage in snapshot.items():
             con.execute(
-                "INSERT OR REPLACE INTO budget_usage VALUES (?,?,?,?,?,?,?,?)",
+                "INSERT OR REPLACE INTO budget_usage VALUES "
+                "(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     scope_id,
                     usage["reserved_amount"],
+                    usage["in_flight_amount"],
+                    usage["unknown_amount"],
                     usage["committed_amount"],
                     usage["reserved_subjects"],
+                    usage["in_flight_subjects"],
+                    usage["unknown_subjects"],
                     usage["committed_subjects"],
                     usage["reserved_effects"],
+                    usage["in_flight_effects"],
+                    usage["unknown_effects"],
                     usage["committed_effects"],
                     int(usage["killed"]),
                 ),
@@ -564,6 +604,7 @@ def execute_payment(
     active_policies: dict[str, PolicyRef],
     at: str,
     mode: str = "governed",
+    live_containment: tuple[object, object] | None = None,
 ) -> dict:
     """Final adapter independently verifies all pre-effect control receipts."""
     required = {
@@ -598,6 +639,11 @@ def execute_payment(
             "payment adapter rejected invalid receipts: "
             + ", ".join(sorted(invalid))
         )
+    if live_containment is None:
+        raise PermissionError("payment adapter missing a live containment permit")
+    containment_controller, effect_permit = live_containment
+    if not containment_controller.effect_authorizes(effect_permit, proposal):
+        raise PermissionError("payment adapter rejected the live containment permit")
     return _insert_payment(proposal, at=at, mode=mode)
 
 

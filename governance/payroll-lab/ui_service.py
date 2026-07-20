@@ -15,6 +15,7 @@ policy_lab = load_local("ungoverned_policy_lab")
 run_changed_after_approval = governance_lab.run_changed_after_approval
 run_approval_gate = governance_lab.run_approval_gate
 run_blast_radius = governance_lab.run_blast_radius
+run_blast_radius_retry_storm = governance_lab.run_blast_radius_retry_storm
 run_governed = governance_lab.run_governed
 run_naive = governance_lab.run_naive
 run_progressive_commitment = governance_lab.run_progressive_commitment
@@ -50,10 +51,10 @@ LECTURES: dict[str, dict[str, Any]] = {
         "title": "爆炸半径控制",
         "pattern": "Blast Radius Control",
         "coordinate": "Governance x Hierarchy",
-        "question": "每个子批次都合规时，组合总额为什么仍可能越界？",
-        "summary": "先沿父子预算路径预留，再允许真实副作用。",
-        "stages": ["Scope Tree", "Reserve", "Effect", "Commit"],
-        "variant_label": "追加第三个部门",
+        "question": "预算已经批准，为什么一次重试仍可能把钱付出五遍？",
+        "summary": "批次先沿父子路径预留，每笔外部效果再消费一次性许可。",
+        "stages": ["层级预留", "逐笔许可", "外部效果", "确认或对账"],
+        "variant_label": "触发重试风暴",
     },
     "39": {
         "number": "39",
@@ -111,7 +112,11 @@ def run_lecture(lecture: str, *, variant: bool = False) -> dict:
                 changed_after_approval=variant,
             )
         elif lecture == "38":
-            result = run_blast_radius(include_third=variant)
+            result = (
+                run_blast_radius_retry_storm()
+                if variant
+                else run_blast_radius(include_third=True)
+            )
         elif lecture == "39":
             result = run_progressive_commitment(incident=variant)
         else:

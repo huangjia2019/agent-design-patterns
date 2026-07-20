@@ -45,6 +45,8 @@ uv run python governance/payroll-lab/run_governance_module.py --mode changed
 uv run python governance/payroll-lab/run_governance_module.py --mode policy-drift
 uv run python governance/payroll-lab/approval_gate_lab.py --changed
 uv run python governance/payroll-lab/approval_gate_lab.py --policy-change
+uv run python governance/payroll-lab/blast_radius_lab.py --overflow
+uv run python governance/payroll-lab/blast_radius_lab.py --retry-storm
 uv run python governance/payroll-lab/progressive_commitment_lab.py
 uv run python governance/payroll-lab/progressive_commitment_lab.py --variant
 uv run pytest governance -q
