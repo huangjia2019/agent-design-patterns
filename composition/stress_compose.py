@@ -43,17 +43,33 @@ SourceResult = FAN.SourceResult
 HANDOFF = _load("d-handoff-chain", "compose_d")
 
 
+def _source_result(source_id: str, amount: float):
+    return SourceResult.from_mapping(
+        source_id=source_id,
+        snapshot_ref=f"snapshot://{source_id}/2026-06",
+        period="2026-06",
+        unit="CNY",
+        line_items={"社保代扣": amount},
+    )
+
+
 def task_a_independent() -> dict:
     """四个独立数据源，各自口径算同一笔总额。社保代扣三个 12万、一个 10.8万 → 分歧可归因。"""
     results = [
-        SourceResult("payroll", {"社保代扣": 120_000.0}),
-        SourceResult("gl", {"社保代扣": 120_000.0}),
-        SourceResult("social_security", {"社保代扣": 108_000.0}),
-        SourceResult("attendance", {"社保代扣": 120_000.0}),
+        _source_result("payroll", 120_000.0),
+        _source_result("gl", 120_000.0),
+        _source_result("social_security", 108_000.0),
+        _source_result("attendance", 120_000.0),
     ]
     report = Reconciler(tol=1.0).reconcile(results)
-    located = [rc["item"] for rc in report["root_causes"]]
-    return {"located": located, "agreed": report["agreed_items"]}
+    located = sorted(
+        {
+            source
+            for verdict in report.attributable_divergences
+            for source in verdict.low_sources
+        }
+    )
+    return {"located": located, "agreed": list(report.agreed_items)}
 
 
 def task_b_dependent() -> dict:
@@ -61,14 +77,20 @@ def task_b_dependent() -> dict:
     于是全都算出同一个错数（10.8万），彼此『一致』。扇出聚合看到一致 → 判缺口不在这。"""
     corrupted = 108_000.0                         # 被上月结转污染的错数
     results = [
-        SourceResult("payroll", {"社保代扣": corrupted}),
-        SourceResult("gl", {"社保代扣": corrupted}),
-        SourceResult("social_security", {"社保代扣": corrupted}),
-        SourceResult("attendance", {"社保代扣": corrupted}),
+        _source_result("payroll", corrupted),
+        _source_result("gl", corrupted),
+        _source_result("social_security", corrupted),
+        _source_result("attendance", corrupted),
     ]
     report = Reconciler(tol=1.0).reconcile(results)
-    located = [rc["item"] for rc in report["root_causes"]]
-    return {"located": located, "agreed": report["agreed_items"]}
+    located = sorted(
+        {
+            source
+            for verdict in report.attributable_divergences
+            for source in verdict.low_sources
+        }
+    )
+    return {"located": located, "agreed": list(report.agreed_items)}
 
 
 # ── 六步法：给整个发薪系统落坐标（每个子任务选对那一个模式）──────────────────
@@ -78,19 +100,19 @@ def task_b_dependent() -> dict:
 
 PAYROLL_SUBTASKS = [
     #  子任务,            认知功能, 执行拓扑, 模式,            has_dep
-    ("入口分诊",          "感知",   "路由",   "P1 上下文分诊",  False),
-    ("花名册语义压缩",    "感知",   "链式",   "P2 语义压缩",    False),
-    ("发薪工具准入",      "行动",   "路由",   "A1 工具调度",    False),
-    ("批量发薪计划",      "行动",   "编排",   "A2 规划执行",    True),   # 计划内步骤有序
-    ("段间挂闸",          "行动",   "链式",   "A3 提示链",      True),   # 段与段有序
-    ("高危动作前中后",    "行动",   "层级",   "A5 护栏三明治",  False),
-    ("主管拆批",          "协作",   "层级",   "C1 层级委派",    False),  # 批间独立
-    ("多源对账",          "协作",   "并行",   "C2 扇出聚合",    False),  # 源彼此独立
-    ("放行评审",          "协作",   "循环",   "C3 对抗评审",    False),
-    ("流水线交接",        "协作",   "链式",   "C4 交接链",      True),   # 棒有先后
-    ("分歧时间回溯",      "推理",   "循环",   "R4 迭代假设验证", True),   # 沿时间线依赖
-    ("打款审批门",        "治理",   "路由",   "G1 审批门",      False),
-    ("全程留痕",          "治理",   "编排",   "G5 可观测性",    False),
+    ("入口分诊",          "感知",   "路由",   "上下文分诊",      False),
+    ("花名册语义压缩",    "感知",   "链式",   "语义压缩",        False),
+    ("发薪工具准入",      "行动",   "路由",   "工具调度",        False),
+    ("批量发薪计划",      "行动",   "编排",   "规划执行",        True),   # 计划内步骤有序
+    ("段间挂闸",          "行动",   "链式",   "提示链",          True),   # 段与段有序
+    ("高危动作前中后",    "行动",   "层级",   "护栏三明治",      False),
+    ("主管拆批",          "协作",   "层级",   "层级委派",        False),  # 批间独立
+    ("多源对账",          "协作",   "并行",   "扇出聚合",        False),  # 源彼此独立
+    ("放行评审",          "协作",   "循环",   "对抗评审",        False),
+    ("流水线交接",        "协作",   "链式",   "交接链",          True),   # 棒有先后
+    ("分歧时间回溯",      "推理",   "循环",   "迭代假设验证",    True),   # 沿时间线依赖
+    ("打款审批门",        "治理",   "路由",   "审批门",          False),
+    ("全程留痕",          "治理",   "编排",   "可观测性",        False),
 ]
 
 PARALLEL_TOPOLOGIES = {"并行", "扇出"}
@@ -124,29 +146,68 @@ def select_payroll_system() -> dict:
 # 就撞上 C4 的 append-only。dependency×parallel 那条交互校验查不出这类冲突。
 
 def compose_seam_conflict() -> dict:
-    Baton = HANDOFF.Baton
-    StageSpec = HANDOFF.StageSpec
+    FactRule = HANDOFF.FactRule
+    FactValue = HANDOFF.FactValue
     HandoffChain = HANDOFF.HandoffChain
-    SeamError = HANDOFF.SeamError
+    StageBinding = HANDOFF.StageBinding
+    StageDelta = HANDOFF.StageDelta
+    StageSpec = HANDOFF.StageSpec
+    TaskContract = HANDOFF.TaskContract
 
-    import asyncio
+    async def settle(b):
+        return StageDelta(
+            facts=(
+                FactValue(
+                    "net_amount",
+                    9600.0,
+                    evidence_refs=("artifact://settlement/v1",),
+                ),
+            )
+        )
 
-    async def settle(b):    return {"facts": {"net_amount": 9600.0}}    # 核算交出 9600
-    async def replan(b):    return {"facts": {"net_amount": 9900.0}}    # A2 重排想改写成 9900
+    async def replan(b):
+        return StageDelta(
+            facts=(
+                FactValue(
+                    "net_amount",
+                    9900.0,
+                    evidence_refs=("plan://revised/v2",),
+                ),
+            )
+        )
 
-    specs = [
-        (StageSpec("settle", provides=("net_amount",)), settle),
-        (StageSpec("replan", provides=("net_amount",)), replan),        # 撞 append-only
-    ]
     # 交互校验（只查依赖×并行）看这套选型：两个都不是并行 → 判『无违规』
-    fake_subtasks = [("settle", "行动", "链式", "C4 交接链", True),
-                     ("replan", "行动", "编排", "A2 规划执行", True)]
+    fake_subtasks = [
+        ("settle", "协作", "链式", "交接链", True),
+        ("replan", "行动", "编排", "规划执行", True),
+    ]
     check_passed = len(interaction_check(fake_subtasks)) == 0
 
     caught = None
     try:
-        asyncio.run(HandoffChain(specs).run(Baton(intent="发薪")))
-    except SeamError as e:
+        HandoffChain(
+            contract=TaskContract(
+                contract_id="compose-seam-conflict",
+                version=1,
+                objective="settle and release one payroll result",
+                output_schema="Baton",
+                accountable_owner="payroll-controller",
+            ),
+            stages=(
+                StageBinding(
+                    StageSpec("settle", provides=("net_amount",)),
+                    settle,
+                ),
+                StageBinding(
+                    StageSpec("replan", provides=("net_amount",)),
+                    replan,
+                ),
+            ),
+            fact_rules=(
+                FactRule("net_amount", "settle", float),
+            ),
+        )
+    except ValueError as e:
         caught = str(e)
 
     return {"check_passed": check_passed, "seam_conflict": caught is not None,
@@ -165,7 +226,7 @@ def report_selection() -> None:
     print("-" * 74)
     print(f"Step 4 交互校验（带依赖的不许并行）：正确选型违规 {len(sel['good_violations'])} 条")
     assert not sel["good_violations"], "正确选型不该有违规"
-    print("反例：把「分歧时间回溯」从循环(R4)错选成并行(C2 扇出聚合)：")
+    print("反例：把「分歧时间回溯」从循环的迭代假设验证错选成并行的扇出聚合：")
     for v in sel["bad_violations"]:
         print(f"  ✗ {v['subtask']}（{v['topo']}）违反：{v['rule']}")
     assert sel["bad_violations"], "反例应被交互校验抓到"
@@ -174,9 +235,9 @@ def report_selection() -> None:
 
     print("\n后半场 · 单条交互校验的盲区（跨模式接缝冲突）")
     sc = compose_seam_conflict()
-    print(f"  A2 规划执行 + C4 交接链，两个都选对了。依赖×并行校验："
+    print(f"  规划执行 + 交接链，两个都选对了。依赖×并行校验："
           f"{'通过(判无违规)' if sc['check_passed'] else '拦下'}")
-    print(f"  可组合到一条流水线上，A2 想改写已 committed 的值 → 撞 C4 append-only：")
+    print("  可组合到一条流水线上，规划执行想改写已 committed 的值 → 撞交接链 append-only：")
     print(f"  ✗ {sc['detail']}")
     assert sc["check_passed"] and sc["seam_conflict"], "接缝冲突演示未如期成立"
     print("  教学版 Step 4 只查一条规则，查不出这类接缝冲突。坐标对 ≠ 组合对。")
@@ -196,7 +257,7 @@ def report() -> None:
     print("  → 四个源一致报同一个错数，聚合器判『一致·缺口不在这』，真错被漏。")
     print("  → 违反 Brooks：子任务有依赖时并行给不出独立探针，只买来虚假一致。")
 
-    a_ok = "社保代扣" in a["located"]
+    a_ok = "social_security" in a["located"]
     b_trap = "社保代扣" in b["agreed"] and not b["located"]   # 错被当成一致
     print("\n" + "-" * 74)
     print(f"任务A 扇出聚合定位成功 = {a_ok}")

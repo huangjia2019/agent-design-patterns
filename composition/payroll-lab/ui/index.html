@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pattern Composition Lab</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">C</div>
+          <div>
+            <strong>Pattern Composition Lab</strong>
+            <span>组合选型工作台</span>
+          </div>
+        </div>
+
+        <div class="sidebar-rule"></div>
+        <div class="sidebar-label">课程实验</div>
+        <nav id="lecture-nav" class="lecture-nav" aria-label="课程章节"></nav>
+
+        <div class="sidebar-bottom">
+          <div class="runtime-state">
+            <span class="status-dot"></span>
+            <div>
+              <strong>真实模式实现</strong>
+              <span>Fan-out + Hypothesis Loop</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="view-tabs" role="tablist" aria-label="工作台视图">
+            <button class="view-tab active" data-view="experiment" role="tab">实验</button>
+            <button class="view-tab" data-view="card" role="tab">选型卡</button>
+            <button class="view-tab" data-view="boundary" role="tab">方法边界</button>
+          </div>
+          <div class="scenario-control" id="scenario-control" aria-label="实验场景"></div>
+        </header>
+
+        <div class="content">
+          <section class="page-heading">
+            <div>
+              <div class="eyebrow">COMPOSITION BASELINE</div>
+              <h1>41 · 模式选型卡</h1>
+              <p>手工挑出几个模式，凭什么相信这套架构真的有用？</p>
+            </div>
+            <button id="run-button" class="run-button" type="button">
+              <span class="play-icon" aria-hidden="true">▶</span>
+              运行实验
+            </button>
+          </section>
+
+          <section class="selection-flow" aria-label="选型卡三面板">
+            <div><span>1</span><strong>ASSESS</strong><small>约束与基线</small></div>
+            <div><span>2</span><strong>ROUTE</strong><small>依赖与拓扑</small></div>
+            <div><span>3</span><strong>SELECT</strong><small>候选与反例</small></div>
+            <div class="evidence-step"><span>✓</span><strong>EVIDENCE</strong><small>实验裁决</small></div>
+          </section>
+
+          <div id="loading" class="loading" hidden>正在运行同负载对照实验...</div>
+          <div id="error" class="error-banner" hidden></div>
+
+          <div id="experiment-view" class="view-panel">
+            <section class="overview-band">
+              <div class="section-kicker">CURRENT HYPOTHESIS</div>
+              <div class="overview-grid">
+                <div class="overview-main">
+                  <span>待回答的问题</span>
+                  <strong id="question">加载中</strong>
+                  <p id="scenario-description"></p>
+                </div>
+                <div class="overview-stat">
+                  <span>数据关系</span>
+                  <strong id="dependency-shape">-</strong>
+                </div>
+                <div class="overview-stat">
+                  <span>卡片状态</span>
+                  <strong id="outcome-state">-</strong>
+                </div>
+                <div class="overview-stat">
+                  <span>决策摘要</span>
+                  <strong id="card-digest">-</strong>
+                </div>
+              </div>
+            </section>
+
+            <section class="experiment-section">
+              <div class="section-heading">
+                <div>
+                  <div class="section-kicker">BOUND COMPARISON</div>
+                  <h2>同一批任务上的基线与候选</h2>
+                </div>
+                <span id="verdict-label" class="verdict-label">等待运行</span>
+              </div>
+
+              <div class="comparison-grid">
+                <article class="candidate baseline">
+                  <div class="candidate-label">最小基线</div>
+                  <h3 id="baseline-name">-</h3>
+                  <p id="baseline-finding">-</p>
+                  <div class="metric-row">
+                    <span>缺陷召回</span>
+                    <strong id="baseline-recall">-</strong>
+                  </div>
+                  <div class="metric-row">
+                    <span>虚假一致</span>
+                    <strong id="baseline-consensus">-</strong>
+                  </div>
+                  <div class="metric-row">
+                    <span>读取次数</span>
+                    <strong id="baseline-reads">-</strong>
+                  </div>
+                </article>
+
+                <div class="comparison-arrow" aria-hidden="true">→</div>
+
+                <article class="candidate proposal">
+                  <div class="candidate-label">候选架构</div>
+                  <h3 id="proposal-name">-</h3>
+                  <p id="proposal-finding">-</p>
+                  <div class="metric-row">
+                    <span>缺陷召回</span>
+                    <strong id="proposal-recall">-</strong>
+                  </div>
+                  <div class="metric-row">
+                    <span>虚假一致</span>
+                    <strong id="proposal-consensus">-</strong>
+                  </div>
+                  <div class="metric-row">
+                    <span>读取次数</span>
+                    <strong id="proposal-reads">-</strong>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="evidence-section">
+              <div class="section-heading">
+                <div>
+                  <div class="section-kicker">WHY THIS DECISION HOLDS</div>
+                  <h2>证据链</h2>
+                </div>
+              </div>
+              <div id="evidence-list" class="evidence-list"></div>
+            </section>
+          </div>
+
+          <div id="card-view" class="view-panel" hidden>
+            <section class="card-panels">
+              <article>
+                <div class="panel-number">01</div>
+                <h2>ASSESS</h2>
+                <dl id="assess-panel"></dl>
+              </article>
+              <article>
+                <div class="panel-number">02</div>
+                <h2>ROUTE</h2>
+                <dl id="route-panel"></dl>
+              </article>
+              <article>
+                <div class="panel-number">03</div>
+                <h2>SELECT</h2>
+                <dl id="select-panel"></dl>
+              </article>
+            </section>
+          </div>
+
+          <div id="boundary-view" class="view-panel" hidden>
+            <section class="boundary-table">
+              <div class="section-kicker">METHOD BOUNDARY</div>
+              <h2>卡片能做什么，不能做什么</h2>
+              <div class="boundary-row">
+                <strong>能做</strong>
+                <span>强迫团队写清约束、前提、替代方案、接缝与验证计划。</span>
+              </div>
+              <div class="boundary-row">
+                <strong>不能做</strong>
+                <span>仅凭任务名称或几个枚举值自动推出“正确架构”。</span>
+              </div>
+              <div class="boundary-row">
+                <strong>最终裁决</strong>
+                <span>候选必须在同一代表性负载上赢过最小基线，才能增加复杂度。</span>
+              </div>
+              <div class="boundary-row">
+                <strong>重新打开</strong>
+                <span>输入规模、风险边界或依赖关系变化时，旧卡片必须升版重测。</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
