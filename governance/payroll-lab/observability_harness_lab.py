@@ -34,6 +34,38 @@ def _trace_policy():
             "progressive-commitment",
             "payment-adapter",
         ),
+        required_edges=(
+            ("proposal.created", "approval.pending"),
+            ("approval.pending", "approval.allowed"),
+            ("approval.allowed", "containment.reserved"),
+            ("containment.reserved", "authority.allowed"),
+            ("authority.allowed", "effect.committed"),
+            ("effect.committed", "containment.committed"),
+        ),
+        required_decisions=(
+            ("approval.pending", "pending"),
+            ("approval.allowed", "allowed"),
+            ("containment.reserved", "allowed"),
+            ("authority.allowed", "allowed"),
+            ("effect.committed", "allowed"),
+            ("containment.committed", "allowed"),
+        ),
+        singleton_event_types=(
+            "proposal.created",
+            "approval.pending",
+            "approval.allowed",
+            "containment.reserved",
+            "authority.allowed",
+            "effect.committed",
+            "containment.committed",
+        ),
+        receipt_event_types=(
+            "approval.pending",
+            "approval.allowed",
+            "containment.reserved",
+            "authority.allowed",
+            "containment.committed",
+        ),
     )
 
 

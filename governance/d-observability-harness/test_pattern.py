@@ -1,4 +1,5 @@
 """Invariants for the Observability Harness pattern."""
+
 from __future__ import annotations
 
 import os
@@ -34,6 +35,7 @@ def draft(
     control: str = "governance-boundary",
     proposal: str = "proposal-a",
     policy: str = "policy-a",
+    occurred_at: str = "2026-07-17T10:00:00+00:00",
     attributes: tuple[tuple[str, str], ...] = (),
 ) -> EventDraft:
     return EventDraft(
@@ -46,7 +48,7 @@ def draft(
         control=control,
         proposal_digest=proposal,
         policy_digest=policy,
-        occurred_at="2026-07-17T10:00:00+00:00",
+        occurred_at=occurred_at,
         summary=event_type,
         evidence_refs=(f"evidence://{event_id}",),
         attributes=attributes,
@@ -97,6 +99,7 @@ def complete_trace() -> tuple[ObservabilityHarness, TracePolicy]:
             event_type="effect.committed",
             control="payment-adapter",
             policy="payment-policy",
+            occurred_at="2026-07-17T10:03:00+00:00",
         )
     )
     policy = TracePolicy(
@@ -107,6 +110,13 @@ def complete_trace() -> tuple[ObservabilityHarness, TracePolicy]:
             "blast-radius",
             "payment-adapter",
         ),
+        required_edges=(
+            ("proposal.created", "control.receipt"),
+            ("control.receipt", "effect.committed"),
+        ),
+        required_decisions=(("control.receipt", "allowed"),),
+        singleton_event_types=("proposal.created", "effect.committed"),
+        receipt_event_types=("control.receipt",),
     )
     return harness, policy
 
@@ -128,6 +138,37 @@ def test_child_span_requires_an_existing_parent_in_the_same_trace() -> None:
 
     with pytest.raises(ObservabilityError, match="parent span"):
         harness.emit(draft("e1", "child", parent="missing"))
+
+
+def test_span_ids_are_unique_inside_one_trace() -> None:
+    harness = ObservabilityHarness()
+    harness.emit(draft("e1", "root"))
+
+    with pytest.raises(ObservabilityError, match="duplicate span_id"):
+        harness.emit(draft("e2", "root"))
+
+
+def test_event_time_requires_a_timezone_and_cannot_precede_parent() -> None:
+    with pytest.raises(ValueError, match="timezone"):
+        draft("e1", "root", occurred_at="2026-07-17T10:00:00")
+
+    harness = ObservabilityHarness()
+    harness.emit(
+        draft(
+            "e1",
+            "root",
+            occurred_at="2026-07-17T10:01:00+00:00",
+        )
+    )
+    with pytest.raises(ObservabilityError, match="predates"):
+        harness.emit(
+            draft(
+                "e2",
+                "child",
+                parent="root",
+                occurred_at="2026-07-17T10:00:00+00:00",
+            )
+        )
 
 
 def test_event_ids_are_append_only_and_unique() -> None:
@@ -177,6 +218,91 @@ def test_complete_trace_passes_semantic_audit() -> None:
     assert audit.complete
     assert audit.chain_valid
     assert audit.event_count == 4
+
+
+def test_complete_requires_declared_causal_edges() -> None:
+    harness = ObservabilityHarness()
+    harness.emit(
+        draft(
+            "effect",
+            "effect",
+            event_type="effect.committed",
+            control="payment-adapter",
+        )
+    )
+    harness.emit(
+        draft(
+            "approval",
+            "approval",
+            parent="effect",
+            event_type="approval.allowed",
+            control="approval-gate",
+            occurred_at="2026-07-17T10:01:00+00:00",
+        )
+    )
+    policy = TracePolicy(
+        required_event_types=("approval.allowed", "effect.committed"),
+        required_controls=("approval-gate", "payment-adapter"),
+        required_edges=(("approval.allowed", "effect.committed"),),
+    )
+
+    audit = harness.audit(TRACE, policy)
+
+    assert not audit.complete
+    assert audit.missing_edges == (("approval.allowed", "effect.committed"),)
+
+
+def test_complete_checks_decisions_cardinality_and_receipts() -> None:
+    harness = ObservabilityHarness()
+    harness.emit(
+        draft(
+            "approval-1",
+            "approval-1",
+            event_type="approval.allowed",
+            control="approval-gate",
+        )
+    )
+    harness.emit(
+        draft(
+            "approval-2",
+            "approval-2",
+            event_type="approval.allowed",
+            control="approval-gate",
+        )
+    )
+    policy = TracePolicy(
+        required_event_types=("approval.allowed",),
+        required_controls=("approval-gate",),
+        required_decisions=(("approval.allowed", "allowed"),),
+        singleton_event_types=("approval.allowed",),
+        receipt_event_types=("approval.allowed",),
+    )
+
+    audit = harness.audit(TRACE, policy)
+
+    assert not audit.complete
+    assert audit.decision_mismatches == ("approval-1", "approval-2")
+    assert audit.duplicate_event_types == ("approval.allowed",)
+    assert audit.missing_receipts == ("approval-1", "approval-2")
+
+
+def test_strict_policy_references_declared_event_types() -> None:
+    with pytest.raises(ValueError, match="reference required event types"):
+        TracePolicy(
+            required_event_types=("proposal.created",),
+            required_controls=("governance-boundary",),
+            required_edges=(("proposal.created", "effect.committed"),),
+        )
+
+    with pytest.raises(ValueError, match="define each event type once"):
+        TracePolicy(
+            required_event_types=("approval.allowed",),
+            required_controls=("approval-gate",),
+            required_decisions=(
+                ("approval.allowed", "allowed"),
+                ("approval.allowed", "denied"),
+            ),
+        )
 
 
 def test_missing_control_is_reported_even_when_logs_exist() -> None:
@@ -234,9 +360,7 @@ def test_policy_drift_is_scoped_per_control() -> None:
         required_controls=("approval-gate",),
     )
 
-    assert harness.audit(TRACE, policy).policy_drift_controls == (
-        "approval-gate",
-    )
+    assert harness.audit(TRACE, policy).policy_drift_controls == ("approval-gate",)
 
 
 def test_tampering_breaks_hash_verification() -> None:

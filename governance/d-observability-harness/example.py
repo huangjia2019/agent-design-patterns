@@ -1,4 +1,5 @@
 """Deterministic semantic trace example."""
+
 from __future__ import annotations
 
 import os
@@ -52,6 +53,8 @@ harness.emit(
 policy = TracePolicy(
     required_event_types=("proposal.created", "effect.committed"),
     required_controls=("governance-boundary", "payment-adapter"),
+    required_edges=(("proposal.created", "effect.committed"),),
+    singleton_event_types=("proposal.created", "effect.committed"),
 )
 audit = harness.audit("payroll-2026-06", policy)
 print(f"events={audit.event_count} complete={audit.complete}")

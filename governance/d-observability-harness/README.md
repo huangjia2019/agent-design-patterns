@@ -19,11 +19,14 @@ accounts and hidden model reasoning in the audit system.
 - decision, receipt digest, and durable evidence;
 - previous and current event hashes.
 
-`TracePolicy` defines the events and controls required for completeness. Audits
-report missing controls, proposal drift, per-control policy drift, broken
-parents, and hash tampering. Sensitive fields are redacted before storage.
-Hidden chain-of-thought is outside the interface; record a publishable decision
-summary and independently checkable evidence.
+`TracePolicy` defines the events, controls, direct causal edges, decisions,
+cardinality, and receipt bindings required for completeness. Audits report
+missing controls, broken causal edges, decision mismatches, duplicate singleton
+events, proposal drift, per-control policy drift, broken parents, and hash
+tampering. Span identities are unique inside a trace, and child timestamps
+cannot precede their causal parents. Sensitive fields are redacted before
+storage. Hidden chain-of-thought is outside the interface; record a publishable
+decision summary and independently checkable evidence.
 
 ## Public interface
 
@@ -32,7 +35,7 @@ summary and independently checkable evidence.
 | `EventDraft` | One semantic event before storage |
 | `EventRecord` | Sequenced, hash-chained immutable record |
 | `RedactionPolicy` | Pre-storage redaction and forbidden fields |
-| `TracePolicy` | Required event and control coverage |
+| `TracePolicy` | Required events, controls, causal edges, decisions, and receipts |
 | `TraceAudit` | Completeness, drift, and hash result |
 | `ObservabilityHarness` | Emit, record receipts, replay, and audit |
 

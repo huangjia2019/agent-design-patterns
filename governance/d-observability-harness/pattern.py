@@ -13,12 +13,14 @@ The harness must not:
 * store known secrets or account identifiers without redaction;
 * call a trace complete merely because some log lines exist.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -38,7 +40,14 @@ def _hash(payload: Mapping[str, Any]) -> str:
         separators=(",", ":"),
         sort_keys=True,
     )
-    return hashlib.sha256(canonical.encode()).hexdigest()[:16]
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
+def _instant(value: str) -> datetime:
+    instant = datetime.fromisoformat(value)
+    if instant.tzinfo is None:
+        raise ValueError("observability timestamps must include a timezone")
+    return instant
 
 
 @dataclass(frozen=True)
@@ -60,13 +69,10 @@ class RedactionPolicy:
         self,
         attributes: tuple[tuple[str, str], ...],
     ) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]]:
-        forbidden = [
-            key for key, _value in attributes if key in self.forbidden_keys
-        ]
+        forbidden = [key for key, _value in attributes if key in self.forbidden_keys]
         if forbidden:
             raise ObservabilityError(
-                "hidden reasoning is outside the observability contract: "
-                + ", ".join(forbidden)
+                "hidden reasoning is outside the observability contract: " + ", ".join(forbidden)
             )
         redacted: list[tuple[str, str]] = []
         fields: list[str] = []
@@ -112,6 +118,7 @@ class EventDraft:
         for name, value in required.items():
             if not value.strip():
                 raise ValueError(f"{name} must not be empty")
+        _instant(self.occurred_at)
         if len({key for key, _value in self.attributes}) != len(self.attributes):
             raise ValueError("event attribute keys must be unique")
 
@@ -129,10 +136,46 @@ class EventRecord:
 class TracePolicy:
     required_event_types: tuple[str, ...]
     required_controls: tuple[str, ...]
+    required_edges: tuple[tuple[str, str], ...] = ()
+    required_decisions: tuple[tuple[str, str], ...] = ()
+    singleton_event_types: tuple[str, ...] = ()
+    receipt_event_types: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.required_event_types or not self.required_controls:
             raise ValueError("trace policy requirements must not be empty")
+        sequences = (
+            ("required_event_types", self.required_event_types),
+            ("required_controls", self.required_controls),
+            ("singleton_event_types", self.singleton_event_types),
+            ("receipt_event_types", self.receipt_event_types),
+        )
+        for name, values in sequences:
+            if any(not value.strip() for value in values):
+                raise ValueError(f"{name} must not contain blank values")
+            if len(set(values)) != len(values):
+                raise ValueError(f"{name} must contain unique values")
+        pairs = (
+            ("required_edges", self.required_edges),
+            ("required_decisions", self.required_decisions),
+        )
+        for name, values in pairs:
+            if any(not left.strip() or not right.strip() for left, right in values):
+                raise ValueError(f"{name} must not contain blank values")
+            if len(set(values)) != len(values):
+                raise ValueError(f"{name} must contain unique values")
+        if len({event_type for event_type, _decision in self.required_decisions}) != len(
+            self.required_decisions
+        ):
+            raise ValueError("required_decisions must define each event type once")
+        declared = set(self.required_event_types)
+        referenced = {event_type for edge in self.required_edges for event_type in edge} | {
+            event_type for event_type, _decision in self.required_decisions
+        }
+        referenced.update(self.singleton_event_types)
+        referenced.update(self.receipt_event_types)
+        if not referenced.issubset(declared):
+            raise ValueError("strict trace requirements must reference required event types")
 
 
 @dataclass(frozen=True)
@@ -143,6 +186,10 @@ class TraceAudit:
     missing_event_types: tuple[str, ...]
     missing_controls: tuple[str, ...]
     broken_parents: tuple[str, ...]
+    missing_edges: tuple[tuple[str, str], ...]
+    decision_mismatches: tuple[str, ...]
+    duplicate_event_types: tuple[str, ...]
+    missing_receipts: tuple[str, ...]
     proposal_drift: bool
     policy_drift_controls: tuple[str, ...]
     redacted_fields: tuple[str, ...]
@@ -171,13 +218,18 @@ class InMemoryEventStore:
         trace_records = [
             record for record in self.records if record.event.trace_id == draft.trace_id
         ]
-        if draft.parent_span_id is not None and not any(
-            record.event.span_id == draft.parent_span_id
-            for record in trace_records
-        ):
+        if any(record.event.span_id == draft.span_id for record in trace_records):
             raise ObservabilityError(
-                "parent span is missing from this trace"
+                f"duplicate span_id {draft.span_id!r} in trace {draft.trace_id!r}"
             )
+        parent = next(
+            (record for record in trace_records if record.event.span_id == draft.parent_span_id),
+            None,
+        )
+        if draft.parent_span_id is not None and parent is None:
+            raise ObservabilityError("parent span is missing from this trace")
+        if parent is not None and _instant(draft.occurred_at) < _instant(parent.event.occurred_at):
+            raise ObservabilityError("child event predates its causal parent")
 
         attributes, fields = redaction.apply(draft.attributes)
         redacted_draft = EventDraft(
@@ -201,11 +253,7 @@ class InMemoryEventStore:
         return record
 
     def trace(self, trace_id: str) -> tuple[EventRecord, ...]:
-        return tuple(
-            record
-            for record in self.records
-            if record.event.trace_id == trace_id
-        )
+        return tuple(record for record in self.records if record.event.trace_id == trace_id)
 
     @staticmethod
     def _event_hash(
@@ -311,12 +359,12 @@ class ObservabilityHarness:
         records = self.store.trace(trace_id)
         event_types = {record.event.event_type for record in records}
         controls = {record.event.control for record in records}
-        spans = {record.event.span_id for record in records}
+        records_by_span = {record.event.span_id: record for record in records}
+        spans = set(records_by_span)
         broken_parents = tuple(
             record.event.event_id
             for record in records
-            if record.event.parent_span_id is not None
-            and record.event.parent_span_id not in spans
+            if record.event.parent_span_id is not None and record.event.parent_span_id not in spans
         )
         proposals = {record.event.proposal_digest for record in records}
         policy_by_control: dict[str, set[str]] = {}
@@ -325,9 +373,7 @@ class ObservabilityHarness:
                 record.event.policy_digest
             )
         policy_drift = tuple(
-            control
-            for control, digests in sorted(policy_by_control.items())
-            if len(digests) > 1
+            control for control, digests in sorted(policy_by_control.items()) if len(digests) > 1
         )
         missing_events = tuple(
             event_type
@@ -335,24 +381,45 @@ class ObservabilityHarness:
             if event_type not in event_types
         )
         missing_controls = tuple(
-            control
-            for control in policy.required_controls
-            if control not in controls
+            control for control in policy.required_controls if control not in controls
         )
-        redacted = tuple(
-            sorted(
-                {
-                    field
-                    for record in records
-                    for field in record.redacted_fields
-                }
+        observed_edges = {
+            (
+                records_by_span[record.event.parent_span_id].event.event_type,
+                record.event.event_type,
             )
+            for record in records
+            if record.event.parent_span_id in records_by_span
+        }
+        missing_edges = tuple(edge for edge in policy.required_edges if edge not in observed_edges)
+        expected_decisions = dict(policy.required_decisions)
+        decision_mismatches = tuple(
+            record.event.event_id
+            for record in records
+            if record.event.event_type in expected_decisions
+            and record.event.decision != expected_decisions[record.event.event_type]
         )
+        duplicate_event_types = tuple(
+            event_type
+            for event_type in policy.singleton_event_types
+            if sum(record.event.event_type == event_type for record in records) > 1
+        )
+        missing_receipts = tuple(
+            record.event.event_id
+            for record in records
+            if record.event.event_type in policy.receipt_event_types
+            and not record.event.receipt_digest
+        )
+        redacted = tuple(sorted({field for record in records for field in record.redacted_fields}))
         chain_valid = self.verify_hash_chain(trace_id)
         complete = not (
             missing_events
             or missing_controls
             or broken_parents
+            or missing_edges
+            or decision_mismatches
+            or duplicate_event_types
+            or missing_receipts
             or len(proposals) > 1
             or policy_drift
             or not chain_valid
@@ -364,6 +431,10 @@ class ObservabilityHarness:
             missing_event_types=missing_events,
             missing_controls=missing_controls,
             broken_parents=broken_parents,
+            missing_edges=missing_edges,
+            decision_mismatches=decision_mismatches,
+            duplicate_event_types=duplicate_event_types,
+            missing_receipts=missing_receipts,
             proposal_drift=len(proposals) > 1,
             policy_drift_controls=policy_drift,
             redacted_fields=redacted,
