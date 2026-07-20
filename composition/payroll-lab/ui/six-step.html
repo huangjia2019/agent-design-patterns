@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Six-Step Methodology · Pattern Composition Lab</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">C</div>
+          <div>
+            <strong>Pattern Composition Lab</strong>
+            <span>组合选型工作台</span>
+          </div>
+        </div>
+
+        <div class="sidebar-rule"></div>
+        <div class="sidebar-label">课程实验</div>
+        <nav id="lecture-nav" class="lecture-nav" aria-label="课程章节"></nav>
+
+        <div class="sidebar-bottom">
+          <div class="runtime-state">
+            <span class="status-dot"></span>
+            <div>
+              <strong>真实模式实现</strong>
+              <span>Plan + Handoff + Method</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="view-tabs" role="tablist" aria-label="工作台视图">
+            <button class="view-tab active" data-panel="method" role="tab">六步法</button>
+            <button class="view-tab" data-panel="artifacts" role="tab">工程工件</button>
+            <button class="view-tab" data-panel="boundary" role="tab">方法边界</button>
+          </div>
+          <div class="scenario-control" id="view-control" aria-label="实验视角"></div>
+        </header>
+
+        <div class="content">
+          <section class="page-heading">
+            <div>
+              <div class="eyebrow">COMPOSITION DECISION LOOP</div>
+              <h1>42 · 六步选型法</h1>
+              <p>从基线缺口出发，让接缝、对照和消融决定模式组合。</p>
+            </div>
+            <button id="run-button" class="run-button" type="button">
+              <span class="play-icon" aria-hidden="true">▶</span>
+              运行六步法
+            </button>
+          </section>
+
+          <section id="step-flow" class="six-step-flow" aria-label="六步方法"></section>
+
+          <div id="loading" class="loading" hidden>正在运行真实模式与消融实验...</div>
+          <div id="error" class="error-banner" hidden></div>
+
+          <div id="method-view" class="view-panel">
+            <section class="overview-band">
+              <div class="section-kicker">BOUND DECISION</div>
+              <div class="overview-grid six-overview">
+                <div class="overview-main">
+                  <span>架构决策</span>
+                  <strong id="objective">加载中</strong>
+                  <p id="view-description"></p>
+                </div>
+                <div class="overview-stat">
+                  <span>绑定负载</span>
+                  <strong id="workload">-</strong>
+                </div>
+                <div class="overview-stat">
+                  <span>决策版本</span>
+                  <strong id="version">-</strong>
+                </div>
+                <div class="overview-stat">
+                  <span>最终裁决</span>
+                  <strong id="decision-status">-</strong>
+                </div>
+              </div>
+            </section>
+
+            <section id="seam-section" class="experiment-section">
+              <div class="section-heading">
+                <div>
+                  <div class="section-kicker">PRE-TRIAL SEAM REVIEW</div>
+                  <h2>三个候选，先查谁有资格进实验</h2>
+                </div>
+                <span class="verdict-label">设计期前移</span>
+              </div>
+              <div id="candidate-table" class="candidate-table"></div>
+              <div class="framework-proof">
+                <strong>真实框架复核</strong>
+                <code id="framework-conflict">-</code>
+              </div>
+            </section>
+
+            <section id="experiment-section" class="experiment-section">
+              <div class="section-heading">
+                <div>
+                  <div class="section-kicker">SAME WORKLOAD + ABLATION</div>
+                  <h2>完整候选和移除变体跑同一份超时负载</h2>
+                </div>
+                <span id="receipt-digest" class="verdict-label accepted">-</span>
+              </div>
+              <div class="experiment-matrix">
+                <div class="matrix-head">方案</div>
+                <div class="matrix-head">恢复</div>
+                <div class="matrix-head">提交后覆盖</div>
+                <div class="matrix-head">交接回执</div>
+                <div class="matrix-head">判定</div>
+                <div id="experiment-rows" class="matrix-rows"></div>
+              </div>
+            </section>
+
+            <section class="decision-band">
+              <div>
+                <div class="section-kicker">DECISION RECEIPT</div>
+                <h2 id="selected-candidate">-</h2>
+                <p id="decision-reason"></p>
+              </div>
+              <div class="version-chain">
+                <span>当前回执</span>
+                <code id="current-receipt">-</code>
+                <span>触发变化后</span>
+                <strong id="reopened-version">-</strong>
+              </div>
+            </section>
+          </div>
+
+          <div id="artifacts-view" class="view-panel" hidden>
+            <section class="artifact-grid">
+              <article>
+                <div class="panel-number">STEP 1-2</div>
+                <h2>问题与基线</h2>
+                <dl id="baseline-artifact"></dl>
+              </article>
+              <article>
+                <div class="panel-number">STEP 3</div>
+                <h2>约束诊断</h2>
+                <div id="diagnosis-artifact" class="artifact-list"></div>
+              </article>
+              <article>
+                <div class="panel-number">STEP 5-6</div>
+                <h2>接缝与重开</h2>
+                <dl id="decision-artifact"></dl>
+              </article>
+            </section>
+          </div>
+
+          <div id="boundary-view" class="view-panel" hidden>
+            <section class="boundary-table">
+              <div class="section-kicker">METHOD BOUNDARY</div>
+              <h2>六步法负责收敛，不负责替架构师猜答案</h2>
+              <div class="boundary-row">
+                <strong>候选从哪来</strong>
+                <span>双轴矩阵、历史事故、领域知识与模式目录共同生成候选。</span>
+              </div>
+              <div class="boundary-row">
+                <strong>谁负责拦错</strong>
+                <span>前提证据与接缝契约先拦结构冲突，代表性负载再拦性能幻觉。</span>
+              </div>
+              <div class="boundary-row">
+                <strong>谁负责采用</strong>
+                <span>同负载对照证明候选优于基线，消融证明每项复杂度确有贡献。</span>
+              </div>
+              <div class="boundary-row">
+                <strong>何时重开</strong>
+                <span>负载、事实所有权、权限边界或验收门变化时，旧回执失效并升版。</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="/assets/six-step.js"></script>
+  </body>
+</html>

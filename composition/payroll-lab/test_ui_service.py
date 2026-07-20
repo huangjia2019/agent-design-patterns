@@ -10,7 +10,7 @@ import pytest
 sys.path.insert(0, os.path.dirname(__file__))
 sys.modules.pop("ui_service", None)
 
-from ui_service import meta, run  # noqa: E402
+from ui_service import meta, run, run_six_step, six_step_meta  # noqa: E402
 
 
 def test_meta_exposes_the_three_lecture_arc() -> None:
@@ -44,3 +44,23 @@ def test_run_returns_an_accepted_evidence_bound_decision(
 def test_unknown_scenario_is_rejected() -> None:
     with pytest.raises(KeyError):
         run("unknown")
+
+
+def test_six_step_meta_activates_lecture_42() -> None:
+    payload = six_step_meta()
+
+    active = [item["number"] for item in payload["lectures"] if item["active"]]
+    assert active == ["42"]
+    assert [item["id"] for item in payload["views"]] == ["seams", "decision"]
+
+
+@pytest.mark.parametrize("view", ["seams", "decision"])
+def test_six_step_workbench_returns_the_same_bound_decision(view: str) -> None:
+    payload = run_six_step(view)
+
+    assert payload["view"] == view
+    assert payload["run"]["receipt"]["status"] == "adopt_candidate"
+    assert (
+        payload["run"]["receipt"]["selected_candidate"]
+        == "split-plan-and-settlement"
+    )

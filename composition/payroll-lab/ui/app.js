@@ -31,13 +31,13 @@ function renderLectures() {
   nav.innerHTML = state.meta.lectures
     .map(
       (lecture) => `
-        <div class="lecture-item ${lecture.active ? "active" : "inactive"}">
+        <a href="${lecture.href}" class="lecture-item ${lecture.active ? "active" : "inactive"}">
           <div class="lecture-number">${lecture.number}</div>
           <div>
             <strong>${lecture.title}</strong>
             <span>${lecture.pattern}</span>
           </div>
-        </div>
+        </a>
       `,
     )
     .join("");
