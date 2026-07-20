@@ -1,22 +1,31 @@
-# Argus Full Case
+# Full System Assembly
 
-> Lecture **09-03** · pattern · Composition × —
-> [中文 README](README.zh-CN.md)
+This directory keeps the historical `Argus Full Case` path while providing a
+generic system-acceptance interface. It does not copy the perception, memory,
+reasoning, action, reflection, collaboration, or governance implementations.
+It verifies that their receipts belong to one run, workload, artifact lineage,
+and business endpoint.
 
-## Status
+Core objects:
 
-Placeholder. Runnable code and engineering slice arrive when lecture 09-03
-publishes in the 极客时间《Agent 设计模式之美》column.
+- `SystemRunContract`
+- `ModuleReceipt`
+- `EndpointEvidence`
+- `audit_system()`
+- `SystemAssembly`
 
-## Where this pattern sits
+Run:
 
-This pattern sits at the intersection of **Composition** (cognitive function)
-and **—** (execution topology). See the
-[two-axis matrix](../../README.md#the-28-pattern-map) for how it relates
-to neighboring patterns.
+```bash
+cd composition/c-argus-full-case
+python3 example.py
+pytest -q
 
-## What this pattern will cover
+cd ../payroll-lab
+python3 capstone_lab.py --mode bound
+python3 capstone_lab.py --mode local-only
+```
 
-The pattern's working title is **Argus Full Case Study** (Chinese: Argus 完整案例).
-Detailed treatment in the Manning book *Designing AI Agents* (Ch09)
-and in the column.
+The digest chain demonstrates identity and lineage. It is not a digital
+signature, external settlement receipt, durable event bus, or production IAM
+system.

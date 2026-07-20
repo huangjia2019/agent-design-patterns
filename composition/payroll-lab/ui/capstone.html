@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Full System Assembly · Pattern Composition Lab</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">C</div>
+          <div>
+            <strong>Pattern Composition Lab</strong>
+            <span>组合选型工作台</span>
+          </div>
+        </div>
+
+        <div class="sidebar-rule"></div>
+        <div class="sidebar-label">课程实验</div>
+        <nav id="lecture-nav" class="lecture-nav" aria-label="课程章节"></nav>
+
+        <div class="sidebar-bottom">
+          <div class="runtime-state">
+            <span class="status-dot"></span>
+            <div>
+              <strong>八模块真实接口</strong>
+              <span>Receipt + Digest + SQLite</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="view-tabs" role="tablist" aria-label="工作台视图">
+            <button class="view-tab active" data-panel="acceptance" role="tab">系统验收</button>
+            <button class="view-tab" data-panel="receipts" role="tab">八模块回执</button>
+            <button class="view-tab" data-panel="boundary" role="tab">诚实边界</button>
+          </div>
+          <div class="scenario-control" id="mode-control" aria-label="装配方式"></div>
+        </header>
+
+        <div class="content capstone-content">
+          <section class="page-heading">
+            <div>
+              <div class="eyebrow">COURSE CAPSTONE</div>
+              <h1>43 · 完整系统</h1>
+              <p>八个模块都通过测试，为什么完整系统仍可能失败？</p>
+            </div>
+            <button id="run-button" class="run-button" type="button">
+              <span class="play-icon" aria-hidden="true">▶</span>
+              运行总装验收
+            </button>
+          </section>
+
+          <section class="capstone-spine" aria-label="八模块证据链">
+            <div><span>组合</span><small>运行契约</small></div>
+            <div><span>感知</span><small>上下文</small></div>
+            <div><span>协作</span><small>事实交接</small></div>
+            <div><span>推理</span><small>根因</small></div>
+            <div><span>行动</span><small>报告工件</small></div>
+            <div><span>反思</span><small>证据复核</small></div>
+            <div><span>治理</span><small>版本审批</small></div>
+            <div><span>记忆</span><small>检查点</small></div>
+          </section>
+
+          <div id="loading" class="loading" hidden>正在运行八模块总装与端点核验...</div>
+          <div id="error" class="error-banner" hidden></div>
+
+          <div id="acceptance-view" class="view-panel">
+            <section class="capstone-scoreboard">
+              <div class="scoreboard-main">
+                <div class="section-kicker">SYSTEM ACCEPTANCE</div>
+                <span>完整系统判定</span>
+                <strong id="system-verdict">等待运行</strong>
+                <p id="mode-description"></p>
+              </div>
+              <div>
+                <span>局部通过</span>
+                <strong id="local-score">-</strong>
+                <small>module receipts</small>
+              </div>
+              <div>
+                <span>端点事实</span>
+                <strong id="endpoint-score">-</strong>
+                <small>business checks</small>
+              </div>
+              <div>
+                <span>运行契约</span>
+                <strong id="contract-digest">-</strong>
+                <small>content bound</small>
+              </div>
+            </section>
+
+            <section class="experiment-section">
+              <div class="section-heading">
+                <div>
+                  <div class="section-kicker">EVIDENCE SPINE</div>
+                  <h2>同一批模块，两种接法</h2>
+                </div>
+                <span id="spine-state" class="verdict-label">等待运行</span>
+              </div>
+              <div id="receipt-spine" class="receipt-spine"></div>
+            </section>
+
+            <section class="capstone-result-grid">
+              <article class="endpoint-proof">
+                <div class="section-kicker">BUSINESS ENDPOINT</div>
+                <h2>SQLite 发布事实</h2>
+                <div class="endpoint-metrics">
+                  <div><span>已支付</span><strong id="paid-count">-</strong></div>
+                  <div><span>已冲正</span><strong id="reversed-count">-</strong></div>
+                  <div><span>报告摘要</span><code id="report-digest">-</code></div>
+                  <div><span>审批回执</span><code id="approval-ref">-</code></div>
+                </div>
+              </article>
+              <article class="finding-proof">
+                <div class="section-kicker">SYSTEM FINDINGS</div>
+                <h2 id="finding-title">等待验收</h2>
+                <div id="finding-list" class="finding-list"></div>
+              </article>
+            </section>
+          </div>
+
+          <div id="receipts-view" class="view-panel" hidden>
+            <section class="receipt-ledger">
+              <div class="section-kicker">MODULE RECEIPT LEDGER</div>
+              <h2>局部结果怎样进入完整系统</h2>
+              <div id="receipt-table" class="receipt-table"></div>
+            </section>
+          </div>
+
+          <div id="boundary-view" class="view-panel" hidden>
+            <section class="boundary-table">
+              <div class="section-kicker">HONEST BOUNDARY</div>
+              <h2>这个案例证明到哪里</h2>
+              <div id="boundary-list"></div>
+              <div class="boundary-row">
+                <strong>Argus 的位置</strong>
+                <span>旧 Argus 代码审查案例继续保留为书稿演化系统。本讲采用课程 Repo 可逐行复验的薪酬 Agent，不使用无法核验的生产部署数字。</span>
+              </div>
+              <div class="boundary-row">
+                <strong>收官标准</strong>
+                <span>模式是否出现不算完成。选型回执、模块回执、治理授权和业务端点必须能回答同一轮任务发生了什么。</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="/assets/capstone.js"></script>
+  </body>
+</html>

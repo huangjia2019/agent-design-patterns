@@ -1,6 +1,6 @@
 # Composition Selection Workbench
 
-This lab supports lectures 41 and 42. It asks a concrete architecture question:
+This lab supports lectures 41 through 43. It asks a concrete architecture question:
 does hand-picking patterns from a catalog produce a useful system?
 
 Pattern names can generate better architecture hypotheses. They do not validate
@@ -19,11 +19,19 @@ Lecture 42 runs the real `Plan and Execute` and `Handoff Chain`
 implementations. It rejects a shared `net_amount` writer before trial, then
 compares a mutable baseline, two candidates, and two removal ablations.
 
+Lecture 43 assembles eight real module interfaces around one month-end run. Both
+variants produce eight locally accepted receipts. The local-only wiring fails
+system acceptance because lineage and artifact identity break at the seams. The
+bound wiring reaches a SQLite endpoint that carries the exact reviewed and
+approved report digest.
+
 ## CLI
 
 ```bash
 python3 composition/payroll-lab/selection_card_lab.py
 python3 composition/payroll-lab/six_step_lab.py
+python3 composition/payroll-lab/capstone_lab.py --mode local-only
+python3 composition/payroll-lab/capstone_lab.py --mode bound
 ```
 
 ## Web workbench
@@ -37,3 +45,4 @@ Open:
 
 - Lecture 41: `http://127.0.0.1:8041`
 - Lecture 42: `http://127.0.0.1:8041/42`
+- Lecture 43: `http://127.0.0.1:8041/43`

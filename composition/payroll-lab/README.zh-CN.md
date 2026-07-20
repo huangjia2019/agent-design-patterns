@@ -1,6 +1,6 @@
 # 组合选型工作台
 
-这套 Lab 分两讲回答一个很具体的问题：架构师从模式目录里手工挑出几个
+这套 Lab 用三讲回答一个很具体的问题：架构师从模式目录里手工挑出几个
 模式，真的能得到可用系统吗？
 
 答案分两层。
@@ -28,11 +28,22 @@
 | 移除规划执行 | 0 | 0 | 0 |
 | 移除交接链 | 1 | 1 | 0 |
 
+第 43 讲把八个模块接到同一轮月结任务。它使用
+`Context Triage`、`Handoff Chain`、`Iterative Hypothesis`、
+`Plan and Execute`、`Generator-Critic`、`Approval Gate`、
+`Progress Tracking` 和 `Full System Assembly` 的真实接口。
+
+对照中的两种接法都有 `8/8` 张局部通过回执。仅看局部成功时，治理仍绑定
+旧报告，而且模块回执没有父链，系统验收拒绝。端到端绑定后，SQLite 发布行、
+报告摘要和治理回执指向同一版本，系统才被接受。
+
 ## 运行 CLI
 
 ```bash
 python3 composition/payroll-lab/selection_card_lab.py
 python3 composition/payroll-lab/six_step_lab.py
+python3 composition/payroll-lab/capstone_lab.py --mode local-only
+python3 composition/payroll-lab/capstone_lab.py --mode bound
 ```
 
 ## 运行 Web 工作台
@@ -46,6 +57,7 @@ uv run uvicorn web_app:app --app-dir composition/payroll-lab --port 8041
 
 - 第 41 讲：`http://127.0.0.1:8041`
 - 第 42 讲：`http://127.0.0.1:8041/42`
+- 第 43 讲：`http://127.0.0.1:8041/43`
 
 ## 运行测试
 
@@ -53,5 +65,6 @@ uv run uvicorn web_app:app --app-dir composition/payroll-lab --port 8041
 uv run pytest -q \
   composition/a-pattern-selection-card/test_pattern.py \
   composition/b-six-step-methodology/test_pattern.py \
-  composition/payroll-lab/test_selection_card_lab.py
+  composition/c-argus-full-case/test_pattern.py \
+  composition/payroll-lab
 ```

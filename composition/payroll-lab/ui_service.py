@@ -4,6 +4,7 @@ from __future__ import annotations
 import threading
 from typing import Any
 
+from capstone_lab import run_capstone
 from selection_card_lab import run_scenario
 from six_step_lab import run_methodology
 
@@ -29,11 +30,11 @@ LECTURES: dict[str, dict[str, Any]] = {
     },
     "43": {
         "number": "43",
-        "title": "Argus 收官",
-        "pattern": "Argus Full Case",
-        "question": "七个认知模块怎样在一个可运行系统中咬合？",
-        "summary": "收官讲将用完整 Agent 验证组合与演进。",
-        "href": "#",
+        "title": "完整系统",
+        "pattern": "Full System Assembly",
+        "question": "八个模块都通过测试，为什么完整系统仍可能失败？",
+        "summary": "让版本、回执、权限与业务事实沿同一条证据链闭环。",
+        "href": "/43",
     },
 }
 
@@ -60,6 +61,19 @@ SIX_STEP_VIEWS = {
         "id": "decision",
         "label": "对照与消融",
         "description": "在同一超时负载上比较基线、候选与两个移除变体。",
+    },
+}
+
+CAPSTONE_MODES = {
+    "local-only": {
+        "id": "local-only",
+        "label": "局部成功",
+        "description": "八个模块各自通过，但父回执与工件版本没有连续传递。",
+    },
+    "bound": {
+        "id": "bound",
+        "label": "端到端闭环",
+        "description": "同一批模块绑定运行契约、工件摘要、审批回执与 SQLite 端点。",
     },
 }
 
@@ -90,6 +104,13 @@ def six_step_meta() -> dict[str, Any]:
     }
 
 
+def capstone_meta() -> dict[str, Any]:
+    return {
+        **meta("43"),
+        "modes": list(CAPSTONE_MODES.values()),
+    }
+
+
 def run(scenario: str) -> dict[str, Any]:
     if scenario not in SCENARIOS:
         raise KeyError(scenario)
@@ -114,6 +135,21 @@ def run_six_step(view: str) -> dict[str, Any]:
             "meta": SIX_STEP_VIEWS[view],
             "view": view,
             "run": run_methodology(),
+        }
+    finally:
+        LAB_LOCK.release()
+
+
+def run_capstone_workbench(mode: str) -> dict[str, Any]:
+    if mode not in CAPSTONE_MODES:
+        raise KeyError(mode)
+    if not LAB_LOCK.acquire(blocking=False):
+        raise LabBusy("已有选型实验正在运行，请等待当前实验完成。")
+    try:
+        return {
+            "meta": CAPSTONE_MODES[mode],
+            "mode": mode,
+            "run": run_capstone(mode),
         }
     finally:
         LAB_LOCK.release()
