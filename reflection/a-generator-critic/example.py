@@ -34,6 +34,7 @@ def critique_update(artifact: Artifact) -> Critique:
         score=0.62 if issues else 0.92,
         issues=issues,
         summary=f"{len(issues)} issue(s)",
+        score_evidence="one grounded blocker" if issues else "",
     )
 
 

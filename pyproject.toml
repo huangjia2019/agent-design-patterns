@@ -65,3 +65,4 @@ target-version = "py311"
 # Tutorial cells add their local directory to sys.path before importing shared helpers.
 "action/c-prompt-chaining/*/tutorial.ipynb" = ["E402"]
 "action/d-guardrail-sandwich/*/tutorial.ipynb" = ["E402"]
+"reflection/a-generator-critic/*/tutorial.ipynb" = ["E402"]

@@ -11,14 +11,25 @@ from __future__ import annotations
 
 import os
 
-from dotenv import load_dotenv
-from langchain_dev_utils.chat_models import load_chat_model, register_model_provider
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:  # pragma: no cover - exercised in a subprocess test
+    load_dotenv = None
+
+try:
+    from langchain_dev_utils.chat_models import load_chat_model, register_model_provider
+except ModuleNotFoundError:  # pragma: no cover - exercised in a subprocess test
+    load_chat_model = None
+    register_model_provider = None
 
 _providers_registered = False
 
 
 def _load_env() -> None:
     """Find .env by walking up from cwd."""
+    if load_dotenv is None:
+        return
+
     for candidate in [".env", "../.env", "../../.env", "../../../.env"]:
         load_dotenv(candidate, override=False)
 
@@ -34,17 +45,22 @@ def _register_providers() -> None:
     global _providers_registered
     if _providers_registered:
         return
-    _providers_registered = True
+    if register_model_provider is None:
+        return
 
     # Ernie (AI Studio) — OpenAI-compatible endpoint
     base_url = os.getenv("OPENAI_BASE_URL", "https://aistudio.baidu.com/llm/lmapi/v3")
-    if os.getenv("OPENAI_API_KEY"):
-        os.environ.setdefault("ERNIE_API_KEY", os.getenv("OPENAI_API_KEY"))
-        register_model_provider(
-            provider_name="ernie",
-            chat_model="openai-compatible",
-            base_url=base_url,
-        )
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        return
+
+    os.environ.setdefault("ERNIE_API_KEY", openai_api_key)
+    register_model_provider(
+        provider_name="ernie",
+        chat_model="openai-compatible",
+        base_url=base_url,
+    )
+    _providers_registered = True
 
 
 def get_model(temperature: float = 0):
@@ -72,6 +88,9 @@ def get_model(temperature: float = 0):
     required_key = key_map.get(provider, f"{provider.upper()}_API_KEY")
     if not os.getenv(required_key):
         print(f"No API key found ({required_key}). See .env.example for setup.")
+        return None
+    if load_chat_model is None:
+        print("LangChain model dependencies not installed. Install with `pip install -e '.[langgraph]'`.")
         return None
 
     model = load_chat_model(f"{provider}:{model_name}", temperature=temperature)

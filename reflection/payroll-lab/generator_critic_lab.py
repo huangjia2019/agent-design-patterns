@@ -6,9 +6,9 @@ The standard scene makes the interface boundary visible:
 2. the revision remains unreviewed;
 3. pass 2 is an explicit new review and may accept it.
 
-The ``--rubber-stamp`` contrast removes the ledger and schema evidence. The
-wrong report then receives a high score and is accepted, which demonstrates
-that a polished critic cannot recover facts it was never allowed to observe.
+The --rubber-stamp contrast removes the ledger and schema evidence. The wrong
+report then receives a high score and is accepted, which demonstrates that a
+polished critic cannot recover facts it was never allowed to observe.
 """
 from __future__ import annotations
 
@@ -102,8 +102,8 @@ def grounded_critic(artifact: Artifact) -> Critique:
             )
         )
 
-    # This opinion remains visible in the trace, but the policy cannot use it
-    # to trigger an automatic revision because it carries no evidence.
+    # This opinion stays auditable, but cannot trigger an automatic revision
+    # because it carries no external evidence.
     issues.append(
         Issue(
             Severity.WARNING,
@@ -127,7 +127,7 @@ def grounded_critic(artifact: Artifact) -> Critique:
 
 
 def revise_report(artifact: Artifact, critique: Critique) -> Artifact:
-    checks = {issue.check for issue in critique.blockers() if issue.grounded}
+    checks = {issue.check for issue in critique.blockers()}
     paid = PAID_DB if "reconcile_paid" in checks else 800
     reversed_ids = REVERSED_DB if "reconcile_reversed" in checks else []
     exceptions = ",".join(reversed_ids) or "none"
@@ -163,10 +163,14 @@ def show_pass(pass_no: int, result: ChainResult) -> None:
     print(f"   reviewed: {result.reviewed_artifact.content}")
     print(f"   trace: {' -> '.join(result.trace)}")
     for issue in result.critique.issues:
-        evidence = issue.evidence or "NONE"
         print(
-            f"   [ISSUE {issue.severity.value.upper()}] check={issue.check or 'unnamed'} "
-            f"message={issue.message} evidence={evidence}"
+            f"   [ISSUE {issue.severity.value.upper()}] check={issue.check} "
+            f"message={issue.message} evidence={issue.evidence}"
+        )
+    for issue in result.critique.dropped_issues:
+        print(
+            f"   [DROPPED] check={issue.check or 'unnamed'} "
+            f"message={issue.message} evidence=NONE"
         )
     if result.revision_draft is not None:
         print(

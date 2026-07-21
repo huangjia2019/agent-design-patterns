@@ -14,6 +14,7 @@ Generator-Critic pass, but the loop is not hidden inside this interface.
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable
@@ -38,7 +39,7 @@ class Decision(str, Enum):
 class Issue:
     """One concrete issue reported by the critic.
 
-    ``evidence`` records what the check observed, such as a ledger query, schema
+    Evidence records what the check observed, such as a ledger query, schema
     clause, source citation, or quoted span. A policy can require evidence before
     an issue is allowed to trigger an automatic revision.
     """
@@ -51,7 +52,16 @@ class Issue:
 
     @property
     def grounded(self) -> bool:
-        return bool(self.evidence.strip())
+        return bool(self.check.strip() and self.evidence.strip())
+
+    @property
+    def source(self) -> str:
+        """Compatibility name used by the notebook JSON schema."""
+
+        return self.check
+
+    def is_evidence_backed(self) -> bool:
+        return self.grounded
 
 
 @dataclass(frozen=True)
@@ -74,22 +84,35 @@ class Critique:
     """The critic's evidence. It can report issues, never approve directly."""
 
     score: float
-    issues: list[Issue]
+    issues: Sequence[Issue]
     summary: str
     score_evidence: str = ""
+    dropped_issues: Sequence[Issue] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.score <= 1.0:
             raise ValueError("score must be between 0.0 and 1.0")
 
-    def blockers(self) -> list[Issue]:
-        return [issue for issue in self.issues if issue.severity is Severity.BLOCKER]
+        # Snapshot and reclassify both inputs. Callers cannot mutate the policy
+        # boundary after construction or hide grounded findings in the dropped
+        # bucket by supplying a pre-classified collection.
+        all_issues = (*self.issues, *self.dropped_issues)
+        grounded = tuple(issue for issue in all_issues if issue.grounded)
+        dropped = tuple(issue for issue in all_issues if not issue.grounded)
 
-    def warnings(self) -> list[Issue]:
-        return [issue for issue in self.issues if issue.severity is Severity.WARNING]
+        object.__setattr__(self, "issues", grounded)
+        object.__setattr__(self, "dropped_issues", dropped)
+
+    def blockers(self, *, include_dropped: bool = False) -> list[Issue]:
+        issues = (*self.issues, *self.dropped_issues) if include_dropped else self.issues
+        return [issue for issue in issues if issue.severity is Severity.BLOCKER]
+
+    def warnings(self, *, include_dropped: bool = False) -> list[Issue]:
+        issues = (*self.issues, *self.dropped_issues) if include_dropped else self.issues
+        return [issue for issue in issues if issue.severity is Severity.WARNING]
 
     def ungrounded(self) -> list[Issue]:
-        return [issue for issue in self.issues if not issue.grounded]
+        return list(self.dropped_issues)
 
 
 @dataclass(frozen=True)
@@ -104,11 +127,6 @@ class AcceptancePolicy:
         if not 0.0 <= self.min_score <= 1.0:
             raise ValueError("min_score must be between 0.0 and 1.0")
 
-    def _actionable(self, issues: list[Issue]) -> list[Issue]:
-        if not self.require_evidence:
-            return issues
-        return [issue for issue in issues if issue.grounded]
-
     def _score_is_actionable(self, critique: Critique) -> bool:
         if critique.score >= self.min_score:
             return False
@@ -117,9 +135,12 @@ class AcceptancePolicy:
         return bool(critique.score_evidence.strip())
 
     def decide(self, critique: Critique) -> Decision:
-        if self._actionable(critique.blockers()):
+        include_dropped = not self.require_evidence
+        if critique.blockers(include_dropped=include_dropped):
             return Decision.NEEDS_REVISION
-        if not self.allow_warnings and self._actionable(critique.warnings()):
+        if not self.allow_warnings and critique.warnings(
+            include_dropped=include_dropped
+        ):
             return Decision.NEEDS_REVISION
         if self._score_is_actionable(critique):
             return Decision.NEEDS_REVISION
@@ -155,9 +176,9 @@ class ChainResult:
 class GeneratorCriticChain:
     """Run one bounded Generator-Critic pass.
 
-    ``run`` starts from a prompt and invokes the generator. ``review`` starts
-    from an existing artifact, which is useful when an outer workflow explicitly
-    submits a revision for another pass. Neither method contains a retry loop.
+    run starts from a prompt and invokes the generator. review starts from an
+    existing artifact, which is useful when an outer workflow explicitly submits
+    a revision for another pass. Neither method contains a retry loop.
     """
 
     def __init__(
@@ -182,6 +203,8 @@ class GeneratorCriticChain:
     def _review(self, artifact: Artifact, *, trace: list[str]) -> ChainResult:
         critique = self.critic(artifact)
         trace.append("critiqued")
+        if critique.dropped_issues:
+            trace.append(f"dropped_opinions:{len(critique.dropped_issues)}")
 
         decision = self.policy.decide(critique)
         trace.append(decision.value)
