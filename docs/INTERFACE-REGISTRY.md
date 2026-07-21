@@ -7,7 +7,7 @@
 >
 > **Citation discipline**: course lectures, whitepapers, and book chapters that quote an interface must pin the commit (`pattern.py@<hash>` in the document header). Interfaces do refactor; a pinned quote stays honest, an unpinned one rots.
 
-Generated 2026-07-20 at HEAD `ebdffa8` (working tree has uncommitted changes).
+Generated 2026-07-21 at HEAD `3e967c6` (working tree clean).
 
 ## Summary
 
@@ -29,7 +29,7 @@ Generated 2026-07-20 at HEAD `ebdffa8` (working tree has uncommitted changes).
 | A2 规划执行 Plan-and-Execute | 行动 × 编排 | `Executor` | 07-16 |
 | A3 提示链 Prompt Chaining | 行动 × 链式 | `PromptChain` | 07-16 |
 | A4 护栏三明治 Guardrail Sandwich | 行动 × 层级 | `GuardrailSandwich` | 07-16 |
-| F1 生成批评 Generator-Critic | 反思 × 链式 | `GeneratorCriticChain` | 07-17 |
+| F1 生成批评 Generator-Critic | 反思 × 链式 | `GeneratorCriticChain` | 07-21 |
 | F2 技能包 Skill Package | 反思 × 路由 | `SkillLibrary` | 07-17 |
 | F3 经验回放 Experience Replay | 反思 × 层级 | `ExperienceStore` | 07-17 |
 | F4 自愈循环 Self-Heal Loop | 反思 × 循环 | `SelfHealLoop` | 07-17 |
@@ -235,9 +235,9 @@ Generated 2026-07-20 at HEAD `ebdffa8` (working tree has uncommitted changes).
 ### F1 生成批评 Generator-Critic — `reflection/a-generator-critic/`
 
 - **Coordinate**: 反思 × 链式
-- **State**: `pattern.py` 200 lines · last commit adc1b24 2026-07-17 · clean · tests: yes
+- **State**: `pattern.py` 223 lines · last commit 3e967c6 2026-07-21 · clean · tests: yes
 - **Summary**: Generator-Critic reference interface.
-- **Public API**: `Severity` *enum*; `Decision` *enum*; `Issue` *dataclass*(grounded); `Artifact` *dataclass*(revise); `Critique` *dataclass*(blockers, warnings, ungrounded); `AcceptancePolicy` *dataclass*(decide); `ChainResult` *dataclass*(artifact, requires_re_review); `GeneratorCriticChain` *class*(run, review)
+- **Public API**: `Severity` *enum*; `Decision` *enum*; `Issue` *dataclass*(grounded, source, is_evidence_backed); `Artifact` *dataclass*(revise); `Critique` *dataclass*(blockers, warnings, ungrounded); `AcceptancePolicy` *dataclass*(decide); `ChainResult` *dataclass*(artifact, requires_re_review); `GeneratorCriticChain` *class*(run, review)
 - **Contract lines (from docstring)**:
   - The critic reports evidence about the artifact. It does not approve the artifact.
   - pass is explicitly unreviewed and therefore cannot be accepted by the same pass.
