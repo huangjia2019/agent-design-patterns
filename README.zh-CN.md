@@ -85,7 +85,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 
 14 个空格子标的是工业还没填上的空白，或那种拓扑-功能组合下还没有结晶的模式。
 
-每个模式文件夹结构一致：`pattern.py`（最小诚实参考实现，50-250 行）+ `example.py`（拟真场景，无需 API key 也能跑）+ `test_pattern.py`（不变量测试）+ 中英双语 README。
+一个完成态的模式文件夹通常包含：`pattern.py`（最小诚实参考实现）、`test_pattern.py`（不变量测试）、中英双语 README，以及在适用时提供的 `example.py`（无需 API key 即可运行）。
 
 ---
 
@@ -118,7 +118,26 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 
 * **不是框架**。要生产 runtime，请用 [LangGraph](https://github.com/langchain-ai/langgraph)、[agno](https://github.com/agno-agi/agno)、[DeerFlow](https://github.com/bytedance/deer-flow) 或 [OpenHands](https://github.com/All-Hands-AI/OpenHands)。本仓库是你应用在它们之上的设计语言。换框架不改矩阵。
 * **不是平铺清单**。清单回答"有哪些模式存在"。矩阵回答**"你的问题落在哪儿、哪些模式是错位选择"**。
-* **不是 toy 代码**。每个 `pattern.py` 故意保持小（50-250 行），但里面是有真不变量、有测试的诚实代码。每个 `example.py` 跑在像生产数据的输入上。README 里的工程切片都是核对过的上游真实文件。
+* **不是 toy 代码**。每个 `pattern.py` 都围绕自身不变量保持最小诚实实现，并由测试固定这些边界。示例（如有）使用接近生产形态的数据。README 里的工程切片都是核对过的上游真实文件。
+
+---
+
+## 接口模型
+
+本仓库提供可运行的模式参考接口，不提供可安装的 Agent Runtime 或 Python SDK。
+
+* `pattern.py` 是模式契约和最小实现的代码真源。
+* `test_pattern.py` 是可执行规范，固定了改造时必须保留的不变量。
+* `example.py`（如有）用接近生产形态的数据展示模式的运行方式。
+* `shared.py` 和框架 Notebook 是教学适配层，不属于稳定公共 API。
+* 协作模式共享 `collaboration/boundary_contract.py`。
+* 治理模式共享 `governance/boundary_contract.py`。
+* [`docs/INTERFACE-REGISTRY.md`](docs/INTERFACE-REGISTRY.md) 是生成的接口文档索引，不是运行时注册表。
+
+`pip install -e ".[dev]"` 只为当前 checkout 安装开发和验证依赖，不会安装
+可导入的 `agent_design_patterns` Python 包。使用者应从克隆后的仓库运行
+示例，或将选定模式连同测试一起复制并改造。引用或采用接口时，应固定
+对应的源码提交；这些参考接口不承诺统一运行时协议或跨版本 SDK 兼容性。
 
 ---
 
@@ -128,6 +147,9 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 git clone https://github.com/huangjia2019/agent-design-patterns.git
 cd agent-design-patterns
 python -m venv .venv && source .venv/bin/activate
+
+# 为当前 checkout 安装开发和验证依赖。
+# 本仓库不会安装可导入的 Python SDK。
 pip install -e ".[dev]"
 
 # 跑一个模式的演示
@@ -138,7 +160,7 @@ python perception/b-semantic-compaction/example.py
 pytest
 ```
 
-每个模式文件夹自包含，没有中心框架，没有 plugin 系统要学。读文件夹的 README → 看 `pattern.py` → 跑 `example.py` → 看测试。
+每个模式都可以从当前 checkout 独立阅读和运行；协作与治理模式还会使用各自行级的 `boundary_contract.py`。这里没有中心框架或 plugin 系统需要学习：读文件夹的 README → 看 `pattern.py` → 在提供时运行 `example.py` → 看测试。
 
 ---
 
@@ -149,11 +171,11 @@ pytest
   README.md                # Why 段 + 工程切片引用
   README.zh-CN.md          # 中文版
   pattern.py               # 最小诚实实现
-  example.py               # 拟真场景，可跑
+  example.py               # 文件夹提供时可运行的拟真场景
   test_pattern.py          # 不变量测试
 ```
 
-先读 README 理解 why，再读 `pattern.py` 看最小解法，跑 `example.py` 看它在有 shape 的数据上的行为，测试钉死你改造时不该破坏的边界。
+先读 README 理解 why，再读 `pattern.py` 看最小解法；如果目录提供了 `example.py`，运行它观察模式在有 shape 的数据上的行为。测试钉死你改造时不该破坏的边界。
 
 ---
 
