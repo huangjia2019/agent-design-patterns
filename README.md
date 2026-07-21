@@ -107,10 +107,10 @@ The 14 empty cells mark either industry gaps no production harness has
 filled yet, or topology-function combinations whose patterns haven't
 crystallized.
 
-Each pattern folder follows the same shape: `pattern.py` (the minimal
-honest reference, 50–250 lines), `example.py` (a real-scenario case that
-runs without API keys), `test_pattern.py` (the invariants the pattern
-must hold), and bilingual `README.md` / `README.zh-CN.md`.
+A completed pattern folder normally contains `pattern.py` (the minimal
+honest reference implementation), `test_pattern.py` (the invariants the
+pattern must hold), bilingual `README.md` / `README.zh-CN.md`, and, where
+available, an `example.py` that runs without API keys.
 
 ---
 
@@ -156,10 +156,37 @@ show the pattern in real production form, not toy form.
 * **Not a flat catalog.** A list answers *what patterns exist*. The matrix
   answers *where a problem sits* and *which patterns are wrong for that
   position*.
-* **Not toy code.** Every `pattern.py` is small (50–250 lines) on
-  purpose, but it is honest code with real invariants and tests. Each
-  `example.py` runs on data shaped like production. Engineering slices
+* **Not toy code.** Each `pattern.py` is scoped to the smallest honest
+  implementation of its invariants, with tests that pin those boundaries.
+  Examples, where present, use production-shaped data. Engineering slices
   in the READMEs cite verified upstream files.
+
+---
+
+## Interface model
+
+This repository publishes runnable reference interfaces, not an installable
+agent runtime or Python SDK.
+
+* `pattern.py` is the source of truth for a pattern's contract and minimal
+  implementation.
+* `test_pattern.py` is its executable specification and pins the invariants
+  that adaptations must preserve.
+* `example.py`, where present, demonstrates the pattern on production-shaped
+  data.
+* `shared.py` and framework notebooks are tutorial adapters, not stable public
+  APIs.
+* Collaboration patterns share `collaboration/boundary_contract.py`.
+* Governance patterns share `governance/boundary_contract.py`.
+* [`docs/INTERFACE-REGISTRY.md`](docs/INTERFACE-REGISTRY.md) is a generated
+  documentation index, not a runtime registry.
+
+`pip install -e ".[dev]"` installs the development dependencies used by this
+checkout. It does not install an importable `agent_design_patterns` package.
+Run examples from the cloned repository, or copy and adapt a pattern together
+with its tests. Pin the source commit when adopting or quoting an interface;
+the reference interfaces do not promise a shared runtime protocol or
+cross-version SDK compatibility.
 
 ---
 
@@ -169,6 +196,9 @@ show the pattern in real production form, not toy form.
 git clone https://github.com/huangjia2019/agent-design-patterns.git
 cd agent-design-patterns
 python -m venv .venv && source .venv/bin/activate
+
+# Install development and verification dependencies for this checkout.
+# This repository does not install an importable Python SDK.
 pip install -e ".[dev]"
 
 # Run a pattern's case
@@ -179,9 +209,11 @@ python perception/b-semantic-compaction/example.py
 pytest
 ```
 
-Each pattern folder is self-contained. No central framework, no plugin
-system to learn. Read the folder's README, look at `pattern.py`, run
-`example.py`, read the tests.
+Each pattern is independently readable and runnable from the checkout.
+Collaboration and governance patterns also use their row-level
+`boundary_contract.py`. There is no central framework or plugin system to
+learn: read the folder's README, inspect `pattern.py`, run the example when
+present, and read the tests.
 
 ---
 
@@ -192,14 +224,14 @@ system to learn. Read the folder's README, look at `pattern.py`, run
   README.md                # The why — what failure mode this pattern catches
   README.zh-CN.md          # 中文版
   pattern.py               # The minimal honest implementation
-  example.py               # A runnable case on production-shaped data
+  example.py               # A runnable case, where the folder provides one
   test_pattern.py          # The invariants the pattern must hold
 ```
 
 Read the README first — it's the *why* and the upstream slice. Then read
-`pattern.py` to see the smallest amount of code that solves it. Run
-`example.py` to see it work on data with shape. Tests pin the invariants
-you must not break when adapting.
+`pattern.py` to see the smallest amount of code that solves it. When an
+`example.py` is present, run it to see the pattern work on data with shape.
+Tests pin the invariants you must not break when adapting.
 
 ---
 
