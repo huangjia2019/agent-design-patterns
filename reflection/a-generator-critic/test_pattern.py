@@ -88,13 +88,41 @@ def test_ungrounded_opinion_is_dropped_and_cannot_trigger_revision() -> None:
     opinion = Issue(Severity.BLOCKER, "the report feels thin", "body", check="vibe")
     critique = Critique(score=0.92, issues=[opinion], summary="one opinion")
 
-    assert critique.issues == []
-    assert critique.dropped_issues == [opinion]
+    assert critique.issues == ()
+    assert critique.dropped_issues == (opinion,)
     assert AcceptancePolicy(require_evidence=True).decide(critique) is Decision.ACCEPTED
     assert (
         AcceptancePolicy(require_evidence=False).decide(critique)
         is Decision.NEEDS_REVISION
     )
+
+
+def test_critique_issue_buckets_are_immutable_after_classification() -> None:
+    opinion = Issue(Severity.BLOCKER, "the report feels thin", "body", check="vibe")
+    critique = Critique(score=0.92, issues=[opinion], summary="one opinion")
+
+    assert isinstance(critique.issues, tuple)
+    assert isinstance(critique.dropped_issues, tuple)
+    with pytest.raises(AttributeError):
+        critique.issues.append(opinion)
+    with pytest.raises(AttributeError):
+        critique.dropped_issues.append(grounded_blocker())
+    assert AcceptancePolicy().decide(critique) is Decision.ACCEPTED
+
+
+def test_critique_reclassifies_grounded_items_from_dropped_input() -> None:
+    blocker = grounded_blocker("paid count mismatch")
+
+    critique = Critique(
+        score=0.92,
+        issues=[],
+        dropped_issues=[blocker],
+        summary="misbucketed input",
+    )
+
+    assert critique.issues == (blocker,)
+    assert critique.dropped_issues == ()
+    assert AcceptancePolicy().decide(critique) is Decision.NEEDS_REVISION
 
 
 def test_critique_score_must_be_unit_interval() -> None:
@@ -190,8 +218,15 @@ def test_example_drafts_then_explicitly_reviews_revision() -> None:
 
 def test_shared_low_score_fixture_has_grounded_score_evidence() -> None:
     critique = shared.parse_critique_json(shared.LOW_SCORE_CRITIQUE_JSON)
+    original = Artifact(shared.INITIAL_DRAFT)
+    revision = shared.revise_with_evidence(original, critique)
 
+    assert not critique.blockers()
     assert critique.score_evidence
+    assert "incident ID" in critique.score_evidence
+    assert "incident ID" in critique.warnings()[0].message
+    assert "INC-42" not in original.content
+    assert "INC-42" in revision.content
     assert shared.default_policy().decide(critique) is Decision.NEEDS_REVISION
 
 
@@ -211,6 +246,30 @@ def test_shared_parser_fails_closed_for_incomplete_schema(raw_json: str) -> None
     assert critique.score == 0.0
     assert critique.blockers()
     assert shared.default_policy().decide(critique) is Decision.NEEDS_REVISION
+
+
+@pytest.mark.parametrize(
+    "raw_json",
+    [
+        "",
+        "  \n\t",
+        '{"score": true, "summary": "ready", "issues": []}',
+        '{"score": "0.95", "summary": "ready", "issues": []}',
+    ],
+)
+def test_shared_parser_failures_cannot_pass_at_zero_score_threshold(
+    raw_json: str,
+) -> None:
+    critique = shared.parse_critique_json(raw_json)
+
+    assert critique.score == 0.0
+    assert critique.blockers()
+    assert critique.dropped_issues == ()
+    assert critique.blockers()[0].evidence.strip()
+    assert (
+        AcceptancePolicy(min_score=0.0).decide(critique)
+        is Decision.NEEDS_REVISION
+    )
 
 
 @pytest.mark.parametrize(
@@ -236,7 +295,7 @@ def test_shared_parser_drops_unsupported_opinions(raw_json: str) -> None:
     critique = shared.parse_critique_json(raw_json)
 
     assert critique.score == 0.95
-    assert critique.issues == []
+    assert critique.issues == ()
     assert len(critique.dropped_issues) == 1
     assert shared.default_policy().decide(critique) is Decision.ACCEPTED
 

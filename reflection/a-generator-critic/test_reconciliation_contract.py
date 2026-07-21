@@ -30,8 +30,8 @@ def test_issue_needs_named_check_and_evidence_to_be_actionable() -> None:
 
     critique = Critique(score=0.95, issues=[opinion], summary="unsupported")
 
-    assert critique.issues == []
-    assert critique.dropped_issues == [opinion]
+    assert critique.issues == ()
+    assert critique.dropped_issues == (opinion,)
     assert AcceptancePolicy().decide(critique) is Decision.ACCEPTED
 
 

@@ -20,6 +20,11 @@
 `source`）和 `evidence`。缺少任一项的意见会进入 `dropped_issues`，
 保留在审计轨迹中，但不能触发自动修订。低分也遵守同一规则：启用证据
 要求时，只有同时给出 `Critique.score_evidence`，低分才能进入策略闸门。
+`Critique` 会把传入的两个问题集合重新分类，并保存为不可变 tuple，调用方
+不能在闸门构造完成后追加问题，也不能靠预先放错集合来绕过证据判断。
+
+格式错误的 critic 输出会成为带诊断证据的 parser blocker；即使
+`min_score=0.0`，也不能被证据过滤掉或意外放行。
 
 如果 reviser 生成了新稿，这份稿件明确处于未复审状态。
 `ChainResult.reviewed_artifact` 指明本遍真正审过的版本，
@@ -72,10 +77,13 @@ uv run pytest reflection/a-generator-critic/test_pattern.py -q
 
 两套 notebook 都先运行确定性的 fake-model 场景，最后的可选真实后端区段
 直接调用 `get_model()`，不需要额外的 fake/real 环境变量。
+`JUPYTER_PATH` 会把 `python3` 固定到项目 venv，避免陈旧的用户级 kernelspec
+误选到另一个解释器。
 
 ```bash
-env OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
-  uv run pytest --nbmake --nbmake-timeout=120 \
+env JUPYTER_PATH="$PWD/.venv/share/jupyter" \
+  OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
+  uv run pytest --nbmake --nbmake-kernel=python3 --nbmake-timeout=120 \
   reflection/a-generator-critic/langgraph/tutorial.ipynb \
   reflection/a-generator-critic/langchain/tutorial.ipynb
 ```

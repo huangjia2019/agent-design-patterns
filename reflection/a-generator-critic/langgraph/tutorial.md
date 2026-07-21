@@ -267,9 +267,9 @@ print_trace(result_from_state(second_state))
     reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
-## Mock run 3: low score without blockers still fails
+## Mock run 3: evidence-backed low score still fails
 
-Here the critic returns only a warning, but the score is below the default threshold. This demonstrates that the policy is more than a blocker check: score and issue severity both matter.
+The critic reports no blocker, only a warning that the incident ID is missing. Warning severity alone would not stop the default policy, but the evidence-backed score is below its threshold. The revision adds `INC-42`, so the finding, original artifact, and revision all address the same missing reference.
 
 
 ```python
@@ -286,8 +286,8 @@ print_trace(result_from_state(state))
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.62
-    score evidence: support style rubric requires a concrete update window
-    issues: ['warning:support_style_guide:sentence 3:next update timing is too vague']
+    score evidence: incident completeness rubric requires an incident ID
+    issues: ['warning:incident_completeness_rubric:whole update:incident ID is missing']
     dropped: none
     reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
     revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
@@ -390,15 +390,13 @@ else:
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision
     score: 0.35
-    score evidence: Missing critical incident communication elements per standard incident update rubric: no timeline, no root cause, no impact scope, no incident ID, no specific remediation steps, no verification of resolution, and vague empathetic language.
-    issues: ['blocker:Incident communication best practices (timeline transparency):Body paragraph 1:No incident timeline provided (start time, duration, resolution time)', 'blocker:Incident post-mortem standards (root cause disclosure):Body paragraph 2:No root cause or technical explanation of the failure', 'blocker:Incident impact reporting standards:Body paragraph 1:No quantified impact scope (number of affected customers, transactions, revenue)', 'blocker:Incident management documentation standards:Header/Subject line:No incident identifier or reference number for tracking', 'blocker:Incident communication completeness checklist:Body paragraph 3:Remediation steps are vague and non-specific', 'warning:Customer communication tone guidelines:Opening and closing:No explicit apology or acknowledgment of customer impact', 'warning:Communication readiness check:Body paragraph 4:Contact information is a placeholder, not actual details', 'warning:Incident resolution verification standards:Body paragraph 2:No mention of monitoring or verification that the fix is holding']
+    score evidence: Missing critical incident communication elements: no specific impact description, no workaround, no status/phase indicator, no incident ID, no link to status page, vague scope language ('some orders')
+    issues: ['blocker:Incident comms best-practice checklist (specificity requirement):Body paragraph 1, sentence 1:No specific description of the symptom or failure mode', 'blocker:Customer incident communication standard (workaround requirement):Body, after apology:No workaround or interim action offered to affected customers', 'blocker:Incident management taxonomy (traceability requirement):Subject and body:No incident identifier or reference number for tracking', 'blocker:Status page / comms rubric (status clarity):Body paragraph 1:No status phase or progress indicator (e.g., Investigating, Identified, Mitigating)', "warning:Clarity and precision rubric:Body paragraph 1, sentence 1:Vague scope language ('some orders') undermines trust", 'warning:Ongoing comms best practice (self-service updates):Body, closing section:No link to a real-time status page or update channel', 'warning:Email subject effectiveness heuristic:Subject line:Subject line lacks specificity']
     dropped: none
-    reviewed artifact: **Subject**: Checkout System Update – Issue Resolved
-    Dear Valued Customer,
-    - We experienced a technical issue with our checkout system earlier today, which may have prevented some customers from completing their purchases.
-    - Our team has resolved the issue, and the system is now fully operational.
-    - We are taking steps to prevent this from happening again.
-    - If you encountered any issues, please contact our support team at [support email/phone] for assistance.
+    reviewed artifact: **Subject**: Checkout Issue Update – [Date]
+    Dear Customer,
+    We’re addressing a temporary checkout issue that may prevent some orders from being completed. Our team is actively resolving this, and we expect a fix by [Time/Date]. We apologize for the inconvenience.
+    If you need assistance, please contact [Support Email/Phone].
     Thank you for your patience.
     Sincerely,
     [Your Company Name]

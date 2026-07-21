@@ -17,10 +17,16 @@ The critic reports evidence; it does not approve the artifact. A deterministic
 `ACCEPTED` or `NEEDS_REVISION`. An actionable issue needs both a named `check`
 (called `source` in the notebook JSON schema) and `evidence`. Unsupported
 opinions remain visible in `dropped_issues` but cannot trigger revision.
+`Critique` snapshots and reclassifies both incoming issue collections as
+immutable tuples, so callers cannot mutate or misbucket findings after the
+evidence gate is constructed.
 
 Low scores follow the same rule: when evidence is required, a low score is
 actionable only when `Critique.score_evidence` records the rubric or check result
 behind it.
+
+Malformed critic output becomes a grounded parser blocker with diagnostic
+evidence. It cannot be filtered out or accepted even when `min_score=0.0`.
 
 If a reviser creates a new draft, that draft is explicitly unreviewed.
 `ChainResult.reviewed_artifact` identifies what the current pass actually judged;
@@ -75,10 +81,13 @@ wrong report.
 Both notebooks run deterministic fake-model scenarios first and call
 `get_model()` directly in the optional real-backend section. No separate
 fake/real environment flag is required.
+`JUPYTER_PATH` pins `python3` to the project venv so a stale user-level
+kernelspec cannot select an unrelated interpreter.
 
 ```bash
-env OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
-  uv run pytest --nbmake --nbmake-timeout=120 \
+env JUPYTER_PATH="$PWD/.venv/share/jupyter" \
+  OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
+  uv run pytest --nbmake --nbmake-kernel=python3 --nbmake-timeout=120 \
   reflection/a-generator-critic/langgraph/tutorial.ipynb \
   reflection/a-generator-critic/langchain/tutorial.ipynb
 ```

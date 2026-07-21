@@ -179,7 +179,9 @@ uv run jupyter lab
 
 ```bash
 # Re-execute notebooks. For deterministic CI, run without provider API keys.
-uv run pytest --nbmake --nbmake-timeout=120 \
+env JUPYTER_PATH="$PWD/.venv/share/jupyter" \
+  OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
+  uv run pytest --nbmake --nbmake-kernel=python3 --nbmake-timeout=120 \
   action/*/langgraph/tutorial.ipynb action/*/langchain/tutorial.ipynb \
   reflection/*/langgraph/tutorial.ipynb reflection/*/langchain/tutorial.ipynb
 

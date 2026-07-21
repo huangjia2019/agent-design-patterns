@@ -287,9 +287,9 @@ print_trace(second_pass)
     reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
 
 
-## Mock run 3: low score without blockers still fails
+## Mock run 3: evidence-backed low score still fails
 
-A critic does not need to find a blocker to stop the artifact. Here the only issue is a warning, but the score is below the default `min_score=0.8`, so the deterministic policy still requires revision.
+The critic reports no blocker, only a warning that the incident ID is missing. Warning severity alone would not stop the default policy, but the score is below `min_score=0.8` and `score_evidence` ties that score to the incident-completeness rubric. The reviser appends `INC-42`, so the finding, original artifact, and revision all refer to the same defect.
 
 
 ```python
@@ -305,8 +305,8 @@ print_trace(result)
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision -> revision_drafted
     score: 0.62
-    score evidence: support style rubric requires a concrete update window
-    issues: ['warning:support_style_guide:sentence 3:next update timing is too vague']
+    score evidence: incident completeness rubric requires an incident ID
+    issues: ['warning:incident_completeness_rubric:whole update:incident ID is missing']
     dropped: none
     reviewed artifact: We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes.
     revision draft (unreviewed): We identified elevated checkout errors. Impact is limited to card payments. Next update in 30 minutes. Evidence: status dashboard incident INC-42.
@@ -390,16 +390,15 @@ else:
 
     decision: needs_revision
     trace: generated -> critiqued -> needs_revision
-    score: 0.45
-    score evidence: Multiple unfilled template placeholders ([Date], [support email/phone], [Your Company Name]) render the message unpublishable; vague impact scope reduces trust and transparency
-    issues: ['blocker:Template completeness check:First paragraph, second sentence:Date placeholder [Date] is not filled in, making the incident timeline meaningless.', 'blocker:Template completeness check:Penultimate sentence:Contact information placeholder [support email/phone] is not filled in, preventing customers from reaching support.', 'blocker:Template completeness check:Sign-off line:Company name placeholder [Your Company Name] is not filled in, removing sender identity.', "warning:Incident communication best-practice rubric:First paragraph, second sentence:Impact description is vague ('some customers may have been unable') and does not quantify scope or specify affected transaction types.", 'warning:Incident communication best-practice rubric:Entire message:No incident identifier, status-page link, or reference number is provided for customers seeking more detail.']
+    score: 0.3
+    score evidence: Missing critical incident communication elements per standard incident update rubric: no incident ID, no severity/status, no timeline, no specific impact scope, no ETA, no next-update commitment, placeholder contact info, no status page link.
+    issues: ['blocker:Incident communication checklist:Subject and body:No incident identifier (ID, ticket number) provided', 'blocker:Incident communication checklist:Body paragraph 1:No severity or status level stated (e.g., P1/P2, investigating/identified/monitoring)', 'blocker:Incident communication checklist:Entire document:No incident start time, detection time, or timeline provided', 'blocker:Incident communication checklist:Body paragraph 1 and closing:No estimated time of resolution or next update commitment', 'blocker:Content completeness check:Body paragraph 2:Contact information is a placeholder, not filled in', 'blocker:Incident communication best practice:Entire document:No link to a status page or dedicated incident page', "warning:Clarity and accuracy check:Body paragraph 2:Vague workaround guidance ('try again in a few minutes') may mislead customers", 'warning:Tone and audience appropriateness:Opening line:Generic salutation and tone lack personalization for an incident audience', 'warning:Impact scope clarity:Body paragraph 1:No description of what is still functional or scope of impact (which regions, which payment methods, etc.)']
     dropped: none
-    reviewed artifact: **Subject**: Checkout Service Update – Resolved
+    reviewed artifact: **Subject: Checkout Issue Update**
     Dear Valued Customer,
-    We experienced a technical issue affecting our checkout system from 10:00 AM to 12:30 PM [Date]. During this time, some customers may have been unable to complete purchases. We sincerely apologize for the inconvenience.
-    Our checkout system is now fully operational. All orders placed during the outage are being processed, and no action is required on your part. Our team is investigating the root cause and implementing measures to prevent future disruptions.
-    Thank you for your patience. If you have any questions, please contact our support team at [support email/phone].
-    Best regards,
+    We are currently experiencing a technical issue affecting our checkout process, which may cause delays or errors when completing your purchase. Our team is actively working to resolve this as quickly as possible.
+    In the meantime, we recommend trying again in a few minutes or contacting our support team at [support email/phone] for immediate assistance.
+    We sincerely apologize for the inconvenience and appreciate your patience. Thank you for your understanding.
     [Your Company Name]
 
 

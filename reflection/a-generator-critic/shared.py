@@ -62,15 +62,15 @@ NEEDS_REVISION_CRITIQUE_JSON = json.dumps(
 LOW_SCORE_CRITIQUE_JSON = json.dumps(
     {
         "score": 0.62,
-        "score_evidence": "support style rubric requires a concrete update window",
-        "summary": "Readable, but too vague to publish safely.",
+        "score_evidence": "incident completeness rubric requires an incident ID",
+        "summary": "Readable, but missing the incident reference required to publish.",
         "issues": [
             {
                 "severity": "warning",
-                "message": "next update timing is too vague",
-                "location": "sentence 3",
-                "source": "support_style_guide",
-                "evidence": "status updates must include a concrete next-update window",
+                "message": "incident ID is missing",
+                "location": "whole update",
+                "source": "incident_completeness_rubric",
+                "evidence": "customer-visible updates must include an incident ID",
             }
         ],
     }
@@ -116,6 +116,9 @@ def parse_critique_json(raw: str) -> Critique:
                 raise KeyError(key)
         if not isinstance(payload["issues"], list):
             raise TypeError("issues must be a list")
+        score = payload["score"]
+        if isinstance(score, bool) or not isinstance(score, (int, float)):
+            raise TypeError("score must be a JSON number")
 
         issues = [
             Issue(
@@ -128,12 +131,13 @@ def parse_critique_json(raw: str) -> Critique:
             for item in payload["issues"]
         ]
         return Critique(
-            score=float(payload["score"]),
+            score=float(score),
             issues=issues,
             summary=str(payload["summary"]),
             score_evidence=str(payload.get("score_evidence") or ""),
         )
     except Exception as exc:  # noqa: BLE001 - parser failure must not become a pass
+        diagnostic_evidence = raw.strip() or "<empty critic output>"
         return Critique(
             score=0.0,
             issues=[
@@ -144,7 +148,7 @@ def parse_critique_json(raw: str) -> Critique:
                         f"{type(exc).__name__}: {exc}"
                     ),
                     location="critic",
-                    evidence=raw,
+                    evidence=f"raw critic output: {diagnostic_evidence}",
                     check="parser",
                 )
             ],

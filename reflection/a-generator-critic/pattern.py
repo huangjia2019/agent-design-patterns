@@ -14,6 +14,7 @@ Generator-Critic pass, but the loop is not hidden inside this interface.
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable
@@ -83,32 +84,31 @@ class Critique:
     """The critic's evidence. It can report issues, never approve directly."""
 
     score: float
-    issues: list[Issue]
+    issues: Sequence[Issue]
     summary: str
     score_evidence: str = ""
-    dropped_issues: list[Issue] = field(default_factory=list)
+    dropped_issues: Sequence[Issue] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.score <= 1.0:
             raise ValueError("score must be between 0.0 and 1.0")
 
-        grounded: list[Issue] = []
-        dropped = list(self.dropped_issues)
-        for issue in self.issues:
-            if issue.grounded:
-                grounded.append(issue)
-            else:
-                dropped.append(issue)
+        # Snapshot and reclassify both inputs. Callers cannot mutate the policy
+        # boundary after construction or hide grounded findings in the dropped
+        # bucket by supplying a pre-classified collection.
+        all_issues = (*self.issues, *self.dropped_issues)
+        grounded = tuple(issue for issue in all_issues if issue.grounded)
+        dropped = tuple(issue for issue in all_issues if not issue.grounded)
 
         object.__setattr__(self, "issues", grounded)
         object.__setattr__(self, "dropped_issues", dropped)
 
     def blockers(self, *, include_dropped: bool = False) -> list[Issue]:
-        issues = self.issues + self.dropped_issues if include_dropped else self.issues
+        issues = (*self.issues, *self.dropped_issues) if include_dropped else self.issues
         return [issue for issue in issues if issue.severity is Severity.BLOCKER]
 
     def warnings(self, *, include_dropped: bool = False) -> list[Issue]:
-        issues = self.issues + self.dropped_issues if include_dropped else self.issues
+        issues = (*self.issues, *self.dropped_issues) if include_dropped else self.issues
         return [issue for issue in issues if issue.severity is Severity.WARNING]
 
     def ungrounded(self) -> list[Issue]:
