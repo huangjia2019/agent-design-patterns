@@ -44,7 +44,7 @@ standing in for the observability-harness pattern. This is a teaching
 minimum kept independent of Codex's capstone_lab.py on purpose; the two
 integration schemes are not merged.
 
-Run `python3 closing_ablation_lab.py` from the repo root.
+Run `python3 composition/payroll-lab/closing_ablation_lab.py` from the repo root.
 """
 from __future__ import annotations
 

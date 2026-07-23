@@ -34,7 +34,7 @@ teaching minimum: in-process, single writer, no persistence, no
 external anchor for the head hash, no redaction story for sensitive
 payloads. Those belong to the pattern, not the intro lab.
 
-Run `python3 trace_chain_lab.py` from the repo root.
+Run `python3 governance/payroll-lab/trace_chain_lab.py` from the repo root.
 """
 from __future__ import annotations
 

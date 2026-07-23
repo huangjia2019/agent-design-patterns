@@ -34,7 +34,7 @@ Hypothesis patterns. The capability vector and the thin selection card are
 a teaching minimum, deliberately not Codex's composition/ pattern.py --
 the two schemes are kept independent on purpose.
 
-Run `python3 handpick_discipline_lab.py` from the repo root.
+Run `python3 composition/payroll-lab/handpick_discipline_lab.py` from the repo root.
 """
 from __future__ import annotations
 

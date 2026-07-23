@@ -33,7 +33,7 @@ gate here are a teaching minimum: no delegation of authority, no
 multi-signature quorum, no revocation feed. Those belong to the pattern,
 not the intro lab.
 
-Run `python3 approval_ticket_lab.py` from the repo root.
+Run `python3 governance/payroll-lab/approval_ticket_lab.py` from the repo root.
 """
 from __future__ import annotations
 

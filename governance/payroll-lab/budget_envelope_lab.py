@@ -33,7 +33,7 @@ book is a teaching minimum: no persistence, no concurrent draws, no
 release/return of unused reservation, no exclusive-partition check
 between siblings. Those belong to the pattern, not the intro lab.
 
-Run `python3 budget_envelope_lab.py` from the repo root.
+Run `python3 governance/payroll-lab/budget_envelope_lab.py` from the repo root.
 """
 from __future__ import annotations
 
