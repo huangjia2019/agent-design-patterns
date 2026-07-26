@@ -95,7 +95,7 @@ cells marked 🟡 are scaffolded.
 | **Act** | [Prompt Chaining ✅](./action/c-prompt-chaining/) | — | [Tool Dispatch ✅](./action/a-tool-dispatch/) | — | [Plan & Execute ✅](./action/b-plan-and-execute/) | [Guardrail Sandwich ✅](./action/d-guardrail-sandwich/) |
 | **Reflect** | [Generator-Critic ✅](./reflection/a-generator-critic/) | — | [Skill Package 🟡](./reflection/b-skill-package/) | [Self-Heal Loop 🟡](./reflection/d-self-heal-loop/) | — | [Experience Replay 🟡](./reflection/c-experience-replay/) |
 | **Collaborate** | [Handoff Chain 🟡](./collaboration/d-handoff-chain/) | [Fan-out & Gather 🟡](./collaboration/b-fan-out-gather/) | — | [Adversarial Review 🟡](./collaboration/c-adversarial-review/) | — | [Hierarchical Delegation 🟡](./collaboration/a-hierarchical-delegation/) |
-| **Govern** | — | [Progressive Commitment 🟡](./governance/c-progressive-commitment/) | [Approval Gate 🟡](./governance/a-approval-gate/) | — | [Observability Harness 🟡](./governance/d-observability-harness/) | [Blast Radius 🟡](./governance/b-blast-radius/) |
+| **Govern** | [Progressive Commitment ✅](./governance/c-progressive-commitment/) | — | [Approval Gate ✅](./governance/a-approval-gate/) | — | [Observability Harness ✅](./governance/d-observability-harness/) | [Blast Radius ✅](./governance/b-blast-radius/) |
 
 **Composition** (putting patterns together):
 [Pattern Selection Card](./composition/a-pattern-selection-card/) ·
