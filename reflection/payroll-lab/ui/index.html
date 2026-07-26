@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Payroll Reflection Lab</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">R</span>
+        <div>
+          <strong>Payroll Reflection Lab</strong>
+          <span>反思模块教学控制台</span>
+        </div>
+      </div>
+      <nav class="lecture-nav" aria-label="课程讲次">
+        <p class="nav-label">课程实验</p>
+        <div id="lecture-list"></div>
+      </nav>
+      <button class="full-run-button" id="run-all" type="button">
+        <span aria-hidden="true">&#9654;</span>
+        运行五讲
+      </button>
+      <div class="sidebar-status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <div>
+          <strong>SQLite 月末实验库</strong>
+          <span id="sidebar-db-status">正在读取状态</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="view-tabs" role="tablist" aria-label="控制台视图">
+          <button class="view-tab active" data-view="experiment" role="tab" type="button">实验</button>
+          <button class="view-tab" data-view="database" role="tab" type="button">数据库</button>
+          <button class="view-tab" data-view="structure" role="tab" type="button">系统结构</button>
+        </div>
+        <div class="topbar-actions">
+          <button class="button secondary" id="month-end-db" type="button" title="重建 798 PAID、2 REVERSED 的月末场景">
+            <span aria-hidden="true">&#8635;</span>
+            月末场景
+          </button>
+          <button class="button secondary" id="reset-db" type="button" title="恢复行动模块 DRAFT 基线">
+            <span aria-hidden="true">&#10226;</span>
+            行动基线
+          </button>
+        </div>
+      </header>
+
+      <section class="view active" id="view-experiment">
+        <div class="lesson-heading">
+          <div>
+            <span class="coordinate" id="lesson-coordinate">Reflection baseline</span>
+            <h1 id="lesson-title">26 · 反思模块导论</h1>
+            <p id="lesson-question">同一份月报，Agent 自评和账本对账为什么会得出相反结论？</p>
+          </div>
+          <div class="run-controls">
+            <label class="variant-toggle" for="variant-mode">
+              <input id="variant-mode" type="checkbox">
+              <span aria-hidden="true"></span>
+              <strong id="variant-label">更严格自评</strong>
+            </label>
+            <button class="button primary run-button" id="run-lecture" type="button">
+              <span aria-hidden="true">&#9654;</span>
+              运行本讲
+            </button>
+          </div>
+        </div>
+        <div class="stage-strip" id="stage-strip" aria-label="模式执行阶段"></div>
+
+        <section class="state-band" aria-labelledby="state-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Reflection state</p>
+              <h2 id="state-title">月报与账本</h2>
+            </div>
+            <span class="updated-at" id="updated-at"></span>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>员工</span><strong id="metric-employees">--</strong><small>employees</small></article>
+            <article class="metric"><span>账本已支付</span><strong id="metric-paid">--</strong><small>ledger PAID</small></article>
+            <article class="metric"><span>账本已冲正</span><strong id="metric-reversed">--</strong><small>ledger REVERSED</small></article>
+            <article class="metric"><span>事实冲突</span><strong id="metric-findings">--</strong><small>external findings</small></article>
+          </div>
+          <div class="state-details">
+            <div class="distribution">
+              <div class="subsection-title">
+                <h3>工资单状态</h3>
+                <span id="payroll-status-label"></span>
+              </div>
+              <div class="status-bar" id="payroll-status-bar"></div>
+              <div class="legend" id="payroll-legend"></div>
+            </div>
+            <div class="mirror-panel" id="mirror-panel">
+              <span class="record-label">External mirror</span>
+              <strong>同一份月报，两种答案</strong>
+              <div class="mirror-comparison">
+                <div><span>月报声称</span><b id="report-claim">--</b></div>
+                <div><span>账本事实</span><b id="ledger-truth">--</b></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="run-panel" aria-labelledby="run-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Evidence trace</p><h2 id="run-title">反思证据</h2></div>
+            <span class="run-meta" id="run-meta">等待运行</span>
+          </div>
+          <div class="empty-state" id="run-empty">
+            <strong id="empty-pattern">外部信号契约</strong>
+            <p id="empty-summary">对照纯内省与两条 SQL，让事实源成为反思回路之外的镜子。</p>
+          </div>
+          <div class="run-result hidden" id="run-result">
+            <div class="result-summary">
+              <div><span class="result-status" id="result-status">COMPLETED</span><strong id="result-title"></strong></div>
+              <code id="result-command"></code>
+            </div>
+            <div class="reflection-verdict hidden" id="reflection-verdict">
+              <div><span id="verdict-label-1">指标一</span><strong id="verdict-value-1">--</strong><small id="verdict-note-1">--</small></div>
+              <div><span id="verdict-label-2">指标二</span><strong id="verdict-value-2">--</strong><small id="verdict-note-2">--</small></div>
+              <div><span id="verdict-label-3">指标三</span><strong id="verdict-value-3">--</strong><small id="verdict-note-3">--</small></div>
+            </div>
+            <div class="event-list" id="event-list"></div>
+            <details class="raw-output">
+              <summary>原始 CLI 输出</summary>
+              <pre id="raw-output"></pre>
+            </details>
+          </div>
+        </section>
+
+        <section class="changes-panel" aria-labelledby="changes-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Action baseline diff</p><h2 id="changes-title">月末状态相对行动基线</h2></div>
+          </div>
+          <div class="change-list" id="change-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-database">
+        <div class="page-heading">
+          <div><p class="eyebrow">SQLite inspector</p><h1>数据库</h1><p id="database-path"></p></div>
+          <div class="table-search">
+            <label for="table-search">搜索当前表</label>
+            <input id="table-search" type="search" placeholder="员工编号、状态、备注" autocomplete="off">
+          </div>
+        </div>
+        <div class="table-tabs" id="table-tabs" role="tablist" aria-label="数据表"></div>
+        <div class="schema-line" id="schema-line"></div>
+        <div class="data-table-wrap">
+          <table class="data-table"><thead id="data-head"></thead><tbody id="data-body"></tbody></table>
+        </div>
+        <div class="pagination">
+          <span id="table-count"></span>
+          <div>
+            <button class="icon-button" id="page-prev" type="button" title="上一页" aria-label="上一页">&#8592;</button>
+            <span id="page-label">1 / 1</span>
+            <button class="icon-button" id="page-next" type="button" title="下一页" aria-label="下一页">&#8594;</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-structure">
+        <div class="page-heading">
+          <div><p class="eyebrow">Teaching architecture</p><h1>系统结构</h1><p>Repo 保留原始实验，Web 层只负责受控触发和证据呈现。</p></div>
+        </div>
+        <div class="architecture-flow" aria-label="反思教学控制台架构">
+          <div class="architecture-node"><span>01</span><strong>Browser UI</strong><small>实验、证据、数据库</small></div>
+          <span class="flow-arrow" aria-hidden="true">&#8594;</span>
+          <div class="architecture-node"><span>02</span><strong>FastAPI</strong><small>固定 API、串行执行锁</small></div>
+          <span class="flow-arrow" aria-hidden="true">&#8594;</span>
+          <div class="architecture-node"><span>03</span><strong>Reflection Runner</strong><small>26—30 五讲串行实验</small></div>
+          <span class="flow-arrow" aria-hidden="true">&#8594;</span>
+          <div class="architecture-node"><span>04</span><strong>Payroll SQLite</strong><small>月末事实与外部信号</small></div>
+        </div>
+        <div class="structure-grid">
+          <section>
+            <h2>四个反思模式</h2>
+            <div class="pattern-table">
+              <div><span>27</span><strong>Generator-Critic</strong><small>有证据的修订</small></div>
+              <div><span>28</span><strong>Skill Package</strong><small>验证后路由</small></div>
+              <div><span>29</span><strong>Experience Replay</strong><small>战绩回写</small></div>
+              <div><span>30</span><strong>Self-Heal Loop</strong><small>有界修复</small></div>
+            </div>
+          </section>
+          <section>
+            <h2>事实关系</h2>
+            <div class="relation-list">
+              <div><code>monthly_report</code><span>&#8596;</span><code>payroll ledger</code></div>
+              <div><code>reflection finding</code><span>&#8594;</span><code>revision</code></div>
+              <div><code>reuse outcome</code><span>&#8594;</span><code>experience score</code></div>
+            </div>
+          </section>
+        </div>
+        <section class="boundary-band">
+          <h2>当前边界</h2>
+          <div>
+            <p><strong>已经证明</strong><span>外部信号能发现纯内省看不到的事实冲突。</span></p>
+            <p><strong>执行模型</strong><span>本地单用户、串行实验，共用薪酬 SQLite。</span></p>
+            <p><strong>模式边界</strong><span>F1 一次只评一遍；F4 才由确定性红灯驱动强制循环。</span></p>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <div class="busy-overlay hidden" id="busy-overlay" aria-live="polite"><div class="busy-indicator"></div><strong id="busy-label">正在运行实验</strong></div>
+  <div class="toast hidden" id="toast" role="status"></div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
