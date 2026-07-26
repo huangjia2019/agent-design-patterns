@@ -37,6 +37,7 @@ pattern, not the intro lab.
 
 Run `python3 authority_ladder_lab.py` from the repo root.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -125,9 +126,11 @@ class AuthorityRecord:
 
 def promotion_fingerprint(agent_id: str, target: str, evidence) -> str:
     canonical = json.dumps(
-        {"agent_id": agent_id, "target": target,
-         "runs": sorted(r.run_id for r in evidence)},
-        ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+        {"agent_id": agent_id, "target": target, "runs": sorted(r.run_id for r in evidence)},
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
 
 
@@ -137,57 +140,81 @@ def promotion_stake(con, target: str) -> float:
     return PROMOTION_STAKES[target]
 
 
-def promote(con, record: AuthorityRecord, target: str, evidence,
-            ticket: ApprovalTicket, gate: ApprovalGate,
-            policy: PolicyCard, today: str):
+def promote(
+    con,
+    record: AuthorityRecord,
+    target: str,
+    evidence,
+    ticket: ApprovalTicket,
+    gate: ApprovalGate,
+    policy: PolicyCard,
+    today: str,
+):
     """One link up the chain, on fresh evidence, behind the gate."""
     findings = []
-    next_level = LEVELS[LEVELS.index(record.level) + 1] \
-        if record.level != LEVELS[-1] else None
+    next_level = LEVELS[LEVELS.index(record.level) + 1] if record.level != LEVELS[-1] else None
     if target != next_level:
-        findings.append(Finding(
-            code="promotion_skips_level", field="level",
-            message="promotion moves exactly one link up the chain",
-            evidence=f"current={record.level} target={target} "
-                     f"next={next_level}"))
-    usable = [r for r in evidence if r.agent_id == record.agent_id
-              and r.clean and r.level == record.level
-              and r.day >= record.since_day]
-    stale = [r for r in evidence if r.level != record.level
-             or r.day < record.since_day]
+        findings.append(
+            Finding(
+                code="promotion_skips_level",
+                field="level",
+                message="promotion moves exactly one link up the chain",
+                evidence=f"current={record.level} target={target} next={next_level}",
+            )
+        )
+    usable = [
+        r
+        for r in evidence
+        if r.agent_id == record.agent_id
+        and r.clean
+        and r.level == record.level
+        and r.day >= record.since_day
+    ]
+    stale = [r for r in evidence if r.level != record.level or r.day < record.since_day]
     dirty = [r for r in evidence if not r.clean]
     if dirty:
-        findings.append(Finding(
-            code="promotion_evidence_dirty", field="evidence",
-            message="a failed run cannot argue for more authority",
-            evidence=f"dirty_runs={sorted(r.run_id for r in dirty)}"))
+        findings.append(
+            Finding(
+                code="promotion_evidence_dirty",
+                field="evidence",
+                message="a failed run cannot argue for more authority",
+                evidence=f"dirty_runs={sorted(r.run_id for r in dirty)}",
+            )
+        )
     if stale:
-        findings.append(Finding(
-            code="promotion_evidence_stale", field="evidence",
-            message="evidence must be earned at the current level, "
-                    "after the last transition",
-            evidence=f"stale_runs={sorted(r.run_id for r in stale)} "
-                     f"since={record.since_day}"))
+        findings.append(
+            Finding(
+                code="promotion_evidence_stale",
+                field="evidence",
+                message="evidence must be earned at the current level, after the last transition",
+                evidence=f"stale_runs={sorted(r.run_id for r in stale)} since={record.since_day}",
+            )
+        )
     if len(usable) < EVIDENCE_QUORUM:
-        findings.append(Finding(
-            code="promotion_evidence_thin", field="evidence",
-            message="not enough fresh clean runs at the current level",
-            evidence=f"usable={len(usable)} required={EVIDENCE_QUORUM}"))
+        findings.append(
+            Finding(
+                code="promotion_evidence_thin",
+                field="evidence",
+                message="not enough fresh clean runs at the current level",
+                evidence=f"usable={len(usable)} required={EVIDENCE_QUORUM}",
+            )
+        )
     if findings:
         return None, tuple(findings)
     decision = gate.admit(
-        ticket, amount=promotion_stake(con, target),
+        ticket,
+        amount=promotion_stake(con, target),
         contract_digest=ticket.contract_digest,
-        artifact_fingerprint=promotion_fingerprint(
-            record.agent_id, target, evidence),
-        policy=policy, today=today)
+        artifact_fingerprint=promotion_fingerprint(record.agent_id, target, evidence),
+        policy=policy,
+        today=today,
+    )
     if not decision.admitted:
         return None, decision.findings
     return AuthorityRecord(record.agent_id, target, today), ()
 
 
-def demote(record: AuthorityRecord, incident_id: str,
-           today: str) -> AuthorityRecord:
+def demote(record: AuthorityRecord, incident_id: str, today: str) -> AuthorityRecord:
     """Any distance down, immediately, no ticket. The incident is the
     evidence; the fall does not wait for a signature."""
     return AuthorityRecord(record.agent_id, "observe", today)
@@ -197,11 +224,14 @@ def allowed(record: AuthorityRecord, capability: str):
     if capability in CAPABILITIES[record.level]:
         return ()
     needed = next(lv for lv in LEVELS if capability in CAPABILITIES[lv])
-    return (Finding(
-        code="authority_level_insufficient", field="capability",
-        message="this capability lives higher up the ladder",
-        evidence=f"level={record.level} capability={capability} "
-                 f"allowed_at={needed}"),)
+    return (
+        Finding(
+            code="authority_level_insufficient",
+            field="capability",
+            message="this capability lives higher up the ladder",
+            evidence=f"level={record.level} capability={capability} allowed_at={needed}",
+        ),
+    )
 
 
 def level_book(con, record: AuthorityRecord) -> BudgetBook | None:
@@ -212,14 +242,22 @@ def level_book(con, record: AuthorityRecord) -> BudgetBook | None:
     if record.level == "limited":
         ops = dict(dept_batches(con))["Ops"]
         root = BudgetEnvelope(
-            envelope_id="env::root::limited", holder=record.agent_id,
-            max_amount=3_000_000.0, max_payments=len(ops),
-            allowed_refs=frozenset(emp for emp, _ in ops))
+            envelope_id="env::root::limited",
+            holder=record.agent_id,
+            max_amount=3_000_000.0,
+            max_payments=len(ops),
+            allowed_refs=frozenset(emp for emp, _ in ops),
+        )
         book = BudgetBook(root)
-        book.reserve(BudgetEnvelope(
-            envelope_id="env::Ops", holder=record.agent_id,
-            max_amount=sum(a for _, a in ops), max_payments=len(ops),
-            allowed_refs=frozenset(emp for emp, _ in ops)))
+        book.reserve(
+            BudgetEnvelope(
+                envelope_id="env::Ops",
+                holder=record.agent_id,
+                max_amount=sum(a for _, a in ops),
+                max_payments=len(ops),
+                allowed_refs=frozenset(emp for emp, _ in ops),
+            )
+        )
         return book
     return None
 
@@ -230,45 +268,53 @@ def settle_as(con, record: AuthorityRecord):
     if refused:
         return 0.0, refused
     book = level_book(con, record)
-    payments, refusals = execute_settlement(
-        dept_batches(con), book=book, retry_storm=("none", 0))
+    payments, refusals = execute_settlement(dept_batches(con), book=book, retry_storm=("none", 0))
     return paid_total(payments), tuple(refusals)
 
 
 # ---- scenes ---------------------------------------------------------------------
 
+
 def cash_policy() -> PolicyCard:
-    return PolicyCard("cash-line", 1, "finance-controller",
-                      "portfolio claimed total must stay under",
-                      13_000_000, "2026 annual budget line")
+    return PolicyCard(
+        "cash-line",
+        1,
+        "finance-controller",
+        "portfolio claimed total must stay under",
+        13_000_000,
+        "2026 annual budget line",
+    )
 
 
-def ticket_for(agent: str, target: str, evidence, *, role: str,
-               approver: str, policy: PolicyCard,
-               day: str) -> ApprovalTicket:
+def ticket_for(
+    agent: str, target: str, evidence, *, role: str, approver: str, policy: PolicyCard, day: str
+) -> ApprovalTicket:
     return ApprovalTicket(
-        ticket_id=f"APR-{day}-{target}", approver=approver,
-        approver_role=role, action=f"promote:{agent}:{target}",
+        ticket_id=f"APR-{day}-{target}",
+        approver=approver,
+        approver_role=role,
+        action=f"promote:{agent}:{target}",
         contract_digest="authority-ledger",
         artifact_fingerprint=promotion_fingerprint(agent, target, evidence),
-        policy_digest=policy.digest, issued_on=day,
-        expires_on=day)
+        policy_digest=policy.digest,
+        issued_on=day,
+        expires_on=day,
+    )
 
 
 def main() -> None:
     con = month_end()
-    total = settle_total(con)
     print("== scene 1: authority on paper ==")
     read_only = TaskContract(
-        contract_id=f"settle-{MONTH}-readonly", version=1,
+        contract_id=f"settle-{MONTH}-readonly",
+        version=1,
         objective="observe the June settlement",
         output_schema="PayrollPortfolioResult",
         accountable_owner="payroll-agent-v2",
         authority_scope=("read:roster",),
     )
     print(f"   contract grants: {read_only.authority_scope}")
-    payments, _ = execute_settlement(dept_batches(con), book=None,
-                                     retry_storm=("none", 0))
+    payments, _ = execute_settlement(dept_batches(con), book=None, retry_storm=("none", 0))
     print(f"   worker pays anyway: {paid_total(payments):,.0f}")
     print("   -> authority_scope 写进了契约、进了摘要、进了测试断言。可是在")
     print("      动作发生的那一行，已提交的代码没有任何一处读它。授权只在")
@@ -278,29 +324,73 @@ def main() -> None:
     policy = cash_policy()
     gate = ApprovalGate()
     record = AuthorityRecord("payroll-agent-v2", "observe", "2026-07-01")
-    print(f"   {record.agent_id}: level={record.level} "
-          f"since={record.since_day}")
+    print(f"   {record.agent_id}: level={record.level} since={record.since_day}")
     _, refused = settle_as(con, record)
     print(f"   try to pay -> {refused[0].code} :: {refused[0].evidence}")
-    skip = promote(con, record, "limited", (), ApprovalTicket(
-        "APR-skip", "cfo", "cfo", "promote", "authority-ledger",
-        "x", policy.digest, "2026-07-02", "2026-07-02"),
-        gate, policy, "2026-07-02")
+    skip = promote(
+        con,
+        record,
+        "limited",
+        (),
+        ApprovalTicket(
+            "APR-skip",
+            "cfo",
+            "cfo",
+            "promote",
+            "authority-ledger",
+            "x",
+            policy.digest,
+            "2026-07-02",
+            "2026-07-02",
+        ),
+        gate,
+        policy,
+        "2026-07-02",
+    )
     print(f"   observe -> limited in one jump -> {skip[1][0].code}")
-    thin_runs = tuple(RunReceipt(f"run-{i}", record.agent_id, "observe",
-                                 "2026-07-02", True) for i in range(2))
-    thin = promote(con, record, "recommend", thin_runs, ticket_for(
-        record.agent_id, "recommend", thin_runs,
-        role="payroll-operator", approver="ops-desk", policy=policy,
-        day="2026-07-02"), gate, policy, "2026-07-02")
-    print(f"   two clean runs only -> {thin[1][0].code} :: "
-          f"{thin[1][0].evidence}")
-    runs = tuple(RunReceipt(f"run-{i}", record.agent_id, "observe",
-                            "2026-07-02", True) for i in range(3))
-    record, _ = promote(con, record, "recommend", runs, ticket_for(
-        record.agent_id, "recommend", runs,
-        role="payroll-operator", approver="ops-desk", policy=policy,
-        day="2026-07-03"), gate, policy, "2026-07-03")
+    thin_runs = tuple(
+        RunReceipt(f"run-{i}", record.agent_id, "observe", "2026-07-02", True) for i in range(2)
+    )
+    thin = promote(
+        con,
+        record,
+        "recommend",
+        thin_runs,
+        ticket_for(
+            record.agent_id,
+            "recommend",
+            thin_runs,
+            role="payroll-operator",
+            approver="ops-desk",
+            policy=policy,
+            day="2026-07-02",
+        ),
+        gate,
+        policy,
+        "2026-07-02",
+    )
+    print(f"   two clean runs only -> {thin[1][0].code} :: {thin[1][0].evidence}")
+    runs = tuple(
+        RunReceipt(f"run-{i}", record.agent_id, "observe", "2026-07-02", True) for i in range(3)
+    )
+    record, _ = promote(
+        con,
+        record,
+        "recommend",
+        runs,
+        ticket_for(
+            record.agent_id,
+            "recommend",
+            runs,
+            role="payroll-operator",
+            approver="ops-desk",
+            policy=policy,
+            day="2026-07-03",
+        ),
+        gate,
+        policy,
+        "2026-07-03",
+    )
     print(f"   three fresh runs + operator ticket -> level={record.level}")
     print("   -> 晋级恰好一格，证据要新、要干净、要在本级挣的，票据的签字人")
     print("      由新等级能碰到的钱决定。")
@@ -308,32 +398,74 @@ def main() -> None:
     print("\n== scene 3: the asymmetry ==")
     record = AuthorityRecord("payroll-agent-v2", "limited", "2026-07-05")
     paid, refusals = settle_as(con, record)
-    print(f"   limited: paid {paid:,.0f}, "
-          f"{len(refusals)} draws outside the envelope refused")
-    limited_runs = tuple(RunReceipt(f"lrun-{i}", record.agent_id,
-                                    "limited", "2026-07-06", True)
-                         for i in range(3))
-    wrong = promote(con, record, "autonomous", limited_runs, ticket_for(
-        record.agent_id, "autonomous", limited_runs,
-        role="payroll-supervisor", approver="shift-lead", policy=policy,
-        day="2026-07-07"), gate, policy, "2026-07-07")
-    print(f"   supervisor signs the autonomous ticket -> "
-          f"{wrong[1][0].code} :: {wrong[1][0].evidence}")
-    record, _ = promote(con, record, "autonomous", limited_runs,
-                        ticket_for(record.agent_id, "autonomous",
-                                   limited_runs, role="cfo",
-                                   approver="chief-financial-officer",
-                                   policy=policy, day="2026-07-07"),
-                        gate, policy, "2026-07-07")
+    print(f"   limited: paid {paid:,.0f}, {len(refusals)} draws outside the envelope refused")
+    limited_runs = tuple(
+        RunReceipt(f"lrun-{i}", record.agent_id, "limited", "2026-07-06", True) for i in range(3)
+    )
+    wrong = promote(
+        con,
+        record,
+        "autonomous",
+        limited_runs,
+        ticket_for(
+            record.agent_id,
+            "autonomous",
+            limited_runs,
+            role="payroll-supervisor",
+            approver="shift-lead",
+            policy=policy,
+            day="2026-07-07",
+        ),
+        gate,
+        policy,
+        "2026-07-07",
+    )
+    print(
+        f"   supervisor signs the autonomous ticket -> {wrong[1][0].code} :: {wrong[1][0].evidence}"
+    )
+    record, _ = promote(
+        con,
+        record,
+        "autonomous",
+        limited_runs,
+        ticket_for(
+            record.agent_id,
+            "autonomous",
+            limited_runs,
+            role="cfo",
+            approver="chief-financial-officer",
+            policy=policy,
+            day="2026-07-07",
+        ),
+        gate,
+        policy,
+        "2026-07-07",
+    )
     paid, _ = settle_as(con, record)
     print(f"   autonomous: paid {paid:,.0f}")
     record = demote(record, "INC-2026-07-08-dupe-pay", "2026-07-08")
-    print(f"   incident INC-2026-07-08 -> level={record.level} "
-          f"since={record.since_day} (no ticket, one move)")
-    retry = promote(con, record, "recommend", limited_runs, ticket_for(
-        record.agent_id, "recommend", limited_runs,
-        role="payroll-operator", approver="ops-desk", policy=policy,
-        day="2026-07-09"), gate, policy, "2026-07-09")
+    print(
+        f"   incident INC-2026-07-08 -> level={record.level} "
+        f"since={record.since_day} (no ticket, one move)"
+    )
+    retry = promote(
+        con,
+        record,
+        "recommend",
+        limited_runs,
+        ticket_for(
+            record.agent_id,
+            "recommend",
+            limited_runs,
+            role="payroll-operator",
+            approver="ops-desk",
+            policy=policy,
+            day="2026-07-09",
+        ),
+        gate,
+        policy,
+        "2026-07-09",
+    )
     codes = ",".join(f.code for f in retry[1])
     print(f"   re-promotion on pre-incident receipts -> {codes}")
     print("   -> 升级一格一格走链，降级一步到底。事故之前攒的证据，事故")
