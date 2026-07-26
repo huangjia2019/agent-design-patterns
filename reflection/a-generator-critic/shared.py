@@ -1,0 +1,236 @@
+"""Shared helpers for the Generator-Critic reference implementations.
+
+Both langgraph/ and langchain/ notebooks import from here so the demo artifact,
+critique parser, policy, revision rule, and trace rendering stay aligned.
+"""
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from typing import Any
+
+from pattern import AcceptancePolicy, Artifact, ChainResult, Critique, Issue, Severity
+
+
+DEFAULT_PROMPT = "Draft a customer-facing checkout incident update."
+GENERATOR_SYSTEM_PROMPT = "Draft a concise customer-facing incident update."
+
+INITIAL_DRAFT = (
+    "We identified elevated checkout errors. Impact is limited to card payments. "
+    "Next update in 30 minutes."
+)
+
+REVISION_EVIDENCE = "Evidence: status dashboard incident INC-42."
+
+CRITIC_SYSTEM_PROMPT = (
+    "Critique the incident update. Return only valid JSON, no markdown. "
+    'Use this schema: {"score": number from 0 to 1, "score_evidence": string, '
+    '"summary": string, '
+    '"issues": [{"severity": "blocker" or "warning", "message": string, '
+    '"location": string, "source": string, "evidence": string}]}. '
+    '"score_evidence" names the rubric or check result behind a low score. '
+    '"source" names the check or external signal. "evidence" records what '
+    'that check saw. Use severity "blocker" only for evidence-backed facts '
+    'that must be fixed before publishing; use "warning" for polish issues.'
+)
+
+GOOD_CRITIQUE_JSON = json.dumps(
+    {
+        "score": 0.9,
+        "summary": "Ready to ship: impact and next update are clear.",
+        "issues": [],
+    }
+)
+
+NEEDS_REVISION_CRITIQUE_JSON = json.dumps(
+    {
+        "score": 0.74,
+        "score_evidence": "incident policy requires a cited status incident",
+        "summary": "The draft needs one evidence link before it can ship.",
+        "issues": [
+            {
+                "severity": "blocker",
+                "message": "impact claim lacks a cited source",
+                "location": "sentence 2",
+                "source": "incident_policy",
+                "evidence": "customer-visible impact claims require a status incident ID",
+            }
+        ],
+    }
+)
+
+LOW_SCORE_CRITIQUE_JSON = json.dumps(
+    {
+        "score": 0.62,
+        "score_evidence": "incident completeness rubric requires an incident ID",
+        "summary": "Readable, but missing the incident reference required to publish.",
+        "issues": [
+            {
+                "severity": "warning",
+                "message": "incident ID is missing",
+                "location": "whole update",
+                "source": "incident_completeness_rubric",
+                "evidence": "customer-visible updates must include an incident ID",
+            }
+        ],
+    }
+)
+
+BAD_CRITIQUE_JSON = "{not valid json"
+
+OPINION_ONLY_CRITIQUE_JSON = json.dumps(
+    {
+        "score": 0.92,
+        "summary": "One stylistic opinion was reported without supporting evidence.",
+        "issues": [
+            {
+                "severity": "blocker",
+                "message": "the update feels too terse",
+                "location": "body",
+                "source": "style_preference",
+                "evidence": "",
+            }
+        ],
+    }
+)
+
+
+def default_policy() -> AcceptancePolicy:
+    return AcceptancePolicy(min_score=0.8)
+
+
+def parse_critique_json(raw: str) -> Critique:
+    """Parse the notebook critique JSON format into the core Critique type.
+
+    Fail closed: malformed JSON, unknown severities, missing required fields, or
+    invalid scores become a blocker critique rather than an accidental pass.
+    Missing, null, or blank support fields mark an issue as an unsupported
+    opinion, which ``Critique`` retains in ``dropped_issues``.
+    """
+    try:
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise TypeError("critique payload must be an object")
+        for key in ("score", "summary", "issues"):
+            if key not in payload:
+                raise KeyError(key)
+        if not isinstance(payload["issues"], list):
+            raise TypeError("issues must be a list")
+        score = payload["score"]
+        if isinstance(score, bool) or not isinstance(score, (int, float)):
+            raise TypeError("score must be a JSON number")
+
+        issues = [
+            Issue(
+                severity=Severity(item["severity"]),
+                message=str(item["message"]),
+                location=str(item["location"]),
+                evidence=str(item.get("evidence") or ""),
+                check=str(item.get("source") or ""),
+            )
+            for item in payload["issues"]
+        ]
+        return Critique(
+            score=float(score),
+            issues=issues,
+            summary=str(payload["summary"]),
+            score_evidence=str(payload.get("score_evidence") or ""),
+        )
+    except Exception as exc:  # noqa: BLE001 - parser failure must not become a pass
+        diagnostic_evidence = raw.strip() or "<empty critic output>"
+        return Critique(
+            score=0.0,
+            issues=[
+                Issue(
+                    severity=Severity.BLOCKER,
+                    message=(
+                        f"critic output could not be parsed: "
+                        f"{type(exc).__name__}: {exc}"
+                    ),
+                    location="critic",
+                    evidence=f"raw critic output: {diagnostic_evidence}",
+                    check="parser",
+                )
+            ],
+            summary="critic output parse failed",
+            score_evidence="critic output failed schema validation",
+        )
+
+
+def critique_to_dict(critique: Critique) -> dict[str, Any]:
+    return {
+        "score": critique.score,
+        "score_evidence": critique.score_evidence,
+        "summary": critique.summary,
+        "issues": [
+            {
+                "severity": issue.severity.value,
+                "message": issue.message,
+                "location": issue.location,
+                "source": issue.source,
+                "evidence": issue.evidence,
+            }
+            for issue in critique.issues
+        ],
+        "dropped_issues": [
+            {
+                "severity": issue.severity.value,
+                "message": issue.message,
+                "location": issue.location,
+                "source": issue.source,
+                "evidence": issue.evidence,
+            }
+            for issue in critique.dropped_issues
+        ],
+    }
+
+
+def revise_with_evidence(artifact: Artifact, critique: Critique) -> Artifact:
+    issue_text = "; ".join(issue.message for issue in critique.issues) or "critic requested revision"
+    return artifact.revise(
+        f"{artifact.content} {REVISION_EVIDENCE}",
+        note=f"addressed: {issue_text}",
+    )
+
+
+def scripted_generator(_prompt: str) -> Artifact:
+    """Framework-agnostic fake generator for notebook mock runs."""
+    return Artifact(content=INITIAL_DRAFT, metadata={"source": "scripted"})
+
+
+def scripted_critic(raw_json: str) -> Callable[[Artifact], Critique]:
+    """Return a fake critic that replays one JSON critique through the parser."""
+    def critic(_artifact: Artifact) -> Critique:
+        return parse_critique_json(raw_json)
+
+    return critic
+
+
+def print_trace(result: ChainResult) -> None:
+    issues = [
+        f"{issue.severity.value}:{issue.source}:{issue.location}:{issue.message}"
+        for issue in result.critique.issues
+    ]
+    dropped = [
+        f"{issue.severity.value}:{issue.source or 'unknown'}:{issue.location}:{issue.message}"
+        for issue in result.critique.dropped_issues
+    ]
+    reviewed_artifact = "\n".join(
+        line.rstrip()
+        for line in result.reviewed_artifact.content.splitlines()
+        if line.strip()
+    )
+    print("decision:", result.decision.value)
+    print("trace:", " -> ".join(result.trace))
+    print("score:", result.critique.score)
+    print("score evidence:", result.critique.score_evidence or "none")
+    print("issues:", issues or "none")
+    print("dropped:", dropped or "none")
+    print("reviewed artifact:", reviewed_artifact)
+    if result.revision_draft is not None:
+        revision_draft = "\n".join(
+            line.rstrip()
+            for line in result.revision_draft.content.splitlines()
+            if line.strip()
+        )
+        print("revision draft (unreviewed):", revision_draft)

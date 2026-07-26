@@ -73,7 +73,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 | **记忆** | [RAG ✅](./memory/b-rag/) | — | [分层保留 ✅](./memory/a-hierarchical-retention/) | [失败日记 ✅](./memory/d-failure-journals/) | [进度追踪 ✅](./memory/c-progress-tracking/) | — |
 | **推理** | [思维链 ✅](./reasoning/a-chain-of-thought/) | [并行探索 ✅](./reasoning/c-parallel-exploration/) | [复杂度路由 ✅](./reasoning/b-complexity-routing/) | [迭代假设 ✅](./reasoning/d-iterative-hypothesis/) | — | — |
 | **行动** | [提示链 ✅](./action/c-prompt-chaining/) | — | [工具调度 ✅](./action/a-tool-dispatch/) | — | [规划执行 ✅](./action/b-plan-and-execute/) | [护栏三明治 ✅](./action/d-guardrail-sandwich/) |
-| **反思** | [生成-批评 🟡](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
+| **反思** | [生成-批评 ✅](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
 | **协作** | [交接链 🟡](./collaboration/d-handoff-chain/) | [扇出聚合 🟡](./collaboration/b-fan-out-gather/) | — | [对抗评审 🟡](./collaboration/c-adversarial-review/) | — | [层级委派 🟡](./collaboration/a-hierarchical-delegation/) |
 | **治理** | — | [渐进承诺 🟡](./governance/c-progressive-commitment/) | [审批门 🟡](./governance/a-approval-gate/) | — | [可观测性 🟡](./governance/d-observability-harness/) | [爆炸半径 🟡](./governance/b-blast-radius/) |
 

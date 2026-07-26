@@ -9,7 +9,7 @@ Each pattern gets up to two implementation folders:
 | Folder | Framework | What it shows |
 |--------|-----------|---------------|
 | `langgraph/` | LangGraph `StateGraph` | The pattern as a visible graph with explicit nodes, edges, and conditional routing |
-| `langchain/` | LangChain v1 middleware | The pattern as middleware plugged into `create_agent` — less code, less visibility |
+| `langchain/` | LangChain | The pattern as LCEL pipes or middleware, whichever best fits the pattern — less code, less visibility |
 
 Both share the same hook factories ([`shared.py`](action/d-guardrail-sandwich/shared.py)) and model configuration ([`model_config.py`](model_config.py)).
 
@@ -19,12 +19,13 @@ Both share the same hook factories ([`shared.py`](action/d-guardrail-sandwich/sh
 |---------|------|:---------:|:---------:|--------|
 | Guardrail Sandwich | `action/d-guardrail-sandwich/` | notebook + html + md | notebook + html + md | Done |
 | Prompt Chaining | `action/c-prompt-chaining/` | notebook + html + md | notebook + html + md | Done |
+| Generator-Critic | `reflection/a-generator-critic/` | notebook + html + md | notebook + html + md | Done |
 
 ### Roadmap
 
 | Wave | Patterns | Status |
 |------|----------|--------|
-| 1 | ~~Prompt Chaining~~ ✓ · Context Triage, Semantic Compaction, Chain of Thought, Generator-Critic | In progress |
+| 1 | ~~Prompt Chaining~~ ✓ · Context Triage, Semantic Compaction, Chain of Thought, ~~Generator-Critic~~ ✓ | In progress |
 | 2 | Progressive Discovery, Complexity Routing, Iterative Hypothesis, Self-Heal Loop | Planned |
 | 3 | Multimodal Fusion, Parallel Exploration, Fan-out & Gather | Planned |
 | 4 | Hierarchical Retention, Progress Tracking, Failure Journals, Experience Replay | Planned |
@@ -75,7 +76,9 @@ Structure (cell order):
 
 ### 3. Write the LangChain notebook (`langchain/tutorial.ipynb`)
 
-Same conceptual flow but uses LangChain middleware / LCEL instead of explicit graph nodes. Highlights the **less code, less visibility** trade-off.
+Same conceptual flow but uses the most natural LangChain surface for the pattern:
+LCEL pipes for chain-shaped flows, middleware for agent-runtime hooks. Highlights
+the **less code, less visibility** trade-off.
 
 ### 4. Export artifacts
 
@@ -164,19 +167,23 @@ uv run jupyter lab
 | **Read on GitHub** | Nothing | Rendered notebook with saved outputs |
 | **Read pre-rendered HTML** | Nothing | Single-page walkthrough as HTML |
 | **Read in JupyterLab** | `uv sync --extra langgraph --extra dev` then `uv run jupyter lab` | Same, but you can collapse/expand cells |
-| **Run cells yourself** | Above + `.env` with API key | Your own LLM outputs, can tweak parameters |
+| **Run cells yourself** | Above; `.env` only for live-backend cells | Mock outputs by default, live LLM outputs when a model is configured |
 
 ## Running cells
 
 - **Deterministic cells** (mock data) run without any API key
-- **"Real LLM" cells** default to `ernie:ernie-5.1` via AI Studio. Set `MODEL_PROVIDER` + `MODEL_NAME` in `.env` to switch. Any OpenAI-compatible endpoint works via `OPENAI_BASE_URL`.
+- **"Real LLM" cells** default to `ernie:ernie-5.1` via AI Studio. Set `MODEL_PROVIDER` + `MODEL_NAME` in `.env` to switch. Any OpenAI-compatible endpoint works via `OPENAI_BASE_URL`. Use `model = get_model()` directly; if it returns `None`, print a concise skip message.
 - To re-run the full notebook: **Kernel → Restart & Run All**
 
 ## Running tests
 
 ```bash
-# Re-execute notebooks (needs .env for real-backend cells)
-uv run pytest --nbmake --nbmake-timeout=120 'action/**/langgraph/tutorial.ipynb' 'action/**/langchain/tutorial.ipynb'
+# Re-execute notebooks. For deterministic CI, run without provider API keys.
+env JUPYTER_PATH="$PWD/.venv/share/jupyter" \
+  OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
+  uv run pytest --nbmake --nbmake-kernel=python3 --nbmake-timeout=120 \
+  action/*/langgraph/tutorial.ipynb action/*/langchain/tutorial.ipynb \
+  reflection/*/langgraph/tutorial.ipynb reflection/*/langchain/tutorial.ipynb
 
 # Run pure-Python test suites
 uv run pytest --import-mode=importlib -v
@@ -209,6 +216,17 @@ action/c-prompt-chaining/
     tutorial.md       # Markdown export
   langchain/
     tutorial.ipynb    # LangChain LCEL: prompt | model | parser | gate, with .with_retry()
+    tutorial.html     # Pre-rendered HTML
+    tutorial.md       # Markdown export
+
+reflection/a-generator-critic/
+  shared.py           # Shared critique parser, policy, mock data, reviser, trace printer
+  langgraph/
+    tutorial.ipynb    # LangGraph StateGraph: generate -> critique -> gate -> optional revise
+    tutorial.html     # Pre-rendered HTML
+    tutorial.md       # Markdown export
+  langchain/
+    tutorial.ipynb    # LangChain LCEL: generator pipe + critic pipe + deterministic policy gate
     tutorial.html     # Pre-rendered HTML
     tutorial.md       # Markdown export
 ```
