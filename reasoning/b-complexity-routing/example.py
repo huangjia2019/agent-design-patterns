@@ -25,7 +25,6 @@ sys.modules.pop("pattern", None)
 
 from pattern import (   # noqa: E402
     ComplexityRouter,
-    ComplexityTier,
     FallbackChain,
     FallbackTriggeredError,
 )

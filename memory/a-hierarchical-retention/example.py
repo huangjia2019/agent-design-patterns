@@ -63,7 +63,7 @@ def main() -> None:
     # SESSION overrides USER for `preference`.
     mem.write(Layer.SESSION, "preference", "for this lesson only: contrast OOP vs functional decorator")
     val, where = mem.read("preference")
-    print(f"=== Override semantics ===")
+    print("=== Override semantics ===")
     print(f"  preference  →  '{val}'  (from {where.value if where else 'nowhere'})")
     print(f"  (USER had: '{mem.layers[Layer.USER].content['preference']}')")
     print()
@@ -81,7 +81,7 @@ def main() -> None:
         },
     )
     mem_short.write(Layer.TURN, "scratch", "just_defined_fn")
-    print(f"=== TURN expiry (TTL=1s) ===")
+    print("=== TURN expiry (TTL=1s) ===")
     print(f"  before sleep: read('scratch') = {mem_short.read('scratch')}")
     time.sleep(1.1)
     print(f"  after  sleep: read('scratch') = {mem_short.read('scratch')}")

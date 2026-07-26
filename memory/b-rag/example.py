@@ -176,7 +176,7 @@ def main() -> None:
 
     query = "what should I read for batch correction in million-cell single-cell datasets, especially preserving rare populations"
 
-    print(f"=== Naive RAG (one-shot, embedding only) ===")
+    print("=== Naive RAG (one-shot, embedding only) ===")
     naive = stub_embedding(query, k=10)
     for c in naive:
         marker = " ← TARGET (missed)" if c.chunk_id == "p-2023-method-x" else ""
@@ -188,7 +188,7 @@ def main() -> None:
           f"{target_naive_rank if target_naive_rank >= 0 else 'NOT FOUND'}")
     print()
 
-    print(f"=== Agentic RAG (decompose + iterative + hypothesis + triangulate) ===")
+    print("=== Agentic RAG (decompose + iterative + hypothesis + triangulate) ===")
     result = rag.research(query=query)
     print(f"hypothesis        : {result['hypothesis']}")
     print(f"answer            : {result['answer']}")

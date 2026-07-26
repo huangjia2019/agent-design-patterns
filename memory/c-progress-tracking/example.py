@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 sys.modules.pop("pattern", None)
 
-from pattern import ProgressTracker, TodoStatus   # noqa: E402
+from pattern import ProgressTracker   # noqa: E402
 
 
 def main() -> None:

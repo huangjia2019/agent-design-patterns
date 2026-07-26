@@ -11,7 +11,6 @@ sys.modules.pop("pattern", None)
 
 from pattern import (   # noqa: E402
     Candidate,
-    DiscoveryEvent,
     Phase,
     ProgressiveDiscoverer,
 )

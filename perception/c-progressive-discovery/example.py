@@ -196,7 +196,7 @@ def main() -> None:
     task = "find why order confirmation emails sometimes show another customer's order"
     print(f"Codebase: {len(_FILES)} files")
     print(f"Task    : {task}")
-    print(f"Initial keywords: ['send_confirm', 'order_confirmed', 'mail']")
+    print("Initial keywords: ['send_confirm', 'order_confirmed', 'mail']")
     print()
 
     session: DiscoverySession = discoverer.discover(

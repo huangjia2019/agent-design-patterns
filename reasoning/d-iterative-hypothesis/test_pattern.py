@@ -100,8 +100,6 @@ def _scripted_loop(
     max_iterations: int = 5,
 ) -> IterativeHypothesisLoop:
     """Build a loop where each role behaves deterministically per script."""
-    iteration_index = {"i": 0}
-
     def planner(_problem, _existing, iteration):
         idx = iteration - 1
         return planner_outputs[idx] if idx < len(planner_outputs) else []

@@ -10,8 +10,6 @@ sys.path.insert(0, os.path.dirname(__file__))
 sys.modules.pop("pattern", None)
 
 from pattern import (   # noqa: E402
-    FusionEvent,
-    FusionResult,
     ModalityInput,
     ModalityType,
     MultiModalFuser,

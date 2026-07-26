@@ -56,7 +56,10 @@ def detect_bg_color(img: Image.Image):
     for cx, cy in corners:
         crop = img.crop((cx, cy, cx + 10, cy + 10))
         for px in crop.getdata():
-            r_sum += px[0]; g_sum += px[1]; b_sum += px[2]; cnt += 1
+            r_sum += px[0]
+            g_sum += px[1]
+            b_sum += px[2]
+            cnt += 1
     r, g, b = r_sum // cnt, g_sum // cnt, b_sum // cnt
     luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
     return (r, g, b), luminance < 128
