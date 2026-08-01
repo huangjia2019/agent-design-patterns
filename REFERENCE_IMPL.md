@@ -20,13 +20,14 @@ Both share the same hook factories ([`shared.py`](action/d-guardrail-sandwich/sh
 | Guardrail Sandwich | `action/d-guardrail-sandwich/` | notebook + html + md | notebook + html + md | Done |
 | Prompt Chaining | `action/c-prompt-chaining/` | notebook + html + md | notebook + html + md | Done |
 | Generator-Critic | `reflection/a-generator-critic/` | notebook + html + md | notebook + html + md | Done |
+| Self-Heal Loop | `reflection/d-self-heal-loop/` | notebook + html + md | notebook + html + md | Done |
 
 ### Roadmap
 
 | Wave | Patterns | Status |
 |------|----------|--------|
 | 1 | ~~Prompt Chaining~~ ✓ · Context Triage, Semantic Compaction, Chain of Thought, ~~Generator-Critic~~ ✓ | In progress |
-| 2 | Progressive Discovery, Complexity Routing, Iterative Hypothesis, Self-Heal Loop | Planned |
+| 2 | Progressive Discovery, Complexity Routing, Iterative Hypothesis, ~~Self-Heal Loop~~ ✓ | In progress |
 | 3 | Multimodal Fusion, Parallel Exploration, Fan-out & Gather | Planned |
 | 4 | Hierarchical Retention, Progress Tracking, Failure Journals, Experience Replay | Planned |
 | 5 | Tool Dispatch, RAG | Planned |
@@ -180,6 +181,7 @@ uv run jupyter lab
 ```bash
 # Re-execute notebooks. For deterministic CI, run without provider API keys.
 env JUPYTER_PATH="$PWD/.venv/share/jupyter" \
+  MODEL_PROVIDER=ernie MODEL_NAME=ernie-5.1 \
   OPENAI_API_KEY= ANTHROPIC_API_KEY= ERNIE_API_KEY= \
   uv run pytest --nbmake --nbmake-kernel=python3 --nbmake-timeout=120 \
   action/*/langgraph/tutorial.ipynb action/*/langchain/tutorial.ipynb \
@@ -227,6 +229,17 @@ reflection/a-generator-critic/
     tutorial.md       # Markdown export
   langchain/
     tutorial.ipynb    # LangChain LCEL: generator pipe + critic pipe + deterministic policy gate
+    tutorial.html     # Pre-rendered HTML
+    tutorial.md       # Markdown export
+
+reflection/d-self-heal-loop/
+  shared.py           # Shared deterministic scenarios, receipt/digest records, and trace renderer
+  langgraph/
+    tutorial.ipynb    # LangGraph transaction routing: diagnose -> fix -> review -> apply -> verify -> compensate
+    tutorial.html     # Pre-rendered HTML
+    tutorial.md       # Markdown export
+  langchain/
+    tutorial.ipynb    # LangChain runnable invoking the sealed transaction core
     tutorial.html     # Pre-rendered HTML
     tutorial.md       # Markdown export
 ```

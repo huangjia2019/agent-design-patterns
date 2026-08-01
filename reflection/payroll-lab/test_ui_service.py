@@ -15,6 +15,7 @@ from ui_service import (  # noqa: E402
     LAB_LOCK,
     LECTURES,
     LabBusy,
+    analyze_output,
     database_state,
     parse_output,
     prepare_month_end_state,
@@ -134,11 +135,28 @@ def test_lecture_30_runs_fixed_and_rollback_paths() -> None:
     assert meltdown["analysis"]["naive_rounds"] == 9
     assert meltdown["analysis"]["controlled_rounds"] == 2
     assert meltdown["analysis"]["failure_classes"] == 7
-    assert "c2" in meltdown["analysis"]["rolled_back"]
-    assert any(
-        event["kind"] == "evidence" and "baseline_restored: true" in event["text"]
-        for event in meltdown["events"]
-    )
+    standard_proofs = standard["analysis"]["restoration_proofs"]
+    meltdown_proof = meltdown["analysis"]["restoration_proofs"][-1]
+    assert standard_proofs[0]["status"] == "FIXED"
+    assert standard_proofs[0]["baseline_restored"] is None
+    assert standard_proofs[1]["status"] == "BLOCKED_BY_CRITIC"
+    assert standard_proofs[1]["baseline_restored"] is True
+    assert standard_proofs[1]["baseline_digest"] == standard_proofs[1]["final_digest"]
+    assert meltdown_proof["status"] == "ROLLED_BACK_REGRESSION"
+    assert meltdown_proof["baseline_restored"] is True
+    assert meltdown_proof["baseline_digest"] == meltdown_proof["final_digest"]
+    assert [receipt["commit_id"] for receipt in meltdown_proof["rollback_receipts"]] == ["c2", "c1"]
+    assert all(receipt["succeeded"] for receipt in meltdown_proof["rollback_receipts"])
+
+
+def test_lecture_30_parser_keeps_failed_restoration_reason() -> None:
+    output = 'SELF_HEAL_RESULT {"baseline_digest":"a","baseline_restored":false,"final_digest":"b","rollback_receipts":[],"status":"ROLLBACK_FAILED_HUMAN_HANDOFF","stop_reason":"blast_radius_exceeded"}'
+    analysis = analyze_output("30", output)
+    proof = analysis["restoration_proofs"][0]
+    assert proof["status"] == "ROLLBACK_FAILED_HUMAN_HANDOFF"
+    assert proof["baseline_restored"] is False
+    assert proof["baseline_digest"] != proof["final_digest"]
+    assert proof["stop_reason"] == "blast_radius_exceeded"
 
 
 def test_shared_bench_rejects_a_concurrent_run() -> None:
