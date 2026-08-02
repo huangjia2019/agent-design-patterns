@@ -29,7 +29,7 @@ Generated 2026-07-21 at HEAD `3e967c6` (working tree clean).
 | A2 规划执行 Plan-and-Execute | 行动 × 编排 | `Executor` | 07-16 |
 | A3 提示链 Prompt Chaining | 行动 × 链式 | `PromptChain` | 07-16 |
 | A4 护栏三明治 Guardrail Sandwich | 行动 × 层级 | `GuardrailSandwich` | 07-16 |
-| F1 生成批评 Generator-Critic | 反思 × 链式 | `GeneratorCriticChain` | 07-21 |
+| F1 生成评审 Generator-Critic | 反思 × 链式 | `GeneratorCriticChain` | 07-21 |
 | F2 技能包 Skill Package | 反思 × 路由 | `SkillLibrary` | 07-17 |
 | F3 经验回放 Experience Replay | 反思 × 层级 | `ExperienceStore` | 07-17 |
 | F4 自愈循环 Self-Heal Loop | 反思 × 循环 | `SelfHealLoop` | 07-17 |
@@ -232,7 +232,7 @@ Generated 2026-07-21 at HEAD `3e967c6` (working tree clean).
 
 ## 反思 Reflection
 
-### F1 生成批评 Generator-Critic — `reflection/a-generator-critic/`
+### F1 生成评审 Generator-Critic — `reflection/a-generator-critic/`
 
 - **Coordinate**: 反思 × 链式
 - **State**: `pattern.py` 223 lines · last commit 3e967c6 2026-07-21 · clean · tests: yes

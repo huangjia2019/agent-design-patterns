@@ -82,5 +82,5 @@ pytest collaboration/payroll-lab/test_adversarial_review_lab.py -q
 
 ## 双轴坐标
 
-对抗评审位于**协作 × 循环**。反思模块的生成批评模式用于评价并改进一个 Agent 的产出。
+对抗评审位于**协作 × 循环**。反思模块的生成评审模式用于评价并改进一个 Agent 的产出。
 本模式把独立评审身份和放行边界带进多个责任主体共同处理的工件。
