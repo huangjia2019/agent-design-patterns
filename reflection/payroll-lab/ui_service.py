@@ -42,7 +42,7 @@ LECTURES: dict[str, dict[str, Any]] = {
     },
     "27": {
         "number": "27",
-        "title": "生成批评",
+        "title": "生成评审",
         "pattern": "Generator-Critic",
         "coordinate": "Reflection x Chain",
         "question": "为什么修改稿必须重新送审，不能在同一遍里自动通过？",

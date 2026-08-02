@@ -1,4 +1,4 @@
-# 生成批评
+# 生成评审
 
 > 专栏第 **06-02** 讲 · 模式 · 反思行 × 链式列
 >
@@ -6,13 +6,13 @@
 
 ## 模式契约
 
-生成批评只审一份产出，只走一遍有界链：
+生成评审只审一份产出，只走一遍有界链：
 
 ```text
-生成 -> 批评 -> 策略裁决 -> 可选的修订草稿
+生成 -> 评审 -> 策略裁决 -> 可选的修订草稿
 ```
 
-批评者负责报告问题和证据，没有放行权。确定性的 `AcceptancePolicy`
+评审者负责报告问题和证据，没有放行权。确定性的 `AcceptancePolicy`
 根据有依据的问题和分数，对本遍真正审过的产出作出 `ACCEPTED` 或
 `NEEDS_REVISION` 裁决。
 
@@ -46,9 +46,9 @@ uv run pytest reflection/a-generator-critic/test_pattern.py -q
 ```
 
 薪酬 Lab 中，月报声称 800 张工资单已支付，而 SQLite 里的事实是 798 张
-`PAID`、2 张 `REVERSED`。标准批评者挂接账本与 schema 证据，第一遍只
+`PAID`、2 张 `REVERSED`。标准评审者挂接账本与 schema 证据，第一遍只
 生成待复审的修订稿，第二遍显式提交后才可能放行。`--rubber-stamp`
-移除这些外部事实，展示一位文风漂亮的批评者如何批准错误月报。
+移除这些外部事实，展示一位文风漂亮的评审者如何批准错误月报。
 
 ## 参考接口
 
@@ -71,7 +71,7 @@ uv run pytest reflection/a-generator-critic/test_pattern.py -q
 | [`test_pattern.py`](test_pattern.py) | 证据、分数、解析、版本边界和可选依赖不变量。 |
 | [`langgraph/tutorial.ipynb`](langgraph/tutorial.ipynb) | 用 StateGraph 节点和条件路由表达同一契约。 |
 | [`langchain/tutorial.ipynb`](langchain/tutorial.ipynb) | 用 LCEL 表达同一套解析器、策略、fixture 和术语。 |
-| [`../payroll-lab/generator_critic_lab.py`](../payroll-lab/generator_critic_lab.py) | 接账本证据的批评者与橡皮图章批评者对照。 |
+| [`../payroll-lab/generator_critic_lab.py`](../payroll-lab/generator_critic_lab.py) | 接账本证据的评审者与橡皮图章评审者对照。 |
 
 ## Notebook 验证
 
