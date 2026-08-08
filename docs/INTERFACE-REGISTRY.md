@@ -7,7 +7,7 @@
 >
 > **Citation discipline**: course lectures, whitepapers, and book chapters that quote an interface must pin the commit (`pattern.py@<hash>` in the document header). Interfaces do refactor; a pinned quote stays honest, an unpinned one rots.
 
-Generated 2026-07-28 at HEAD `3ae1f85` (working tree clean).
+Generated 2026-08-08 at HEAD `a6f11b1` (working tree clean).
 
 ## Summary
 
@@ -32,7 +32,7 @@ Generated 2026-07-28 at HEAD `3ae1f85` (working tree clean).
 | F1 生成评审 Generator-Critic | 反思 × 链式 | `GeneratorCriticChain` | 07-21 |
 | F2 技能包 Skill Package | 反思 × 路由 | `SkillLibrary` | 07-17 |
 | F3 经验回放 Experience Replay | 反思 × 层级 | `ExperienceStore` | 07-17 |
-| F4 自愈循环 Self-Heal Loop | 反思 × 循环 | `SelfHealLoop` | 07-28 |
+| F4 自愈循环 Self-Heal Loop | 反思 × 循环 | `SelfHealLoop` | 08-08 |
 | C1 层级委派 Hierarchical Delegation | 协作 × 层级 | `SettlementSupervisor` | 07-17 |
 | C2 扇出聚合 Fan-out / Gather | 协作 × 并行 | `FanOutGather` | 07-17 |
 | C3 对抗评审 Adversarial Review | 协作 × 循环 | `AdversarialReview` | 07-17 |
@@ -279,7 +279,7 @@ Generated 2026-07-28 at HEAD `3ae1f85` (working tree clean).
 ### F4 自愈循环 Self-Heal Loop — `reflection/d-self-heal-loop/`
 
 - **Coordinate**: 反思 × 循环
-- **State**: `pattern.py` 600 lines · last commit ae07ab1 2026-07-28 · clean · tests: yes
+- **State**: `pattern.py` 645 lines · last commit a6f11b1 2026-08-08 · clean · tests: yes
 - **Summary**: Self-Heal Loop reference implementation.
 - **Public API**: `HealStatus` *enum*; `HealStage` *enum*; `FailureSignal` *dataclass*(signature); `Patch` *dataclass*(digest, fingerprint, touches_tests); `PatchReview` *dataclass*; `ApplyReceipt` *dataclass*; `VerificationReceipt` *dataclass*; `RollbackReceipt` *dataclass*; `StageError` *dataclass*; `StabilityPolicy` *dataclass*; `HealRound` *dataclass*; `HealTrace` *dataclass*(applied_commits, rolled_back); `SelfHealLoop` *class*(heal)
 - **Module functions**: `propose_guard`
