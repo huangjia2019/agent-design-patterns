@@ -374,7 +374,7 @@ def fake_model_for(spec) -> FakeListChatModel:
 
 **Purpose:** Produce and validate the ten-field public record.
 
-**Invariant:** Rendering is observational only; it cannot change transaction state or terminal status.
+**Invariant:** Rendering is observational only; it cannot change transaction state or terminal status. Offline fixtures also check their locked expected record; live runs check the same ten-field public shape without pretending a model proposal is predetermined.
 
 **Failure route:** A malformed public record fails its assertion instead of being displayed as valid evidence.
 
@@ -386,18 +386,22 @@ The function returns the record without printing it. Default notebook output sta
 def render_record(item: dict[str, object]) -> dict[str, object]:
     # Read the completed trace only; this renderer cannot change the workspace.
     record = trace_record(item["scenario"], item["trace"])
-    # Reject malformed evidence before the caller stores or displays the record.
-    assert_expected_record(record)
+    if item.get("validate_expected_record", True):
+        # Offline fixtures have a locked result, so any drift fails visibly.
+        assert_expected_record(record)
+    else:
+        # A live proposal is intentionally unpredictable, but its public shape is not.
+        assert tuple(record) == RECORD_FIELDS
     return record
 ```
 
 ### Run one bounded transaction
 
-**Input:** One fresh scenario runtime and one model runnable.
+**Input:** One fresh scenario runtime, one model runnable, and optionally a role-pipe builder.
 
-**Purpose:** Adapt the two model roles, construct a fresh sealed `SelfHealLoop`, and execute exactly one repair transaction.
+**Purpose:** Adapt the two model roles, construct a fresh sealed `SelfHealLoop`, and execute exactly one repair transaction. The default builder keeps deterministic examples unchanged; the live section selects native structured output through the same input boundary.
 
-**Invariant:** `build_role_pipes(model)` runs once per transaction, model roles remain observational, and fake calls exactly match the interleaved response list.
+**Invariant:** Exactly one role-pipe builder runs per transaction, model roles remain observational, and offline fake calls exactly match the interleaved response list.
 
 **Failure route:** The sealed core records role, policy, mutation, verification, and compensation failures in its terminal trace.
 
@@ -411,7 +415,16 @@ The transaction remains one runnable because `SelfHealLoop` already owns the har
 def invoke_transaction(inputs: dict[str, object]) -> dict[str, object]:
     runtime = inputs["runtime"]
     model = inputs["model"]
-    diagnose_pipe, draft_pipe = build_role_pipes(model)
+    # Validate presentation controls before model roles or mutation can run.
+    validate_expected_record = inputs.get("validate_expected_record", True)
+    if type(validate_expected_record) is not bool:
+        raise TypeError("validate_expected_record must be a boolean")
+    # Offline runs use text/JSON pipes. A live caller may inject the native
+    # structured-output builder without receiving any mutation authority.
+    role_pipe_builder = inputs.get("role_pipe_builder", build_role_pipes)
+    if not callable(role_pipe_builder):
+        raise TypeError("role_pipe_builder must be callable")
+    diagnose_pipe, draft_pipe = role_pipe_builder(model)
     role_counts = {"diagnose": 0, "draft": 0}
 
     # These callbacks adapt the core's Python values to the two LCEL input shapes.
@@ -443,7 +456,12 @@ def invoke_transaction(inputs: dict[str, object]) -> dict[str, object]:
             "draft": len(runtime.scenario.patches),
         }
         assert sum(role_counts.values()) == len(model.responses)
-    return {"scenario": runtime.scenario.name, "trace": trace}
+
+    return {
+        "scenario": runtime.scenario.name,
+        "trace": trace,
+        "validate_expected_record": validate_expected_record,
+    }
 ```
 
 ### Name the transaction runnable
@@ -524,18 +542,26 @@ LANGCHAIN_GRAPH_ALT = (
 # Capture the generated graph first so the final image can carry useful alt text.
 with capture_output() as _graph_capture:
     show_graph(self_heal_chain, alt=LANGCHAIN_GRAPH_ALT)
-# show_graph emits display data; select its PNG payload for the HTML image.
+# A successful render emits PNG display data; an offline render emits ASCII stdout.
 _graph_png = next(
-    output.data["image/png"]
-    for output in _graph_capture.outputs
-    if "image/png" in output.data
+    (
+        output.data["image/png"]
+        for output in _graph_capture.outputs
+        if "image/png" in output.data
+    ),
+    None,
 )
-display(
-    HTML(
-        f'<img alt="{html.escape(LANGCHAIN_GRAPH_ALT)}" '
-        f'src="data:image/png;base64,{_graph_png}" />'
+if _graph_png is None:
+    # The offline fallback is ordinary stdout, which capture_output stored.
+    # Replay it so readers still see the graph instead of a StopIteration error.
+    print(_graph_capture.stdout, end="")
+else:
+    display(
+        HTML(
+            f'<img alt="{html.escape(LANGCHAIN_GRAPH_ALT)}" '
+            f'src="data:image/png;base64,{_graph_png}" />'
+        )
     )
-)
 
 ```
 
@@ -696,9 +722,9 @@ print(
 
 ## Optional real model
 
-Only diagnosis and patch drafting cross the model boundary. Native structured output constrains response shape, while strict parsing enforces canonical content and safe paths. Deterministic review remains authoritative, and this demonstration never applies the candidate.
+Only diagnosis and patch drafting cross the model boundary. Native structured output constrains response shape, while strict parsing enforces canonical content and safe paths. The same bounded transaction still owns deterministic review, apply, verification, compensation, and terminal status.
 
-`get_model()` returns `None` and prints one skip line when the configured provider has no API key. On a live run, only clipped diagnosis, patch, and review summaries are displayed; raw provider messages remain transient.
+`get_model()` returns `None` and prints one skip line when the configured provider has no API key. On a live run, the notebook keeps the full trace in `model_transaction` but displays only clipped diagnosis, patch, terminal result, and one deterministic review reason or evidence item. Raw provider messages remain transient.
 
 
 
@@ -707,21 +733,23 @@ Only diagnosis and patch drafting cross the model boundary. Native structured ou
 model = get_model()
 
 if model is not None:
-    # Only diagnosis and drafting cross the live boundary; no transaction is run.
-    diagnose_pipe, draft_pipe = build_structured_role_pipes(model)
-    # Use a fresh fixture and save its digest before invoking either model role.
-    candidate_runtime = new_runtime("convergence")
-    failure = candidate_runtime.scenario.initial_failure
-    baseline_digest = candidate_runtime.workspace.state_digest()
-    diagnosis = diagnose_pipe.invoke(failure_input(failure))
-    candidate_patch = draft_pipe.invoke({"diagnosis": diagnosis})
-    # Reject out-of-workspace paths, then review without applying the proposal.
-    # The unchanged digest proves the live model did not mutate the fixture.
-    if not set(candidate_patch.touches).issubset(candidate_runtime.workspace.files):
-        raise ValueError("model patch touches files outside the fresh workspace")
-    candidate_review = candidate_runtime.review(candidate_patch, failure)
-    assert candidate_review.patch_digest == candidate_patch.digest
-    assert candidate_runtime.workspace.state_digest() == baseline_digest
+    # Select native structured output at the role boundary, then execute the
+    # exact bounded transaction used by the deterministic LCEL examples.
+    model_runtime = new_runtime("convergence")
+    model_transaction = bounded_self_heal_transaction.invoke(
+        {
+            "runtime": model_runtime,
+            "model": model,
+            "role_pipe_builder": build_structured_role_pipes,
+            # Live proposals are not expected to match a pre-scripted fixture result.
+            "validate_expected_record": False,
+        }
+    )
+    # Run the same terminal branch as self_heal_chain while retaining the trace
+    # locally for a small, beginner-readable summary.
+    model_record = terminal_branch.invoke(model_transaction)
+    live_trace = model_transaction["trace"]
+    assert model_record["status"] == live_trace.status.value
 
     # Normalize and clip parsed summaries so model text cannot flood saved artifacts.
     def _clip_summary(value: object, limit: int = 160) -> str:
@@ -729,24 +757,44 @@ if model is not None:
         return text if len(text) <= limit else f"{text[: limit - 3]}..."
 
 
+    live_round = live_trace.rounds[-1] if live_trace.rounds else None
+    diagnosis = live_round.diagnosis if live_round is not None else "unavailable"
     print(f"diagnosis: {_clip_summary(diagnosis)}")
-    print(
-        "patch: "
-        + _clip_summary(
-            f"{candidate_patch.description}; files={list(candidate_patch.touches)}"
+    if live_round is not None:
+        candidate_patch = live_round.patch
+        print(
+            "patch: "
+            + _clip_summary(
+                f"{candidate_patch.description}; files={list(candidate_patch.touches)}"
+            )
         )
-    )
-    decision = "approved" if candidate_review.approved else "rejected"
-    print(f"review: {decision}; applied: no")
+    print(f"result: {live_trace.status.value} ({live_trace.stop_reason})")
 
+    # Prefer a human-readable deterministic reason. If the reason is empty on
+    # approval, show the first nonblank policy evidence item instead.
+    candidate_review = live_round.patch_review if live_round is not None else None
+    if candidate_review is None:
+        print("review: unavailable; transaction stopped before deterministic review")
+    else:
+        review_detail = candidate_review.reason.strip() or next(
+            (
+                item.strip()
+                for item in candidate_review.evidence
+                if item.strip() and "digest=" not in item
+            ),
+            "deterministic policy supplied no text detail",
+        )
+        decision = "approved" if candidate_review.approved else "rejected"
+        print(f"review: {decision}; {_clip_summary(review_detail)}")
 ```
 
     Model: ernie:glm-5.1
 
 
-    diagnosis: CONVERGENCE_1 indicates a numerical convergence failure in app.py. The scenario test expects an iterative algorithm (e.g., solver, optimizer, or simulation l...
-    patch: Fix convergence failure in app.py: correct the sign in the iterative update rule. The update step was using addition instead of subtraction (e.g., `x = x + d...
-    review: rejected; applied: no
+    diagnosis: The CONVERGENCE_1 scenario failure indicates an iterative algorithm in app.py failed to converge within its expected tolerance or iteration limit. This is a ...
+    patch: Fix CONVERGENCE_1 failure: correct the convergence check logic in the iterative solver. The primary bug is a flipped comparison operator in the convergence c...
+    result: blocked_by_critic (review_rejected)
+    review: rejected; patch content does not satisfy the current failure
 
 
 ## What to remember

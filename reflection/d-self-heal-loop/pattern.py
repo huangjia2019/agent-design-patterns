@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from dataclasses import dataclass, replace
 from enum import Enum
@@ -64,6 +65,8 @@ def _canonical_paths(paths: Iterable[str]) -> tuple[str, ...]:
 
 
 def _snapshot_strings(values: Iterable[str], field_name: str) -> tuple[str, ...]:
+    if isinstance(values, (str, bytes)):
+        raise TypeError(f"{field_name} must be an iterable of strings")
     result = tuple(values)
     if any(not isinstance(value, str) for value in result):
         raise TypeError(f"{field_name} must contain only strings")
@@ -230,8 +233,16 @@ class StabilityPolicy:
     max_radius_multiplier: float = 2.0
 
     def __post_init__(self) -> None:
+        if type(self.max_rounds) is not int:
+            raise TypeError("max_rounds must be an integer")
         if self.max_rounds < 1:
             raise ValueError("max_rounds must be at least 1")
+        if isinstance(self.max_radius_multiplier, bool) or not isinstance(
+            self.max_radius_multiplier, (int, float)
+        ):
+            raise TypeError("max_radius_multiplier must be an int or float")
+        if not math.isfinite(self.max_radius_multiplier):
+            raise ValueError("max_radius_multiplier must be finite")
         if self.max_radius_multiplier < 1.0:
             raise ValueError("max_radius_multiplier must be at least 1.0")
 
@@ -464,6 +475,23 @@ class SelfHealLoop:
         rounds: list[HealRound] = []
         applies: list[ApplyReceipt] = []
         unaddressable = False
+        if not _valid_failure_signal(failure):
+            errors.append(
+                self._stage_error(
+                    HealStage.DIAGNOSE,
+                    None,
+                    TypeError("failure must be a valid FailureSignal"),
+                )
+            )
+            return self._finish_non_success(
+                HealStatus.STAGE_ERROR_HUMAN_HANDOFF,
+                "stage_error:diagnose",
+                rounds,
+                applies,
+                errors,
+                baseline,
+                unaddressable,
+            )
         baseline_radius = max(len(failure.affected_files), 1)
         radius_files = set(failure.affected_files)
         attempts: set[tuple[str, str]] = set()
@@ -477,6 +505,23 @@ class SelfHealLoop:
                 if ok:
                     errors.append(self._stage_error(HealStage.DIAGNOSE, round_no, TypeError("diagnose must return str")))
                 return self._finish_non_success(HealStatus.STAGE_ERROR_HUMAN_HANDOFF, self._error_reason(errors, HealStage.DIAGNOSE), rounds, applies, errors, baseline, unaddressable)
+            if not diagnosis.strip():
+                errors.append(
+                    self._stage_error(
+                        HealStage.DIAGNOSE,
+                        round_no,
+                        ValueError("diagnose must return a nonblank string"),
+                    )
+                )
+                return self._finish_non_success(
+                    HealStatus.STAGE_ERROR_HUMAN_HANDOFF,
+                    "stage_error:diagnose",
+                    rounds,
+                    applies,
+                    errors,
+                    baseline,
+                    unaddressable,
+                )
             patch, mutated, ok = self._pure_call(HealStage.FIX, round_no, self.fix, (diagnosis,), errors)
             unaddressable |= mutated
             if not ok or not isinstance(patch, Patch):

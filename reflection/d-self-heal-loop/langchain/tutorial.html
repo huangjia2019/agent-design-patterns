@@ -8345,7 +8345,7 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="Normalize-one-terminal-trace">Normalize one terminal trace<a class="anchor-link" href="#Normalize-one-terminal-trace">¶</a></h3><p><strong>Input:</strong> A completed scenario name and <code>HealTrace</code>.</p>
 <p><strong>Purpose:</strong> Produce and validate the ten-field public record.</p>
-<p><strong>Invariant:</strong> Rendering is observational only; it cannot change transaction state or terminal status.</p>
+<p><strong>Invariant:</strong> Rendering is observational only; it cannot change transaction state or terminal status. Offline fixtures also check their locked expected record; live runs check the same ten-field public shape without pretending a model proposal is predetermined.</p>
 <p><strong>Failure route:</strong> A malformed public record fails its assertion instead of being displayed as valid evidence.</p>
 <p>The function returns the record without printing it. Default notebook output stays compact; <code>show_record(name)</code> later provides deliberate access to one full record.</p>
 </div>
@@ -8362,8 +8362,12 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">render_record</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
     <span class="c1"># Read the completed trace only; this renderer cannot change the workspace.</span>
     <span class="n">record</span> <span class="o">=</span> <span class="n">trace_record</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"scenario"</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">"trace"</span><span class="p">])</span>
-    <span class="c1"># Reject malformed evidence before the caller stores or displays the record.</span>
-    <span class="n">assert_expected_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"validate_expected_record"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="c1"># Offline fixtures have a locked result, so any drift fails visibly.</span>
+        <span class="n">assert_expected_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># A live proposal is intentionally unpredictable, but its public shape is not.</span>
+        <span class="k">assert</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">record</span><span class="p">)</span> <span class="o">==</span> <span class="n">RECORD_FIELDS</span>
     <span class="k">return</span> <span class="n">record</span>
 </pre></div>
 </div>
@@ -8377,9 +8381,9 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Run-one-bounded-transaction">Run one bounded transaction<a class="anchor-link" href="#Run-one-bounded-transaction">¶</a></h3><p><strong>Input:</strong> One fresh scenario runtime and one model runnable.</p>
-<p><strong>Purpose:</strong> Adapt the two model roles, construct a fresh sealed <code>SelfHealLoop</code>, and execute exactly one repair transaction.</p>
-<p><strong>Invariant:</strong> <code>build_role_pipes(model)</code> runs once per transaction, model roles remain observational, and fake calls exactly match the interleaved response list.</p>
+<h3 id="Run-one-bounded-transaction">Run one bounded transaction<a class="anchor-link" href="#Run-one-bounded-transaction">¶</a></h3><p><strong>Input:</strong> One fresh scenario runtime, one model runnable, and optionally a role-pipe builder.</p>
+<p><strong>Purpose:</strong> Adapt the two model roles, construct a fresh sealed <code>SelfHealLoop</code>, and execute exactly one repair transaction. The default builder keeps deterministic examples unchanged; the live section selects native structured output through the same input boundary.</p>
+<p><strong>Invariant:</strong> Exactly one role-pipe builder runs per transaction, model roles remain observational, and offline fake calls exactly match the interleaved response list.</p>
 <p><strong>Failure route:</strong> The sealed core records role, policy, mutation, verification, and compensation failures in its terminal trace.</p>
 <p>The transaction remains one runnable because <code>SelfHealLoop</code> already owns the hardened round logic, receipt checks, decision precedence, and compensation. Reimplementing those internals as a second framework-specific loop would create another safety authority.</p>
 </div>
@@ -8398,7 +8402,16 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 <span class="k">def</span><span class="w"> </span><span class="nf">invoke_transaction</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
     <span class="n">runtime</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s2">"runtime"</span><span class="p">]</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span>
-    <span class="n">diagnose_pipe</span><span class="p">,</span> <span class="n">draft_pipe</span> <span class="o">=</span> <span class="n">build_role_pipes</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="c1"># Validate presentation controls before model roles or mutation can run.</span>
+    <span class="n">validate_expected_record</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"validate_expected_record"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">validate_expected_record</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"validate_expected_record must be a boolean"</span><span class="p">)</span>
+    <span class="c1"># Offline runs use text/JSON pipes. A live caller may inject the native</span>
+    <span class="c1"># structured-output builder without receiving any mutation authority.</span>
+    <span class="n">role_pipe_builder</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"role_pipe_builder"</span><span class="p">,</span> <span class="n">build_role_pipes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">role_pipe_builder</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"role_pipe_builder must be callable"</span><span class="p">)</span>
+    <span class="n">diagnose_pipe</span><span class="p">,</span> <span class="n">draft_pipe</span> <span class="o">=</span> <span class="n">role_pipe_builder</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">role_counts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"diagnose"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"draft"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
 
     <span class="c1"># These callbacks adapt the core's Python values to the two LCEL input shapes.</span>
@@ -8430,7 +8443,12 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
             <span class="s2">"draft"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">patches</span><span class="p">),</span>
         <span class="p">}</span>
         <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">role_counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">responses</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"scenario"</span><span class="p">:</span> <span class="n">runtime</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"trace"</span><span class="p">:</span> <span class="n">trace</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenario"</span><span class="p">:</span> <span class="n">runtime</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"trace"</span><span class="p">:</span> <span class="n">trace</span><span class="p">,</span>
+        <span class="s2">"validate_expected_record"</span><span class="p">:</span> <span class="n">validate_expected_record</span><span class="p">,</span>
+    <span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -8573,18 +8591,26 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 <span class="c1"># Capture the generated graph first so the final image can carry useful alt text.</span>
 <span class="k">with</span> <span class="n">capture_output</span><span class="p">()</span> <span class="k">as</span> <span class="n">_graph_capture</span><span class="p">:</span>
     <span class="n">show_graph</span><span class="p">(</span><span class="n">self_heal_chain</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="n">LANGCHAIN_GRAPH_ALT</span><span class="p">)</span>
-<span class="c1"># show_graph emits display data; select its PNG payload for the HTML image.</span>
+<span class="c1"># A successful render emits PNG display data; an offline render emits ASCII stdout.</span>
 <span class="n">_graph_png</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-    <span class="n">output</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"image/png"</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">_graph_capture</span><span class="o">.</span><span class="n">outputs</span>
-    <span class="k">if</span> <span class="s2">"image/png"</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">data</span>
+    <span class="p">(</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"image/png"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">_graph_capture</span><span class="o">.</span><span class="n">outputs</span>
+        <span class="k">if</span> <span class="s2">"image/png"</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">data</span>
+    <span class="p">),</span>
+    <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">display</span><span class="p">(</span>
-    <span class="n">HTML</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">'&lt;img alt="</span><span class="si">{</span><span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">LANGCHAIN_GRAPH_ALT</span><span class="p">)</span><span class="si">}</span><span class="s1">" '</span>
-        <span class="sa">f</span><span class="s1">'src="data:image/png;base64,</span><span class="si">{</span><span class="n">_graph_png</span><span class="si">}</span><span class="s1">" /&gt;'</span>
+<span class="k">if</span> <span class="n">_graph_png</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># The offline fallback is ordinary stdout, which capture_output stored.</span>
+    <span class="c1"># Replay it so readers still see the graph instead of a StopIteration error.</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">_graph_capture</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">display</span><span class="p">(</span>
+        <span class="n">HTML</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">'&lt;img alt="</span><span class="si">{</span><span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">LANGCHAIN_GRAPH_ALT</span><span class="p">)</span><span class="si">}</span><span class="s1">" '</span>
+            <span class="sa">f</span><span class="s1">'src="data:image/png;base64,</span><span class="si">{</span><span class="n">_graph_png</span><span class="si">}</span><span class="s1">" /&gt;'</span>
+        <span class="p">)</span>
     <span class="p">)</span>
-<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8884,8 +8910,8 @@ baseline restored: no
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Optional-real-model">Optional real model<a class="anchor-link" href="#Optional-real-model">¶</a></h2><p>Only diagnosis and patch drafting cross the model boundary. Native structured output constrains response shape, while strict parsing enforces canonical content and safe paths. Deterministic review remains authoritative, and this demonstration never applies the candidate.</p>
-<p><code>get_model()</code> returns <code>None</code> and prints one skip line when the configured provider has no API key. On a live run, only clipped diagnosis, patch, and review summaries are displayed; raw provider messages remain transient.</p>
+<h2 id="Optional-real-model">Optional real model<a class="anchor-link" href="#Optional-real-model">¶</a></h2><p>Only diagnosis and patch drafting cross the model boundary. Native structured output constrains response shape, while strict parsing enforces canonical content and safe paths. The same bounded transaction still owns deterministic review, apply, verification, compensation, and terminal status.</p>
+<p><code>get_model()</code> returns <code>None</code> and prints one skip line when the configured provider has no API key. On a live run, the notebook keeps the full trace in <code>model_transaction</code> but displays only clipped diagnosis, patch, terminal result, and one deterministic review reason or evidence item. Raw provider messages remain transient.</p>
 </div>
 </div>
 </div>
@@ -8901,21 +8927,23 @@ baseline restored: no
 <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">()</span>
 
 <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># Only diagnosis and drafting cross the live boundary; no transaction is run.</span>
-    <span class="n">diagnose_pipe</span><span class="p">,</span> <span class="n">draft_pipe</span> <span class="o">=</span> <span class="n">build_structured_role_pipes</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-    <span class="c1"># Use a fresh fixture and save its digest before invoking either model role.</span>
-    <span class="n">candidate_runtime</span> <span class="o">=</span> <span class="n">new_runtime</span><span class="p">(</span><span class="s2">"convergence"</span><span class="p">)</span>
-    <span class="n">failure</span> <span class="o">=</span> <span class="n">candidate_runtime</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">initial_failure</span>
-    <span class="n">baseline_digest</span> <span class="o">=</span> <span class="n">candidate_runtime</span><span class="o">.</span><span class="n">workspace</span><span class="o">.</span><span class="n">state_digest</span><span class="p">()</span>
-    <span class="n">diagnosis</span> <span class="o">=</span> <span class="n">diagnose_pipe</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">failure_input</span><span class="p">(</span><span class="n">failure</span><span class="p">))</span>
-    <span class="n">candidate_patch</span> <span class="o">=</span> <span class="n">draft_pipe</span><span class="o">.</span><span class="n">invoke</span><span class="p">({</span><span class="s2">"diagnosis"</span><span class="p">:</span> <span class="n">diagnosis</span><span class="p">})</span>
-    <span class="c1"># Reject out-of-workspace paths, then review without applying the proposal.</span>
-    <span class="c1"># The unchanged digest proves the live model did not mutate the fixture.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">candidate_patch</span><span class="o">.</span><span class="n">touches</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">candidate_runtime</span><span class="o">.</span><span class="n">workspace</span><span class="o">.</span><span class="n">files</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"model patch touches files outside the fresh workspace"</span><span class="p">)</span>
-    <span class="n">candidate_review</span> <span class="o">=</span> <span class="n">candidate_runtime</span><span class="o">.</span><span class="n">review</span><span class="p">(</span><span class="n">candidate_patch</span><span class="p">,</span> <span class="n">failure</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">patch_digest</span> <span class="o">==</span> <span class="n">candidate_patch</span><span class="o">.</span><span class="n">digest</span>
-    <span class="k">assert</span> <span class="n">candidate_runtime</span><span class="o">.</span><span class="n">workspace</span><span class="o">.</span><span class="n">state_digest</span><span class="p">()</span> <span class="o">==</span> <span class="n">baseline_digest</span>
+    <span class="c1"># Select native structured output at the role boundary, then execute the</span>
+    <span class="c1"># exact bounded transaction used by the deterministic LCEL examples.</span>
+    <span class="n">model_runtime</span> <span class="o">=</span> <span class="n">new_runtime</span><span class="p">(</span><span class="s2">"convergence"</span><span class="p">)</span>
+    <span class="n">model_transaction</span> <span class="o">=</span> <span class="n">bounded_self_heal_transaction</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"runtime"</span><span class="p">:</span> <span class="n">model_runtime</span><span class="p">,</span>
+            <span class="s2">"model"</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
+            <span class="s2">"role_pipe_builder"</span><span class="p">:</span> <span class="n">build_structured_role_pipes</span><span class="p">,</span>
+            <span class="c1"># Live proposals are not expected to match a pre-scripted fixture result.</span>
+            <span class="s2">"validate_expected_record"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="c1"># Run the same terminal branch as self_heal_chain while retaining the trace</span>
+    <span class="c1"># locally for a small, beginner-readable summary.</span>
+    <span class="n">model_record</span> <span class="o">=</span> <span class="n">terminal_branch</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">model_transaction</span><span class="p">)</span>
+    <span class="n">live_trace</span> <span class="o">=</span> <span class="n">model_transaction</span><span class="p">[</span><span class="s2">"trace"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">model_record</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="n">live_trace</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span>
 
     <span class="c1"># Normalize and clip parsed summaries so model text cannot flood saved artifacts.</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_clip_summary</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">160</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -8923,15 +8951,35 @@ baseline restored: no
         <span class="k">return</span> <span class="n">text</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">limit</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">text</span><span class="p">[:</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">..."</span>
 
 
+    <span class="n">live_round</span> <span class="o">=</span> <span class="n">live_trace</span><span class="o">.</span><span class="n">rounds</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">live_trace</span><span class="o">.</span><span class="n">rounds</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">diagnosis</span> <span class="o">=</span> <span class="n">live_round</span><span class="o">.</span><span class="n">diagnosis</span> <span class="k">if</span> <span class="n">live_round</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"unavailable"</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"diagnosis: </span><span class="si">{</span><span class="n">_clip_summary</span><span class="p">(</span><span class="n">diagnosis</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="s2">"patch: "</span>
-        <span class="o">+</span> <span class="n">_clip_summary</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">candidate_patch</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">; files=</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">candidate_patch</span><span class="o">.</span><span class="n">touches</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">live_round</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">candidate_patch</span> <span class="o">=</span> <span class="n">live_round</span><span class="o">.</span><span class="n">patch</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">"patch: "</span>
+            <span class="o">+</span> <span class="n">_clip_summary</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">candidate_patch</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">; files=</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">candidate_patch</span><span class="o">.</span><span class="n">touches</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
         <span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">decision</span> <span class="o">=</span> <span class="s2">"approved"</span> <span class="k">if</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">approved</span> <span class="k">else</span> <span class="s2">"rejected"</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"review: </span><span class="si">{</span><span class="n">decision</span><span class="si">}</span><span class="s2">; applied: no"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"result: </span><span class="si">{</span><span class="n">live_trace</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">live_trace</span><span class="o">.</span><span class="n">stop_reason</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+
+    <span class="c1"># Prefer a human-readable deterministic reason. If the reason is empty on</span>
+    <span class="c1"># approval, show the first nonblank policy evidence item instead.</span>
+    <span class="n">candidate_review</span> <span class="o">=</span> <span class="n">live_round</span><span class="o">.</span><span class="n">patch_review</span> <span class="k">if</span> <span class="n">live_round</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">candidate_review</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"review: unavailable; transaction stopped before deterministic review"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">review_detail</span> <span class="o">=</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">reason</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">evidence</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">"digest="</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span>
+            <span class="p">),</span>
+            <span class="s2">"deterministic policy supplied no text detail"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">decision</span> <span class="o">=</span> <span class="s2">"approved"</span> <span class="k">if</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">approved</span> <span class="k">else</span> <span class="s2">"rejected"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"review: </span><span class="si">{</span><span class="n">decision</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">_clip_summary</span><span class="p">(</span><span class="n">review_detail</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -8951,9 +8999,10 @@ baseline restored: no
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>diagnosis: CONVERGENCE_1 indicates a numerical convergence failure in app.py. The scenario test expects an iterative algorithm (e.g., solver, optimizer, or simulation l...
-patch: Fix convergence failure in app.py: correct the sign in the iterative update rule. The update step was using addition instead of subtraction (e.g., `x = x + d...
-review: rejected; applied: no
+<pre>diagnosis: The CONVERGENCE_1 scenario failure indicates an iterative algorithm in app.py failed to converge within its expected tolerance or iteration limit. This is a ...
+patch: Fix CONVERGENCE_1 failure: correct the convergence check logic in the iterative solver. The primary bug is a flipped comparison operator in the convergence c...
+result: blocked_by_critic (review_rejected)
+review: rejected; patch content does not satisfy the current failure
 </pre>
 </div>
 </div>

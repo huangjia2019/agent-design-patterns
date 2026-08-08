@@ -8321,8 +8321,8 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="Capture-the-baseline">Capture the baseline<a class="anchor-link" href="#Capture-the-baseline">¶</a></h3><p><strong>Input:</strong> The caller-supplied runtime, initial failure, and role callables.</p>
 <p><strong>Purpose:</strong> Initialize fresh transaction collections and record the pre-repair workspace digest.</p>
-<p><strong>Invariant:</strong> No repair role runs before a valid baseline exists.</p>
-<p><strong>Failure route:</strong> A failed digest read goes directly to <code>finalize</code>; no rollback callback runs because no apply is known.</p>
+<p><strong>Invariant:</strong> No repair role runs before a valid baseline exists, and caller input is validated before its affected-file radius enters graph state.</p>
+<p><strong>Failure route:</strong> A failed digest read goes directly to <code>finalize</code>. A malformed initial failure becomes a stable diagnose-stage error and also finalizes without calling a role, apply, or rollback callback.</p>
 </div>
 </div>
 </div>
@@ -8337,12 +8337,12 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 <div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">capture_baseline</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">GraphState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
     <span class="c1"># No repair role or mutating callback may run until a baseline digest exists.</span>
     <span class="n">baseline</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="n">_digest_or_error</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"runtime"</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="c1"># Fresh collections belong to this invocation, so separate runs share no evidence.</span>
+    <span class="c1"># Start with an empty radius: caller data enters it only after full validation.</span>
     <span class="n">initial</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"round_no"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
         <span class="s2">"attempt_keys"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
         <span class="s2">"commit_ids"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-        <span class="s2">"radius_files"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"initial_failure"</span><span class="p">]</span><span class="o">.</span><span class="n">affected_files</span><span class="p">),</span>
+        <span class="s2">"radius_files"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
         <span class="s2">"rounds"</span><span class="p">:</span> <span class="p">[],</span>
         <span class="s2">"apply_receipts"</span><span class="p">:</span> <span class="p">[],</span>
         <span class="s2">"rollback_receipts"</span><span class="p">:</span> <span class="p">[],</span>
@@ -8359,12 +8359,41 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
             <span class="s2">"baseline_restored"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
             <span class="s2">"next_route"</span><span class="p">:</span> <span class="s2">"finalize"</span><span class="p">,</span>
         <span class="p">}</span>
+
+    <span class="n">failure</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"initial_failure"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_valid_failure_signal</span><span class="p">(</span><span class="n">failure</span><span class="p">):</span>
+        <span class="c1"># Rebuild-based validation catches both wrong types and forged dataclasses.</span>
+        <span class="n">input_error</span> <span class="o">=</span> <span class="n">_stage_error</span><span class="p">(</span>
+            <span class="n">HealStage</span><span class="o">.</span><span class="n">DIAGNOSE</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"failure must be a valid FailureSignal"</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">final</span><span class="p">,</span> <span class="n">final_errors</span> <span class="o">=</span> <span class="n">_digest_or_error</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"runtime"</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">all_errors</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">errors</span><span class="p">,</span> <span class="n">input_error</span><span class="p">,</span> <span class="o">*</span><span class="n">final_errors</span><span class="p">]</span>
+        <span class="n">restored</span> <span class="o">=</span> <span class="n">final</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">final</span> <span class="o">==</span> <span class="n">baseline</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">initial</span><span class="p">,</span>
+            <span class="s2">"stage_errors"</span><span class="p">:</span> <span class="n">all_errors</span><span class="p">,</span>
+            <span class="s2">"baseline_digest"</span><span class="p">:</span> <span class="n">baseline</span><span class="p">,</span>
+            <span class="s2">"final_digest"</span><span class="p">:</span> <span class="n">final</span><span class="p">,</span>
+            <span class="s2">"baseline_restored"</span><span class="p">:</span> <span class="n">restored</span><span class="p">,</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">HealStatus</span><span class="o">.</span><span class="n">STAGE_ERROR_HUMAN_HANDOFF</span>
+                <span class="k">if</span> <span class="n">restored</span>
+                <span class="k">else</span> <span class="n">HealStatus</span><span class="o">.</span><span class="n">ROLLBACK_FAILED_HUMAN_HANDOFF</span>
+            <span class="p">),</span>
+            <span class="s2">"stop_reason"</span><span class="p">:</span> <span class="s2">"stage_error:diagnose"</span><span class="p">,</span>
+            <span class="s2">"next_route"</span><span class="p">:</span> <span class="s2">"finalize"</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Only validated paths may define the deterministic repair radius.</span>
+    <span class="n">initial</span><span class="p">[</span><span class="s2">"radius_files"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">failure</span><span class="o">.</span><span class="n">affected_files</span><span class="p">)</span>
     <span class="c1"># LangGraph merges this partial update with caller inputs such as runtime</span>
     <span class="c1"># and the role callables.</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="o">**</span><span class="n">initial</span><span class="p">,</span>
         <span class="s2">"baseline_digest"</span><span class="p">:</span> <span class="n">baseline</span><span class="p">,</span>
-        <span class="s2">"current_failure"</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="s2">"initial_failure"</span><span class="p">],</span>
+        <span class="s2">"current_failure"</span><span class="p">:</span> <span class="n">failure</span><span class="p">,</span>
         <span class="s2">"next_route"</span><span class="p">:</span> <span class="s2">"diagnose"</span><span class="p">,</span>
     <span class="p">}</span>
 
@@ -8386,7 +8415,7 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="Diagnose-the-current-failure">Diagnose the current failure<a class="anchor-link" href="#Diagnose-the-current-failure">¶</a></h3><p><strong>Input:</strong> The current <code>FailureSignal</code> and <code>diagnose_role</code> callable.</p>
 <p><strong>Purpose:</strong> Produce one nonblank diagnosis for the current round.</p>
-<p><strong>Invariant:</strong> Diagnosis is observationally pure and must return <code>str</code>.</p>
+<p><strong>Invariant:</strong> Diagnosis is observationally pure and must return a nonblank <code>str</code>.</p>
 <p><strong>Failure route:</strong> Callback, type, digest, or mutation failure routes to <code>rollback</code> through <code>_role_failure</code>.</p>
 </div>
 </div>
@@ -8425,15 +8454,15 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
         <span class="n">state</span><span class="p">[</span><span class="s2">"diagnose_role"</span><span class="p">],</span>
         <span class="n">state</span><span class="p">[</span><span class="s2">"current_failure"</span><span class="p">],</span>
     <span class="p">)</span>
-    <span class="c1"># Deterministic Python checks the type; the role cannot declare itself valid.</span>
-    <span class="k">if</span> <span class="n">ok</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">_stage_error</span><span class="p">(</span>
-                <span class="n">HealStage</span><span class="o">.</span><span class="n">DIAGNOSE</span><span class="p">,</span>
-                <span class="n">state</span><span class="p">[</span><span class="s2">"round_no"</span><span class="p">],</span>
-                <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"diagnose must return str"</span><span class="p">),</span>
-            <span class="p">)</span>
+    <span class="c1"># Deterministic Python checks type and content; the role cannot declare</span>
+    <span class="c1"># an empty string useful merely by returning the expected Python type.</span>
+    <span class="k">if</span> <span class="n">ok</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"diagnose must return str"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="k">else</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"diagnose must return a nonblank string"</span><span class="p">)</span>
         <span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_stage_error</span><span class="p">(</span><span class="n">HealStage</span><span class="o">.</span><span class="n">DIAGNOSE</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="s2">"round_no"</span><span class="p">],</span> <span class="n">error</span><span class="p">))</span>
         <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">ok</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_role_failure</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">HealStage</span><span class="o">.</span><span class="n">DIAGNOSE</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">mutated</span><span class="p">)</span>
@@ -9159,20 +9188,28 @@ c1 -&gt; c2 -&gt; regression -&gt; rollback c2 -&gt; rollback c1 -&gt; baseline 
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">build_self_heal_graph</span><span class="p">()</span>
 <span class="n">GRAPH_ALT</span> <span class="o">=</span> <span class="s2">"Self-Heal transaction with bounded repair loop and compensation path"</span>
-<span class="c1"># Capture the rendered graph so exported HTML keeps a descriptive image label.</span>
+<span class="c1"># Capture PNG display data or the offline ASCII fallback for replay below.</span>
 <span class="k">with</span> <span class="n">capture_output</span><span class="p">()</span> <span class="k">as</span> <span class="n">_graph_capture</span><span class="p">:</span>
     <span class="n">show_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="n">GRAPH_ALT</span><span class="p">)</span>
 <span class="n">_graph_png</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-    <span class="n">output</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"image/png"</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">_graph_capture</span><span class="o">.</span><span class="n">outputs</span>
-    <span class="k">if</span> <span class="s2">"image/png"</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">data</span>
+    <span class="p">(</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">"image/png"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">_graph_capture</span><span class="o">.</span><span class="n">outputs</span>
+        <span class="k">if</span> <span class="s2">"image/png"</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">data</span>
+    <span class="p">),</span>
+    <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">display</span><span class="p">(</span>
-    <span class="n">HTML</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">'&lt;img alt="</span><span class="si">{</span><span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">GRAPH_ALT</span><span class="p">)</span><span class="si">}</span><span class="s1">" '</span>
-        <span class="sa">f</span><span class="s1">'src="data:image/png;base64,</span><span class="si">{</span><span class="n">_graph_png</span><span class="si">}</span><span class="s1">" /&gt;'</span>
+<span class="k">if</span> <span class="n">_graph_png</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># The offline fallback is ordinary stdout, which capture_output stored.</span>
+    <span class="c1"># Replay it so readers still see the graph instead of a StopIteration error.</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">_graph_capture</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">display</span><span class="p">(</span>
+        <span class="n">HTML</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">'&lt;img alt="</span><span class="si">{</span><span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">GRAPH_ALT</span><span class="p">)</span><span class="si">}</span><span class="s1">" '</span>
+            <span class="sa">f</span><span class="s1">'src="data:image/png;base64,</span><span class="si">{</span><span class="n">_graph_png</span><span class="si">}</span><span class="s1">" /&gt;'</span>
+        <span class="p">)</span>
     <span class="p">)</span>
-<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9644,7 +9681,7 @@ baseline restored: no
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Run-the-same-graph-with-model-roles">Run the same graph with model roles<a class="anchor-link" href="#Run-the-same-graph-with-model-roles">¶</a></h3><p><code>get_model()</code> returns <code>None</code> and prints one skip line when the configured provider has no API key. On a live run, only clipped diagnosis, patch, and result summaries are displayed; the complete trace remains available in <code>model_state</code> for deliberate inspection.</p>
+<h3 id="Run-the-same-graph-with-model-roles">Run the same graph with model roles<a class="anchor-link" href="#Run-the-same-graph-with-model-roles">¶</a></h3><p><code>get_model()</code> returns <code>None</code> and prints one skip line when the configured provider has no API key. On a live run, only clipped diagnosis, patch, terminal result, and one deterministic review reason or evidence item are displayed; the complete trace remains available in <code>model_state</code> for deliberate inspection.</p>
 </div>
 </div>
 </div>
@@ -9710,9 +9747,11 @@ baseline restored: no
 
 
     <span class="n">live_trace</span> <span class="o">=</span> <span class="n">model_state</span><span class="p">[</span><span class="s2">"trace"</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"diagnosis: </span><span class="si">{</span><span class="n">_clip_summary</span><span class="p">(</span><span class="n">model_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'diagnosis'</span><span class="p">,</span><span class="w"> </span><span class="s1">'unavailable'</span><span class="p">))</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="n">candidate</span> <span class="o">=</span> <span class="n">model_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"patch"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="n">Patch</span><span class="p">):</span>
+    <span class="n">live_round</span> <span class="o">=</span> <span class="n">live_trace</span><span class="o">.</span><span class="n">rounds</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">live_trace</span><span class="o">.</span><span class="n">rounds</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">diagnosis</span> <span class="o">=</span> <span class="n">live_round</span><span class="o">.</span><span class="n">diagnosis</span> <span class="k">if</span> <span class="n">live_round</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"unavailable"</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"diagnosis: </span><span class="si">{</span><span class="n">_clip_summary</span><span class="p">(</span><span class="n">diagnosis</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">live_round</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">live_round</span><span class="o">.</span><span class="n">patch</span>
         <span class="nb">print</span><span class="p">(</span>
             <span class="s2">"patch: "</span>
             <span class="o">+</span> <span class="n">_clip_summary</span><span class="p">(</span>
@@ -9720,6 +9759,22 @@ baseline restored: no
             <span class="p">)</span>
         <span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"result: </span><span class="si">{</span><span class="n">live_trace</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">live_trace</span><span class="o">.</span><span class="n">stop_reason</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+
+    <span class="c1"># Surface the deterministic gate that decided whether the proposal could apply.</span>
+    <span class="n">candidate_review</span> <span class="o">=</span> <span class="n">live_round</span><span class="o">.</span><span class="n">patch_review</span> <span class="k">if</span> <span class="n">live_round</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">candidate_review</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"review: unavailable; transaction stopped before deterministic review"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">review_detail</span> <span class="o">=</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">reason</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">evidence</span>
+                <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="s2">"digest="</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item</span>
+            <span class="p">),</span>
+            <span class="s2">"deterministic policy supplied no text detail"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">decision</span> <span class="o">=</span> <span class="s2">"approved"</span> <span class="k">if</span> <span class="n">candidate_review</span><span class="o">.</span><span class="n">approved</span> <span class="k">else</span> <span class="s2">"rejected"</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"review: </span><span class="si">{</span><span class="n">decision</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">_clip_summary</span><span class="p">(</span><span class="n">review_detail</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9739,9 +9794,10 @@ baseline restored: no
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>diagnosis: CONVERGENCE_1 failure in app.py: an iterative process (e.g., optimization loop, numerical solver, or training step) failed to converge within the allowed ite...
-patch: Fix CONVERGENCE_1 failure: increase max iteration limit from 100 to 1000, relax convergence tolerance from 1e-10 to 1e-6, add stall detection with best-resul...
+<pre>diagnosis: CONVERGENCE_1 failure in app.py: an iterative algorithm or optimization loop failed to converge within the expected iteration limit or tolerance threshold. T...
+patch: Fix CONVERGENCE_1: add abs() to convergence check so that small-magnitude differences of either sign are correctly detected as converged. Without abs(), a ne...
 result: blocked_by_critic (review_rejected)
+review: rejected; patch content does not satisfy the current failure
 </pre>
 </div>
 </div>

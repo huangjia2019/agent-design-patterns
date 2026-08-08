@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ast
 import copy
+import html as html_module
 import json
 import re
 import sys
@@ -73,6 +74,17 @@ def code_source(path: Path) -> str:
         for cell in data["cells"]
         if cell["cell_type"] == "code"
     )
+
+
+def code_cell_source_containing(path: Path, marker: str) -> str:
+    """Return one real notebook code cell identified by a stable marker."""
+    matches = [
+        "".join(cell["source"])
+        for cell in notebook_data(path)["cells"]
+        if cell["cell_type"] == "code" and marker in "".join(cell["source"])
+    ]
+    assert len(matches) == 1, f"expected one cell containing {marker!r}"
+    return matches[0]
 
 
 def markdown_source(path: Path) -> str:
@@ -411,7 +423,7 @@ def test_langchain_notebook_has_required_contract_surface() -> None:
     assert "for scenario_name in SCENARIO_ORDER" in code
     assert ".with_retry(" not in code
     assert "assert record == core_record" in code
-    assert "diagnose_pipe, draft_pipe = build_structured_role_pipes(model)" in code
+    assert '"role_pipe_builder": build_structured_role_pipes' in code
     assert "../langgraph/tutorial.ipynb" in markdown
     assert_sections_in_order(
         markdown,
@@ -426,6 +438,143 @@ def test_langchain_notebook_has_required_contract_surface() -> None:
             "## Further reading",
         ),
     )
+
+
+@pytest.mark.parametrize(
+    ("path", "graph_name", "fallback_text"),
+    (
+        (LANGGRAPH_NOTEBOOK, "graph", "LANGGRAPH OFFLINE ASCII"),
+        (LANGCHAIN_NOTEBOOK, "self_heal_chain", "LANGCHAIN OFFLINE ASCII"),
+    ),
+    ids=("langgraph", "langchain"),
+)
+def test_graph_display_cell_replays_ascii_when_png_is_unavailable(
+    path: Path,
+    graph_name: str,
+    fallback_text: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An offline Mermaid renderer must leave readable ASCII, not raise StopIteration."""
+    from IPython.utils.capture import capture_output
+
+    displayed: list[object] = []
+
+    def show_ascii(_graph: object, *, alt: str) -> None:
+        assert alt
+        print(fallback_text)
+
+    namespace: dict[str, object] = {
+        "HTML": lambda value: value,
+        "capture_output": capture_output,
+        "display": displayed.append,
+        graph_name: object(),
+        "html": html_module,
+        "show_graph": show_ascii,
+    }
+
+    source = code_cell_source_containing(path, "with capture_output() as _graph_capture:")
+    # The LangGraph cell defines build_self_heal_graph above its display block.
+    # Execute only the display tail so this regression tests rendering, not assembly.
+    alt_marker = "GRAPH_ALT =" if graph_name == "graph" else "LANGCHAIN_GRAPH_ALT ="
+    source = source[source.index(alt_marker) :]
+    exec(
+        compile(
+            source,
+            str(path),
+            "exec",
+        ),
+        namespace,
+    )
+
+    assert fallback_text in capsys.readouterr().out
+    assert displayed == []
+
+
+def test_langchain_transaction_accepts_a_structured_role_pipe_builder() -> None:
+    """The live adapter must enter the same sealed transaction as offline role pipes."""
+    source = code_cell_source_containing(LANGCHAIN_NOTEBOOK, "def invoke_transaction(")
+    tree = ast.parse(source, filename=str(LANGCHAIN_NOTEBOOK))
+    definition = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "invoke_transaction"
+    )
+
+    class NotTheOfflineFake:
+        pass
+
+    namespace: dict[str, object] = {
+        "FailureSignal": FailureSignal,
+        "Patch": Patch,
+        "SelfHealLoop": SelfHealLoop,
+        "FakeListChatModel": NotTheOfflineFake,
+        "failure_input": lambda failure: {
+            "kind": failure.kind,
+            "code": failure.code,
+            "error_text": failure.error_text,
+            "affected_files": list(failure.affected_files),
+        },
+        "build_role_pipes": lambda _model: (_ for _ in ()).throw(
+            AssertionError("default offline role builder was selected")
+        ),
+    }
+    module = ast.fix_missing_locations(ast.Module(body=[definition], type_ignores=[]))
+    exec(compile(module, str(LANGCHAIN_NOTEBOOK), "exec"), namespace)
+
+    runtime = new_runtime("convergence")
+    diagnoses = iter(runtime.scenario.diagnoses)
+    patches = iter(plan.patch() for plan in runtime.scenario.patches)
+    builder_calls: list[object] = []
+
+    class ScriptedPipe:
+        def __init__(self, values) -> None:
+            self._values = values
+
+        def invoke(self, _value: object) -> object:
+            return next(self._values)
+
+    def structured_builder(model: object) -> tuple[ScriptedPipe, ScriptedPipe]:
+        builder_calls.append(model)
+        return ScriptedPipe(diagnoses), ScriptedPipe(patches)
+
+    model = object()
+    completed = namespace["invoke_transaction"](
+        {
+            "runtime": runtime,
+            "model": model,
+            "role_pipe_builder": structured_builder,
+        }
+    )
+
+    assert builder_calls == [model]
+    assert completed["trace"].status is HealStatus.FIXED, completed["trace"].stage_errors
+
+    builder_calls.clear()
+    with pytest.raises(TypeError, match="validate_expected_record must be a boolean"):
+        namespace["invoke_transaction"](
+            {
+                "runtime": new_runtime("convergence"),
+                "model": model,
+                "role_pipe_builder": structured_builder,
+                "validate_expected_record": "no",
+            }
+        )
+    assert builder_calls == []
+
+
+def test_live_notebook_paths_use_the_transaction_and_explain_review_policy() -> None:
+    """Live teaching cells must show the deterministic gate without exposing raw data."""
+    langchain_live = code_cell_source_containing(LANGCHAIN_NOTEBOOK, "model = get_model()")
+    assert "bounded_self_heal_transaction.invoke(" in langchain_live
+    assert '"role_pipe_builder": build_structured_role_pipes' in langchain_live
+    assert "terminal_branch.invoke(" in langchain_live
+    assert "diagnose_pipe" not in langchain_live
+    assert ".patch_review" in langchain_live
+    assert "reason" in langchain_live and "evidence" in langchain_live
+
+    langgraph_live = code_cell_source_containing(LANGGRAPH_NOTEBOOK, "model = get_model()")
+    assert ".patch_review" in langgraph_live
+    assert "reason" in langgraph_live and "evidence" in langgraph_live
 
 
 def test_notebooks_share_scenario_order_and_record_schema() -> None:
@@ -704,6 +853,123 @@ def test_langgraph_mixed_review_evidence_matches_core_predicate(
     core_record = trace_record("convergence", core_trace)
     assert graph_record == core_record
     assert graph_record["status"] == HealStatus.FIXED.value
+
+
+@pytest.mark.parametrize("diagnosis", ["", "   "], ids=("empty", "whitespace"))
+def test_langgraph_blank_diagnosis_matches_core_stage_error(
+    diagnosis: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Neither orchestrator may let an unusable diagnosis reach patch drafting."""
+    monkeypatch.chdir(LANGGRAPH_NOTEBOOK.parent)
+    namespace = langgraph_namespace()
+
+    graph_runtime = new_runtime("convergence")
+    graph_fix_calls: list[str] = []
+
+    def graph_fix(value: str) -> Patch:
+        graph_fix_calls.append(value)
+        return graph_runtime.fix(value)
+
+    completed = namespace["build_self_heal_graph"]().invoke(
+        {
+            "runtime": graph_runtime,
+            "initial_failure": graph_runtime.scenario.initial_failure,
+            "diagnose_role": lambda _failure: diagnosis,
+            "draft_role": graph_fix,
+        },
+        {"recursion_limit": 64},
+    )
+
+    core_runtime = new_runtime("convergence")
+    core_fix_calls: list[str] = []
+
+    def core_fix(value: str) -> Patch:
+        core_fix_calls.append(value)
+        return core_runtime.fix(value)
+
+    core_trace = SelfHealLoop(
+        diagnose=lambda _failure: diagnosis,
+        fix=core_fix,
+        review=core_runtime.review,
+        apply=core_runtime.workspace.apply,
+        verify=core_runtime.verify,
+        rollback=core_runtime.workspace.rollback,
+        state_digest=core_runtime.workspace.state_digest,
+        stability=core_runtime.scenario.stability,
+    ).heal(core_runtime.scenario.initial_failure)
+
+    graph_trace = completed["trace"]
+    assert trace_record("blank", graph_trace) == trace_record("blank", core_trace)
+    assert graph_trace.status is HealStatus.STAGE_ERROR_HUMAN_HANDOFF
+    assert graph_trace.stop_reason == "stage_error:diagnose"
+    assert graph_trace.apply_receipts == () and graph_trace.baseline_restored is True
+    assert graph_fix_calls == [] and core_fix_calls == []
+
+
+def _forged_initial_failure() -> FailureSignal:
+    malformed = object.__new__(FailureSignal)
+    object.__setattr__(malformed, "kind", "test")
+    object.__setattr__(malformed, "error_text", "red")
+    object.__setattr__(malformed, "affected_files", ("app.py", 1))
+    object.__setattr__(malformed, "code", "MALFORMED")
+    return malformed
+
+
+@pytest.mark.parametrize(
+    "invalid_failure",
+    [_forged_initial_failure(), "not-a-failure-signal"],
+    ids=("forged-mixed-paths", "wrong-type"),
+)
+def test_langgraph_invalid_initial_failure_matches_core_before_roles(
+    invalid_failure: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Caller input validation must finish safely before any role or apply runs."""
+    monkeypatch.chdir(LANGGRAPH_NOTEBOOK.parent)
+    namespace = langgraph_namespace()
+    graph_runtime = new_runtime("convergence")
+    graph_calls: list[str] = []
+
+    def forbidden_graph_role(*_args: object) -> object:
+        graph_calls.append("role")
+        raise AssertionError("graph role ran for invalid input")
+
+    completed = namespace["build_self_heal_graph"]().invoke(
+        {
+            "runtime": graph_runtime,
+            "initial_failure": invalid_failure,
+            "diagnose_role": forbidden_graph_role,
+            "draft_role": forbidden_graph_role,
+        },
+        {"recursion_limit": 64},
+    )
+
+    core_runtime = new_runtime("convergence")
+    core_calls: list[str] = []
+
+    def forbidden_core_role(*_args: object) -> object:
+        core_calls.append("role")
+        raise AssertionError("core role ran for invalid input")
+
+    core_trace = SelfHealLoop(
+        diagnose=forbidden_core_role,  # type: ignore[arg-type]
+        fix=forbidden_core_role,  # type: ignore[arg-type]
+        review=forbidden_core_role,  # type: ignore[arg-type]
+        apply=forbidden_core_role,  # type: ignore[arg-type]
+        verify=forbidden_core_role,  # type: ignore[arg-type]
+        rollback=forbidden_core_role,  # type: ignore[arg-type]
+        state_digest=core_runtime.workspace.state_digest,
+        stability=core_runtime.scenario.stability,
+    ).heal(invalid_failure)  # type: ignore[arg-type]
+
+    graph_trace = completed["trace"]
+    assert trace_record("invalid", graph_trace) == trace_record("invalid", core_trace)
+    assert graph_trace.status is HealStatus.STAGE_ERROR_HUMAN_HANDOFF
+    assert graph_trace.stop_reason == "stage_error:diagnose"
+    assert graph_trace.apply_receipts == () and graph_trace.baseline_restored is True
+    assert graph_runtime.workspace.snapshots == {}
+    assert graph_calls == [] and core_calls == []
 
 
 @pytest.mark.parametrize(

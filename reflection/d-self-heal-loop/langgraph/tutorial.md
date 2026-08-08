@@ -395,9 +395,9 @@ def _validate_verify(
 
 **Purpose:** Initialize fresh transaction collections and record the pre-repair workspace digest.
 
-**Invariant:** No repair role runs before a valid baseline exists.
+**Invariant:** No repair role runs before a valid baseline exists, and caller input is validated before its affected-file radius enters graph state.
 
-**Failure route:** A failed digest read goes directly to `finalize`; no rollback callback runs because no apply is known.
+**Failure route:** A failed digest read goes directly to `finalize`. A malformed initial failure becomes a stable diagnose-stage error and also finalizes without calling a role, apply, or rollback callback.
 
 
 
@@ -405,12 +405,12 @@ def _validate_verify(
 def capture_baseline(state: GraphState) -> dict[str, object]:
     # No repair role or mutating callback may run until a baseline digest exists.
     baseline, errors = _digest_or_error(state["runtime"], None)
-    # Fresh collections belong to this invocation, so separate runs share no evidence.
+    # Start with an empty radius: caller data enters it only after full validation.
     initial: dict[str, object] = {
         "round_no": 1,
         "attempt_keys": set(),
         "commit_ids": set(),
-        "radius_files": set(state["initial_failure"].affected_files),
+        "radius_files": set(),
         "rounds": [],
         "apply_receipts": [],
         "rollback_receipts": [],
@@ -427,12 +427,41 @@ def capture_baseline(state: GraphState) -> dict[str, object]:
             "baseline_restored": None,
             "next_route": "finalize",
         }
+
+    failure = state.get("initial_failure")
+    if not _valid_failure_signal(failure):
+        # Rebuild-based validation catches both wrong types and forged dataclasses.
+        input_error = _stage_error(
+            HealStage.DIAGNOSE,
+            None,
+            TypeError("failure must be a valid FailureSignal"),
+        )
+        final, final_errors = _digest_or_error(state["runtime"], None)
+        all_errors = [*errors, input_error, *final_errors]
+        restored = final is not None and final == baseline
+        return {
+            **initial,
+            "stage_errors": all_errors,
+            "baseline_digest": baseline,
+            "final_digest": final,
+            "baseline_restored": restored,
+            "status": (
+                HealStatus.STAGE_ERROR_HUMAN_HANDOFF
+                if restored
+                else HealStatus.ROLLBACK_FAILED_HUMAN_HANDOFF
+            ),
+            "stop_reason": "stage_error:diagnose",
+            "next_route": "finalize",
+        }
+
+    # Only validated paths may define the deterministic repair radius.
+    initial["radius_files"] = set(failure.affected_files)
     # LangGraph merges this partial update with caller inputs such as runtime
     # and the role callables.
     return {
         **initial,
         "baseline_digest": baseline,
-        "current_failure": state["initial_failure"],
+        "current_failure": failure,
         "next_route": "diagnose",
     }
 
@@ -448,7 +477,7 @@ def route_after_capture(state: GraphState) -> str:
 
 **Purpose:** Produce one nonblank diagnosis for the current round.
 
-**Invariant:** Diagnosis is observationally pure and must return `str`.
+**Invariant:** Diagnosis is observationally pure and must return a nonblank `str`.
 
 **Failure route:** Callback, type, digest, or mutation failure routes to `rollback` through `_role_failure`.
 
@@ -481,15 +510,15 @@ def diagnose(state: GraphState) -> dict[str, object]:
         state["diagnose_role"],
         state["current_failure"],
     )
-    # Deterministic Python checks the type; the role cannot declare itself valid.
-    if ok and not isinstance(result, str):
-        errors.append(
-            _stage_error(
-                HealStage.DIAGNOSE,
-                state["round_no"],
-                TypeError("diagnose must return str"),
-            )
+    # Deterministic Python checks type and content; the role cannot declare
+    # an empty string useful merely by returning the expected Python type.
+    if ok and (not isinstance(result, str) or not result.strip()):
+        error = (
+            TypeError("diagnose must return str")
+            if not isinstance(result, str)
+            else ValueError("diagnose must return a nonblank string")
         )
+        errors.append(_stage_error(HealStage.DIAGNOSE, state["round_no"], error))
         ok = False
     if not ok:
         return _role_failure(state, HealStage.DIAGNOSE, errors, mutated)
@@ -1107,20 +1136,28 @@ def build_self_heal_graph():
 
 graph = build_self_heal_graph()
 GRAPH_ALT = "Self-Heal transaction with bounded repair loop and compensation path"
-# Capture the rendered graph so exported HTML keeps a descriptive image label.
+# Capture PNG display data or the offline ASCII fallback for replay below.
 with capture_output() as _graph_capture:
     show_graph(graph, alt=GRAPH_ALT)
 _graph_png = next(
-    output.data["image/png"]
-    for output in _graph_capture.outputs
-    if "image/png" in output.data
+    (
+        output.data["image/png"]
+        for output in _graph_capture.outputs
+        if "image/png" in output.data
+    ),
+    None,
 )
-display(
-    HTML(
-        f'<img alt="{html.escape(GRAPH_ALT)}" '
-        f'src="data:image/png;base64,{_graph_png}" />'
+if _graph_png is None:
+    # The offline fallback is ordinary stdout, which capture_output stored.
+    # Replay it so readers still see the graph instead of a StopIteration error.
+    print(_graph_capture.stdout, end="")
+else:
+    display(
+        HTML(
+            f'<img alt="{html.escape(GRAPH_ALT)}" '
+            f'src="data:image/png;base64,{_graph_png}" />'
+        )
     )
-)
 
 ```
 
@@ -1411,7 +1448,7 @@ PATCH_SYSTEM_PROMPT = (
 
 ### Run the same graph with model roles
 
-`get_model()` returns `None` and prints one skip line when the configured provider has no API key. On a live run, only clipped diagnosis, patch, and result summaries are displayed; the complete trace remains available in `model_state` for deliberate inspection.
+`get_model()` returns `None` and prints one skip line when the configured provider has no API key. On a live run, only clipped diagnosis, patch, terminal result, and one deterministic review reason or evidence item are displayed; the complete trace remains available in `model_state` for deliberate inspection.
 
 
 
@@ -1470,9 +1507,11 @@ if model is not None:
 
 
     live_trace = model_state["trace"]
-    print(f"diagnosis: {_clip_summary(model_state.get('diagnosis', 'unavailable'))}")
-    candidate = model_state.get("patch")
-    if isinstance(candidate, Patch):
+    live_round = live_trace.rounds[-1] if live_trace.rounds else None
+    diagnosis = live_round.diagnosis if live_round is not None else "unavailable"
+    print(f"diagnosis: {_clip_summary(diagnosis)}")
+    if live_round is not None:
+        candidate = live_round.patch
         print(
             "patch: "
             + _clip_summary(
@@ -1481,14 +1520,31 @@ if model is not None:
         )
     print(f"result: {live_trace.status.value} ({live_trace.stop_reason})")
 
+    # Surface the deterministic gate that decided whether the proposal could apply.
+    candidate_review = live_round.patch_review if live_round is not None else None
+    if candidate_review is None:
+        print("review: unavailable; transaction stopped before deterministic review")
+    else:
+        review_detail = candidate_review.reason.strip() or next(
+            (
+                item.strip()
+                for item in candidate_review.evidence
+                if item.strip() and "digest=" not in item
+            ),
+            "deterministic policy supplied no text detail",
+        )
+        decision = "approved" if candidate_review.approved else "rejected"
+        print(f"review: {decision}; {_clip_summary(review_detail)}")
+
 ```
 
     Model: ernie:glm-5.1
 
 
-    diagnosis: CONVERGENCE_1 failure in app.py: an iterative process (e.g., optimization loop, numerical solver, or training step) failed to converge within the allowed ite...
-    patch: Fix CONVERGENCE_1 failure: increase max iteration limit from 100 to 1000, relax convergence tolerance from 1e-10 to 1e-6, add stall detection with best-resul...
+    diagnosis: CONVERGENCE_1 failure in app.py: an iterative algorithm or optimization loop failed to converge within the expected iteration limit or tolerance threshold. T...
+    patch: Fix CONVERGENCE_1: add abs() to convergence check so that small-magnitude differences of either sign are correctly detected as converged. Without abs(), a ne...
     result: blocked_by_critic (review_rejected)
+    review: rejected; patch content does not satisfy the current failure
 
 
 ### Compose as a subgraph

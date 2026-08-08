@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sys
 from dataclasses import FrozenInstanceError, dataclass, field
 from pathlib import Path
@@ -41,6 +42,12 @@ def test_inputs_snapshot_collections_and_freeze_identity() -> None:
     assert receipt.changed_files == ("a.py", "b.py")
     with pytest.raises(FrozenInstanceError):
         signal.code = "CHANGED"  # type: ignore[misc]
+
+
+def test_patch_review_rejects_scalar_string_evidence() -> None:
+    """A single evidence string must not become one item per character."""
+    with pytest.raises(TypeError, match="evidence must be an iterable of strings"):
+        PatchReview("digest", True, "", evidence="policy=approved")  # type: ignore[arg-type]
 
 
 def test_patch_digest_uses_payload_and_canonical_paths_not_description() -> None:
@@ -309,6 +316,62 @@ def test_failure_signal_rejects_non_string_scalars(field: str, value: object) ->
         FailureSignal(**values)  # type: ignore[arg-type]
 
 
+def _forged_initial_failure() -> FailureSignal:
+    malformed = object.__new__(FailureSignal)
+    object.__setattr__(malformed, "kind", "test")
+    object.__setattr__(malformed, "error_text", "red")
+    object.__setattr__(malformed, "affected_files", ("app.py", 1))
+    object.__setattr__(malformed, "code", "MALFORMED")
+    return malformed
+
+
+@pytest.mark.parametrize(
+    "invalid_failure",
+    [_forged_initial_failure(), "not-a-failure-signal"],
+    ids=["forged-mixed-paths", "wrong-type"],
+)
+def test_invalid_initial_failure_fails_closed_before_role_callbacks(
+    invalid_failure: object,
+) -> None:
+    """Malformed input stops after baseline proof, before any repair role runs."""
+    workspace = TransactionWorkspace()
+    calls: list[str] = []
+
+    def forbidden_callback(*_args: object) -> object:
+        calls.append("role")
+        raise AssertionError("a role callback ran for invalid input")
+
+    loop = SelfHealLoop(
+        diagnose=forbidden_callback,  # type: ignore[arg-type]
+        fix=forbidden_callback,  # type: ignore[arg-type]
+        review=forbidden_callback,  # type: ignore[arg-type]
+        apply=forbidden_callback,  # type: ignore[arg-type]
+        verify=forbidden_callback,  # type: ignore[arg-type]
+        rollback=forbidden_callback,  # type: ignore[arg-type]
+        state_digest=workspace.digest,
+    )
+
+    trace = loop.heal(invalid_failure)  # type: ignore[arg-type]
+
+    assert trace.status is HealStatus.STAGE_ERROR_HUMAN_HANDOFF
+    assert trace.stop_reason == "stage_error:diagnose"
+    assert trace.rounds == () and trace.apply_receipts == ()
+    assert trace.rollback_receipts == () and calls == []
+    assert trace.baseline_digest == trace.final_digest
+    assert trace.baseline_restored is True
+    assert [
+        (error.stage, error.round_no, error.exception_type, error.message)
+        for error in trace.stage_errors
+    ] == [
+        (
+            HealStage.DIAGNOSE,
+            None,
+            "TypeError",
+            "failure must be a valid FailureSignal",
+        )
+    ]
+
+
 def test_initial_digest_failure_runs_no_roles() -> None:
     workspace = TransactionWorkspace()
     calls: list[str] = []
@@ -332,6 +395,83 @@ def test_initial_digest_exception_runs_no_roles() -> None:
     assert trace.stop_reason == "stage_error:state_check"
     assert trace.baseline_digest is trace.final_digest is trace.baseline_restored is None
     assert calls == []
+
+
+@pytest.mark.parametrize("diagnosis", ["", "   "])
+def test_blank_diagnosis_fails_closed_before_fix(diagnosis: str) -> None:
+    workspace = TransactionWorkspace()
+    fix_calls: list[str] = []
+
+    def fix(value: str) -> Patch:
+        fix_calls.append(value)
+        return Patch("repair", payload("repair"), ("app.py",))
+
+    trace = transaction_loop(
+        workspace,
+        diagnose=lambda _failure: diagnosis,
+        fix=fix,
+    ).heal(FailureSignal("test", "red", ("app.py",), "RED"))
+
+    assert trace.status is HealStatus.STAGE_ERROR_HUMAN_HANDOFF
+    assert trace.stop_reason == "stage_error:diagnose"
+    assert trace.rounds == () and trace.apply_receipts == ()
+    assert trace.rollback_receipts == () and fix_calls == []
+    assert trace.baseline_digest == trace.final_digest
+    assert trace.baseline_restored is True
+    assert [
+        (error.stage, error.round_no, error.exception_type, error.message)
+        for error in trace.stage_errors
+    ] == [
+        (
+            HealStage.DIAGNOSE,
+            1,
+            "ValueError",
+            "diagnose must return a nonblank string",
+        )
+    ]
+
+
+@pytest.mark.parametrize("max_rounds", [True, 1.5, 2.0, "2", None])
+def test_stability_policy_rejects_non_integer_round_budget(
+    max_rounds: object,
+) -> None:
+    with pytest.raises(TypeError, match="max_rounds must be an integer"):
+        StabilityPolicy(max_rounds=max_rounds)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("multiplier", [True, "2", None])
+def test_stability_policy_rejects_nonnumeric_radius_multiplier(
+    multiplier: object,
+) -> None:
+    with pytest.raises(
+        TypeError,
+        match="max_radius_multiplier must be an int or float",
+    ):
+        StabilityPolicy(max_radius_multiplier=multiplier)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("multiplier", [math.nan, math.inf, -math.inf])
+def test_stability_policy_rejects_nonfinite_radius_multiplier(
+    multiplier: float,
+) -> None:
+    with pytest.raises(ValueError, match="max_radius_multiplier must be finite"):
+        StabilityPolicy(max_radius_multiplier=multiplier)
+
+
+@pytest.mark.parametrize(
+    ("max_rounds", "multiplier"),
+    [(1, 1), (2, 1.0), (3, 2.5)],
+)
+def test_stability_policy_accepts_integer_rounds_and_finite_numeric_radius(
+    max_rounds: int,
+    multiplier: int | float,
+) -> None:
+    policy = StabilityPolicy(
+        max_rounds=max_rounds,
+        max_radius_multiplier=multiplier,
+    )
+    assert policy.max_rounds == max_rounds
+    assert policy.max_radius_multiplier == multiplier
 
 
 @pytest.mark.parametrize("role", ["diagnose", "fix", "review", "verify"])
