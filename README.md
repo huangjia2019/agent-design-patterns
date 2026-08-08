@@ -169,7 +169,7 @@ show the pattern in real production form, not toy form.
 git clone https://github.com/huangjia2019/agent-design-patterns.git
 cd agent-design-patterns
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e ".[dev,langgraph]"
 
 # Run a pattern's case
 python perception/a-context-triage/example.py

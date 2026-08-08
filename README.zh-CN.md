@@ -128,7 +128,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 git clone https://github.com/huangjia2019/agent-design-patterns.git
 cd agent-design-patterns
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e ".[dev,langgraph]"
 
 # 跑一个模式的演示
 python perception/a-context-triage/example.py
