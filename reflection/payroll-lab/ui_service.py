@@ -1,6 +1,7 @@
 """Service layer for the Payroll Reflection Lab teaching UI."""
 from __future__ import annotations
 
+import json
 import re
 import sqlite3
 import subprocess
@@ -79,7 +80,7 @@ LECTURES: dict[str, dict[str, Any]] = {
         "pattern": "Self-Heal Loop",
         "coordinate": "Reflection x Loop",
         "question": "修复怎样在确定性信号和熔断线之间收敛？",
-        "summary": "用确定性红灯驱动修复，失败路径统一回滚到基线后交人工。",
+        "summary": "用确定性红灯驱动修复；失败路径尝试回滚，只有回执链和最终摘要证明后才宣称恢复。",
         "stages": ["Diagnose", "Review Patch", "Atomic Apply", "Verify / Stop"],
         "variant_label": "失控循环",
         "available": True,
@@ -229,6 +230,8 @@ def parse_output(output: str) -> list[dict[str, str]]:
     for raw in output.splitlines():
         text = raw.strip()
         if not text or set(text) == {"="}:
+            continue
+        if text.startswith("SELF_HEAL_RESULT "):
             continue
 
         lowered = text.lower()
@@ -483,8 +486,16 @@ def analyze_output(lecture: str, output: str) -> dict[str, Any]:
         }
 
     if lecture == "30":
-        statuses = re.findall(r"status: ([A-Z_]+)", output)
-        rolled_back = re.findall(r"rolled back, newest first: \[([^\]]*)\]", output)
+        restoration_proofs = [
+            json.loads(match)
+            for match in re.findall(r"^SELF_HEAL_RESULT (\{.*\})$", output, flags=re.MULTILINE)
+        ]
+        statuses = [record["status"] for record in restoration_proofs]
+        if not statuses:
+            statuses = re.findall(r"status: ([A-Z_]+)", output)
+        last_proof = restoration_proofs[-1] if restoration_proofs else None
+        rolled_back = [item["commit_id"] for item in last_proof["rollback_receipts"]] if last_proof else []
+        restored = bool(last_proof and last_proof["baseline_restored"] is True and last_proof["baseline_digest"] == last_proof["final_digest"])
         is_meltdown = "naive loop (no critic" in output
 
         if is_meltdown:
@@ -517,7 +528,7 @@ def analyze_output(lecture: str, output: str) -> dict[str, Any]:
                 {
                     "label": "安全出口",
                     "value": statuses[-1] if statuses else "--",
-                    "note": "baseline restored",
+                    "note": "baseline restored" if restored else "restoration not proven",
                 },
             ]
         else:
@@ -546,7 +557,8 @@ def analyze_output(lecture: str, output: str) -> dict[str, Any]:
             "naive_rounds": naive_rounds,
             "controlled_rounds": controlled_rounds,
             "failure_classes": failure_classes if is_meltdown else 0,
-            "rolled_back": rolled_back[-1] if rolled_back else "",
+            "rolled_back": rolled_back,
+            "restoration_proofs": restoration_proofs,
             "metrics": metrics,
         }
 
