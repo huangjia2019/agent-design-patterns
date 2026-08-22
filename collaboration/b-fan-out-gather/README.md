@@ -68,6 +68,12 @@ python collaboration/payroll-lab/fan_out_gather_lab.py --additive
 The framework tutorials show LangGraph and Claude Agent SDK dispatch seams. The
 pattern contract and deterministic gather remain framework-independent.
 
+For a focused demonstration of why the Harness owns concurrency while business
+code owns aggregation semantics, run [bonus B1 in the lightweight collaboration
+workbench](../light_labs/README.md#bonus-harness-concurrency-versus-business-aggregation).
+Its five payroll scenarios print runtime settlement and the business verdict
+separately.
+
 ## Where this pattern sits
 
 Collaborate × Parallel. Hierarchical Delegation gives different workers

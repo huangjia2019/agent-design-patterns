@@ -1,0 +1,61 @@
+- insert:
+    - id: editorial-brief-gate
+      name: '__BRIEF_GATE_PLUGIN__'
+
+    - id: editorial-topology-researcher
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: spawn
+        toolName: research_topology
+        enableRunInBackground: false
+        backgroundMode: one-shot
+        maxDepth: 1
+        persona: >-
+          You are the topology researcher. Study only coordination and dispatch.
+          Return one compact JSON object with worker_id, lane=topology, claim,
+          source_id, and source_url. Do not write files or delegate further.
+        toolFilter:
+          deny:
+            - research_topology
+            - research_state
+            - research_handoff
+            - brief_gate
+
+    - id: editorial-state-researcher
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: spawn
+        toolName: research_state
+        enableRunInBackground: false
+        backgroundMode: one-shot
+        maxDepth: 1
+        persona: >-
+          You are the state researcher. Study only context, session, and state
+          isolation. Return one compact JSON object with worker_id, lane=state,
+          claim, source_id, and source_url. Do not write files or delegate further.
+        toolFilter:
+          deny:
+            - research_topology
+            - research_state
+            - research_handoff
+            - brief_gate
+
+    - id: editorial-handoff-researcher
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: spawn
+        toolName: research_handoff
+        enableRunInBackground: false
+        backgroundMode: one-shot
+        maxDepth: 1
+        persona: >-
+          You are the handoff researcher. Study only cross-agent handoff and
+          deliverable transfer. Return one compact JSON object with worker_id,
+          lane=handoff, claim, source_id, and source_url. Do not write files or
+          delegate further.
+        toolFilter:
+          deny:
+            - research_topology
+            - research_state
+            - research_handoff
+            - brief_gate

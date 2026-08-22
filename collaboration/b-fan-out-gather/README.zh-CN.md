@@ -64,6 +64,8 @@ python collaboration/payroll-lab/fan_out_gather_lab.py --additive
 
 两套框架教程分别展示 LangGraph 与 Claude Agent SDK 的派发接缝。模式契约与确定性聚合保持框架无关。
 
+想专门看清“Harness 负责并发，业务负责聚合语义”这条边界，可以运行[轻量协作工作台的 B1 加餐](../light_labs/README.zh-CN.md#harness-并发与业务聚合加餐)。其中五个薪酬场景把运行状态与业务结论分别打印，三路调用全部成功也不等于结算可以放行。
+
 ## 它在双轴里的位置
 
 协作 × 并行。层级委派把不同责任单元交给不同工人，扇出聚合让多个独立来源回答同一个

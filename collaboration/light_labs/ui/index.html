@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Collaboration Mini Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">C</span>
+          <div>
+            <strong>Collaboration Mini Lab</strong>
+            <span>协作模式轻实验</span>
+          </div>
+        </div>
+        <nav aria-label="课程实验">
+          <button class="lesson-link active" data-lesson="32">
+            <span>32</span>
+            <div><strong>层级委派</strong><small>责任覆盖</small></div>
+          </button>
+          <button class="lesson-link" data-lesson="33">
+            <span>33</span>
+            <div><strong>扇出聚合</strong><small>证据收口</small></div>
+          </button>
+          <button class="lesson-link" data-lesson="34">
+            <span>34</span>
+            <div><strong>对抗评审</strong><small>异议放行</small></div>
+          </button>
+          <button class="lesson-link" data-lesson="35">
+            <span>35</span>
+            <div><strong>交接链</strong><small>版本接力</small></div>
+          </button>
+          <button class="lesson-link" data-lesson="B1">
+            <span>B1</span>
+            <div><strong>并发与聚合</strong><small>业务语义</small></div>
+          </button>
+        </nav>
+        <div class="runtime-note">
+          <span class="status-dot"></span>
+          <div><strong>本地确定性运行</strong><small>无 API Key · 无外部写入</small></div>
+        </div>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">ADPS · COLLABORATION</span>
+            <h1 id="lesson-title">32 · 层级委派</h1>
+          </div>
+          <div class="top-actions">
+            <button id="reset-button" class="secondary-button">重置</button>
+            <button id="run-button" class="primary-button">运行对照实验</button>
+          </div>
+        </header>
+
+        <section class="scenario-band">
+          <div>
+            <span class="section-label">本讲问题</span>
+            <p id="lesson-question">三位研究员怎样覆盖完整任务，而不是重复同一方向？</p>
+          </div>
+          <div class="benefit">
+            <span class="section-label">采用模式的收益</span>
+            <p id="lesson-benefit">扩大覆盖面，同时让主管保留总目标与验收责任。</p>
+          </div>
+        </section>
+
+        <section class="experiment" aria-live="polite">
+          <div class="experiment-heading">
+            <div>
+              <span class="section-label">对照实验</span>
+              <h2>同一业务场景，只改变协作边界</h2>
+            </div>
+            <span id="run-state" class="run-state">等待运行</span>
+          </div>
+
+          <div id="empty-state" class="empty-state">
+            <strong>点击“运行对照实验”</strong>
+            <p>左边显示原始做法，右边显示加入模式以后究竟改变了什么。</p>
+          </div>
+
+          <div id="results" class="results" hidden>
+            <article id="baseline-panel" class="result-panel"></article>
+            <article id="pattern-panel" class="result-panel"></article>
+          </div>
+        </section>
+
+        <section id="trace-section" class="trace-section" hidden>
+          <div class="experiment-heading">
+            <div>
+              <span class="section-label">运行轨迹</span>
+              <h2>程序实际检查了什么</h2>
+            </div>
+          </div>
+          <div id="trace-grid" class="trace-grid"></div>
+        </section>
+      </main>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

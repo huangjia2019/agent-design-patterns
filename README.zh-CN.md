@@ -74,7 +74,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 | **推理** | [思维链 ✅](./reasoning/a-chain-of-thought/) | [并行探索 ✅](./reasoning/c-parallel-exploration/) | [复杂度路由 ✅](./reasoning/b-complexity-routing/) | [迭代假设 ✅](./reasoning/d-iterative-hypothesis/) | — | — |
 | **行动** | [提示链 ✅](./action/c-prompt-chaining/) | — | [工具调度 ✅](./action/a-tool-dispatch/) | — | [规划执行 ✅](./action/b-plan-and-execute/) | [护栏三明治 ✅](./action/d-guardrail-sandwich/) |
 | **反思** | [生成评审 ✅](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
-| **协作** | [交接链 🟡](./collaboration/d-handoff-chain/) | [扇出聚合 🟡](./collaboration/b-fan-out-gather/) | — | [对抗评审 🟡](./collaboration/c-adversarial-review/) | — | [层级委派 🟡](./collaboration/a-hierarchical-delegation/) |
+| **协作** | [交接链 ✅](./collaboration/d-handoff-chain/) | [扇出聚合 ✅](./collaboration/b-fan-out-gather/) | — | [对抗评审 ✅](./collaboration/c-adversarial-review/) | — | [层级委派 ✅](./collaboration/a-hierarchical-delegation/) |
 | **治理** | [渐进承诺 ✅](./governance/c-progressive-commitment/) | — | [审批门 ✅](./governance/a-approval-gate/) | — | [可观测性 ✅](./governance/d-observability-harness/) | [爆炸半径 ✅](./governance/b-blast-radius/) |
 
 **组合**（把模式组装起来）：
@@ -86,6 +86,8 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 14 个空格子标的是工业还没填上的空白，或那种拓扑-功能组合下还没有结晶的模式。
 
 每个模式文件夹结构一致：`pattern.py`（最小诚实参考实现，50-250 行）+ `example.py`（拟真场景，无需 API key 也能跑）+ `test_pattern.py`（不变量测试）+ 中英双语 README。
+
+> **协作加餐实验**：`asyncio.gather` 或多 Agent Harness 能把结果收进同一个列表，仍不能替业务定义这个列表何时可信。打开[轻量协作工作台 B1](./collaboration/light_labs/README.zh-CN.md#harness-并发与业务聚合加餐)，可以实跑银行超时、重复血缘、单位错位和“三路调用全成功但业务拒绝”四类现场。
 
 ---
 

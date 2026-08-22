@@ -94,7 +94,7 @@ cells marked 🟡 are scaffolded.
 | **Reason** | [Chain of Thought ✅](./reasoning/a-chain-of-thought/) | [Parallel Exploration ✅](./reasoning/c-parallel-exploration/) | [Complexity Routing ✅](./reasoning/b-complexity-routing/) | [Iterative Hypothesis ✅](./reasoning/d-iterative-hypothesis/) | — | — |
 | **Act** | [Prompt Chaining ✅](./action/c-prompt-chaining/) | — | [Tool Dispatch ✅](./action/a-tool-dispatch/) | — | [Plan & Execute ✅](./action/b-plan-and-execute/) | [Guardrail Sandwich ✅](./action/d-guardrail-sandwich/) |
 | **Reflect** | [Generator-Critic ✅](./reflection/a-generator-critic/) | — | [Skill Package 🟡](./reflection/b-skill-package/) | [Self-Heal Loop 🟡](./reflection/d-self-heal-loop/) | — | [Experience Replay 🟡](./reflection/c-experience-replay/) |
-| **Collaborate** | [Handoff Chain 🟡](./collaboration/d-handoff-chain/) | [Fan-out & Gather 🟡](./collaboration/b-fan-out-gather/) | — | [Adversarial Review 🟡](./collaboration/c-adversarial-review/) | — | [Hierarchical Delegation 🟡](./collaboration/a-hierarchical-delegation/) |
+| **Collaborate** | [Handoff Chain ✅](./collaboration/d-handoff-chain/) | [Fan-out & Gather ✅](./collaboration/b-fan-out-gather/) | — | [Adversarial Review ✅](./collaboration/c-adversarial-review/) | — | [Hierarchical Delegation ✅](./collaboration/a-hierarchical-delegation/) |
 | **Govern** | [Progressive Commitment ✅](./governance/c-progressive-commitment/) | — | [Approval Gate ✅](./governance/a-approval-gate/) | — | [Observability Harness ✅](./governance/d-observability-harness/) | [Blast Radius ✅](./governance/b-blast-radius/) |
 
 **Composition** (putting patterns together):
@@ -111,6 +111,12 @@ Each pattern folder follows the same shape: `pattern.py` (the minimal
 honest reference, 50–250 lines), `example.py` (a real-scenario case that
 runs without API keys), `test_pattern.py` (the invariants the pattern
 must hold), and bilingual `README.md` / `README.zh-CN.md`.
+
+> **Collaboration bonus:** `asyncio.gather` or a multi-agent Harness can put
+> outputs in one list; it cannot define when that list earns a business
+> conclusion. Run [lightweight workbench B1](./collaboration/light_labs/README.md#bonus-harness-concurrency-versus-business-aggregation)
+> for bank timeout, duplicate lineage, unit mismatch, and the case where all
+> workers succeed while the business release is correctly denied.
 
 ---
 
