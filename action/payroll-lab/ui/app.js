@@ -109,6 +109,9 @@ function renderStressControls() {
   const resultNode = byId("stress-ladder");
   resultNode.classList.add("hidden");
   resultNode.innerHTML = "";
+  const runMeta = byId("run-meta");
+  runMeta.textContent = "等待运行";
+  runMeta.classList.remove("done");
   let actions = "";
 
   if (lecture === "21") {
@@ -270,6 +273,9 @@ async function runStressVector(vectorId) {
             <td>${escapeHtml(row.evidence)}</td>
           </tr>`).join("")}
       </table>`;
+    const runMeta = byId("run-meta");
+    runMeta.textContent = "✓ 对照实验运行完毕";
+    runMeta.classList.add("done");
     toast(`${vectorId} 前后对照完成`);
   } catch (error) {
     toast(error.message, true);
@@ -418,6 +424,7 @@ function renderRunResult(result) {
   byId("run-result").classList.remove("hidden");
   byId("result-title").textContent = result.meta.title;
   byId("result-command").textContent = result.command;
+  byId("run-meta").classList.remove("done");
   byId("run-meta").textContent = `${result.duration_ms} ms · exit ${result.return_code}`;
   byId("raw-output").textContent = result.output;
   const keyEvents = result.events.filter(
