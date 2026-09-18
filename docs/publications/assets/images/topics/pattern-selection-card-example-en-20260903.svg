@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+  <title id="title">Worked pattern selection for a technical document review agent</title>
+  <desc id="desc">A five-stage flow from source documents to a cited review, using Context Triage, Complexity-Based Routing, and a Generator-Critic loop, supported by observability and evaluation.</desc>
+  <rect width="1200" height="430" fill="#fafaf9"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif">
+    <g fill="#ffffff" stroke="#cbd5e1" stroke-width="2">
+      <rect x="35" y="60" width="190" height="150" rx="6"/>
+      <rect x="270" y="60" width="190" height="150" rx="6"/>
+      <rect x="505" y="60" width="190" height="150" rx="6"/>
+      <rect x="740" y="60" width="190" height="150" rx="6"/>
+      <rect x="975" y="60" width="190" height="150" rx="6"/>
+    </g>
+    <g stroke="#0f3a5f" stroke-width="3" fill="none">
+      <path d="M225 135 H260"/>
+      <path d="M460 135 H495"/>
+      <path d="M695 135 H730"/>
+      <path d="M930 135 H965"/>
+    </g>
+    <g fill="#0f3a5f">
+      <path d="M260 135 l-10 -6 v12 z"/>
+      <path d="M495 135 l-10 -6 v12 z"/>
+      <path d="M730 135 l-10 -6 v12 z"/>
+      <path d="M965 135 l-10 -6 v12 z"/>
+    </g>
+    <g fill="#b8842b" font-size="15" font-weight="700">
+      <text x="55" y="91">BOUNDARY</text>
+      <text x="290" y="91">P1 · PERCEPTION</text>
+      <text x="525" y="91">R2 · ROUTE</text>
+      <text x="760" y="91">F1 · LOOP</text>
+      <text x="995" y="91">OUTPUT</text>
+    </g>
+    <g fill="#0f172a" font-size="18" font-weight="700">
+      <text x="55" y="123">Sources and criteria</text>
+      <text x="290" y="123">Context Triage</text>
+      <text x="525" y="123">Complexity route</text>
+      <text x="760" y="123">Generator-Critic</text>
+      <text x="995" y="123">Cited review</text>
+    </g>
+    <g fill="#475569" font-size="15">
+      <text x="55" y="155">Proposal</text><text x="55" y="179">Standards</text>
+      <text x="290" y="155">Scope</text><text x="290" y="179">Evidence contract</text>
+      <text x="525" y="155">Fast path</text><text x="525" y="179">Deep path</text>
+      <text x="760" y="155">Draft · review</text><text x="760" y="179">Revise · stop</text>
+      <text x="995" y="155">Findings</text><text x="995" y="179">Open questions</text>
+    </g>
+    <rect x="35" y="275" width="1130" height="95" rx="6" fill="#0f3a5f"/>
+    <text x="65" y="311" fill="#fdf6e3" font-size="16" font-weight="700">CROSS-CUTTING ENGINEERING PLANES</text>
+    <text x="65" y="343" fill="#ffffff" font-size="17"><tspan font-weight="700">X1 Observability</tspan><tspan> · trace, evidence and versions</tspan></text>
+    <text x="610" y="343" fill="#ffffff" font-size="17"><tspan font-weight="700">X2 Evaluation &amp; Validation</tspan><tspan> · acceptance and regression</tspan></text>
+  </g>
+</svg>

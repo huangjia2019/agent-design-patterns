@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+  <title id="title">感知模块运行管线</title>
+  <desc id="desc">外部信号通过信号接入、预处理、语义聚合和事件判定，形成允许进入本轮判断的上下文。</desc>
+  <rect width="1200" height="430" fill="#ffffff"/>
+  <text x="60" y="52" fill="#0f2742" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="24" font-weight="700">感知决定哪些信息有资格影响本轮判断</text>
+  <text x="60" y="82" fill="#64748b" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="15">目标、约束与当前状态共同定义上下文准入标准</text>
+
+  <rect x="60" y="128" width="180" height="126" rx="6" fill="#f5f7fa" stroke="#cbd5e1"/>
+  <text x="150" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="19" font-weight="700">信号接入</text>
+  <text x="150" y="193" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">事件 · 轮询 · 流式</text>
+  <text x="150" y="218" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">多源交叉校验</text>
+
+  <path d="M240 191 H290" stroke="#b37a1a" stroke-width="3" fill="none"/>
+  <path d="M290 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="290" y="128" width="180" height="126" rx="6" fill="#edf7f6" stroke="#a9cfc9"/>
+  <text x="380" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="19" font-weight="700">预处理</text>
+  <text x="380" y="193" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">去重 · 清洗 · 标准化</text>
+  <text x="380" y="218" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">来源与时效标记</text>
+
+  <path d="M470 191 H520" stroke="#b37a1a" stroke-width="3" fill="none"/>
+  <path d="M520 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="520" y="128" width="180" height="126" rx="6" fill="#edf7f6" stroke="#a9cfc9"/>
+  <text x="610" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="19" font-weight="700">语义聚合</text>
+  <text x="610" y="193" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">关联同一事件</text>
+  <text x="610" y="218" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">补齐实体与上下文</text>
+
+  <path d="M700 191 H750" stroke="#b37a1a" stroke-width="3" fill="none"/>
+  <path d="M750 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="750" y="128" width="180" height="126" rx="6" fill="#fff8e8" stroke="#d6b36c"/>
+  <text x="840" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="19" font-weight="700">事件判定</text>
+  <text x="840" y="193" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">类型 · 严重度 · 置信度</text>
+  <text x="840" y="218" text-anchor="middle" fill="#475569" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">触发建议与证据</text>
+
+  <path d="M930 191 H980" stroke="#b37a1a" stroke-width="3" fill="none"/>
+  <path d="M980 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="980" y="128" width="160" height="126" rx="6" fill="#0f2742"/>
+  <text x="1060" y="164" text-anchor="middle" fill="#ffffff" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="18" font-weight="700">上下文合同</text>
+  <text x="1060" y="190" text-anchor="middle" fill="#dce7f0" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="13">（Context Contract）</text>
+  <text x="1060" y="218" text-anchor="middle" fill="#dce7f0" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="13">交给推理与行动</text>
+
+  <path d="M380 254 V308 H840 V254" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5" fill="none"/>
+  <rect x="394" y="290" width="432" height="72" rx="4" fill="#f8fafc" stroke="#d8dee7"/>
+  <text x="610" y="319" text-anchor="middle" fill="#334155" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="15" font-weight="700">被拒绝的信号不会悄悄消失</text>
+  <text x="610" y="344" text-anchor="middle" fill="#64748b" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="13">记录拒绝理由、来源、规则版本；必要时进入隔离区复核</text>
+
+  <line x1="60" y1="394" x2="1140" y2="394" stroke="#d8dee7"/>
+  <text x="60" y="418" fill="#64748b" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="13">输出是可追溯的事件与上下文，不是业务动作本身。</text>
+</svg>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">两个 Agent 的任务交接控制面</title>
+  <desc id="desc">前端 Agent 提交已核验事实和证据，协作控制面保存任务状态、交接包和验收条件，后端 Agent 接手修复后把版本化证据交回复测。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#31516f"/></marker>
+    <style>
+      .t{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#102238;letter-spacing:0}
+      .title{font-size:32px;font-weight:700} .sub{font-size:16px;fill:#587087}
+      .h{font-size:21px;font-weight:700} .b{font-size:17px} .small{font-size:14px;fill:#587087} .state{font-size:14px;font-weight:600}
+      .box{fill:#fff;stroke:#c8d2dc;stroke-width:2} .strong{fill:#f7f2e8;stroke:#b77a17;stroke-width:2.5}
+      .store{fill:#f5f8fb;stroke:#67829a;stroke-width:2} .pod{fill:#eef6f3;stroke:#3b7b69;stroke-width:2}
+      .inner{fill:#fff;stroke:#d7bd8d;stroke-width:1.5} .lane{fill:#fff;stroke:#d6dee5;stroke-width:1.5}
+      .line{fill:none;stroke:#31516f;stroke-width:2.5;marker-end:url(#arrow)} .return{fill:none;stroke:#3b7b69;stroke-width:2.5;marker-end:url(#arrow)}
+      .dash{fill:none;stroke:#8094a6;stroke-width:2;stroke-dasharray:7 7;marker-end:url(#arrow)} .thin{stroke:#9aabba;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1400" height="760" fill="#fff"/>
+  <text class="t title" x="52" y="58">两个 Agent 的任务交接控制面</text>
+  <text class="t sub" x="52" y="88">消息负责通知，任务账转移责任，证据链证明修复到了哪一个版本</text>
+  <rect class="agent" x="52" y="152" width="242" height="188" rx="8"/>
+  <text class="t h" x="78" y="194">前端 Agent</text>
+  <text class="t b" x="78" y="232">复现接口超时</text>
+  <text class="t b" x="78" y="264">分开事实与假设</text>
+  <text class="t b" x="78" y="296">提交 trace 与版本</text>
+  <text class="t small" x="78" y="324">本地保留页面排查过程</text>
+  <rect class="strong" x="380" y="118" width="628" height="256" rx="8"/>
+  <text class="t h" x="410" y="158">协作控制面</text>
+  <rect class="inner" x="410" y="184" width="170" height="130" rx="8"/>
+  <text class="t b" x="434" y="220">任务账</text>
+  <text class="t small" x="434" y="250">owner · state</text>
+  <text class="t small" x="434" y="276">expected_version</text>
+  <rect class="inner" x="600" y="184" width="170" height="130" rx="8"/>
+  <text class="t b" x="624" y="220">交接包</text>
+  <text class="t small" x="624" y="250">facts · hypotheses</text>
+  <text class="t small" x="624" y="276">artifacts · authority</text>
+  <rect class="inner" x="790" y="184" width="188" height="130" rx="8"/>
+  <text class="t b" x="814" y="220">验收门</text>
+  <text class="t small" x="814" y="250">commit · CI · deploy</text>
+  <text class="t small" x="814" y="276">retest result</text>
+  <text class="t small" x="410" y="347">状态提交与通知分开记录；重复消息不能重复推进任务或执行外部动作</text>
+  <rect class="agent" x="1090" y="152" width="258" height="188" rx="8"/>
+  <text class="t h" x="1116" y="194">后端 Agent</text>
+  <text class="t b" x="1116" y="232">显式接受任务</text>
+  <text class="t b" x="1116" y="264">在受限权限内修复</text>
+  <text class="t b" x="1116" y="296">提交 commit 与测试</text>
+  <text class="t small" x="1116" y="324">本地保留事务与 SQL 分析</text>
+  <path class="line" d="M294 246H380"/>
+  <text class="t small" x="304" y="230">OFFER</text>
+  <path class="line" d="M1008 246H1090"/>
+  <text class="t small" x="1023" y="230">ACCEPT</text>
+  <path class="return" d="M1219 340V424H173V340"/>
+  <text class="t small" x="595" y="414">READY_FOR_RETEST：后端交回版本化产物，前端按原复现步骤验收</text>
+  <rect class="lane" x="52" y="470" width="1296" height="58" rx="8"/>
+  <text class="t b" x="78" y="506">消息通道</text>
+  <text class="t small" x="242" y="506">“请接手” · “需要更多信息” · “可以复测”</text>
+  <rect class="lane" x="52" y="540" width="1296" height="58" rx="8"/>
+  <text class="t b" x="78" y="576">任务状态</text>
+  <text class="t state" x="242" y="576">OPEN → OFFERED → ACCEPTED → IN_PROGRESS → READY_FOR_RETEST → CLOSED</text>
+  <rect class="lane" x="52" y="610" width="1296" height="58" rx="8"/>
+  <text class="t b" x="78" y="646">证据通道</text>
+  <text class="t small" x="242" y="646">request_id · source version · trace · commit · CI report · deployment · retest</text>
+  <line class="thin" x1="52" y1="706" x2="1348" y2="706"/>
+  <text class="t small" x="52" y="738">边界：聊天记录不是任务账；角色名称不是权限；“已修复”不是验收结果</text>
+</svg>

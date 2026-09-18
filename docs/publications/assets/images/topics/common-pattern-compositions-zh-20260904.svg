@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" role="img" aria-labelledby="title desc">
+  <title id="title">四类常见 Agent 模式组合</title>
+  <desc id="desc">知识问答、长程工作、执行型事务和多 Agent 研究四类任务的起步模式组合，以及共同的可观测性、评测验证和安全身份工程面。</desc>
+  <rect width="1600" height="960" fill="#f7f9fc"/>
+  <text x="92" y="92" fill="#0d1b2f" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="46" font-weight="700">常见模式组合</text>
+  <text x="92" y="138" fill="#607087" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="23">先选一条完成任务的主路径，再按失败方式增加保护、反馈与协作</text>
+
+  <g font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <g transform="translate(92 196)">
+      <rect width="1416" height="144" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <rect width="250" height="144" rx="6" fill="#0d1b2f"/>
+      <text x="28" y="55" fill="#e0b35f" font-size="18" font-weight="700">READ / ANSWER</text>
+      <text x="28" y="94" fill="#ffffff" font-size="27" font-weight="700">知识问答</text>
+      <text x="284" y="54" fill="#0d1b2f" font-size="22" font-weight="700">P1 上下文分诊</text>
+      <text x="497" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="542" y="54" fill="#0d1b2f" font-size="22" font-weight="700">M2 检索增强</text>
+      <text x="735" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="780" y="54" fill="#0d1b2f" font-size="22" font-weight="700">R2 复杂度路由</text>
+      <text x="284" y="103" fill="#607087" font-size="19">完成条件：答案中的关键判断可回到原始证据；机械状态另走结构化查询。</text>
+    </g>
+
+    <g transform="translate(92 360)">
+      <rect width="1416" height="144" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <rect width="250" height="144" rx="6" fill="#16395c"/>
+      <text x="28" y="55" fill="#e0b35f" font-size="18" font-weight="700">LONG-RUNNING</text>
+      <text x="28" y="94" fill="#ffffff" font-size="27" font-weight="700">长程工作</text>
+      <text x="284" y="54" fill="#0d1b2f" font-size="22" font-weight="700">P1 上下文分诊</text>
+      <text x="477" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="520" y="54" fill="#0d1b2f" font-size="22" font-weight="700">M3 进度追踪</text>
+      <text x="711" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="754" y="54" fill="#0d1b2f" font-size="22" font-weight="700">A2 规划执行</text>
+      <text x="927" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="970" y="54" fill="#0d1b2f" font-size="22" font-weight="700">F3 经验回放</text>
+      <text x="284" y="103" fill="#607087" font-size="19">完成条件：checkpoint 能恢复目标、状态引用和下一步，不重复已经发生的外部动作。</text>
+    </g>
+
+    <g transform="translate(92 524)">
+      <rect width="1416" height="144" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <rect width="250" height="144" rx="6" fill="#315b52"/>
+      <text x="28" y="55" fill="#f1c979" font-size="18" font-weight="700">WRITE / COMMIT</text>
+      <text x="28" y="94" fill="#ffffff" font-size="27" font-weight="700">执行型事务</text>
+      <text x="284" y="54" fill="#0d1b2f" font-size="22" font-weight="700">A2 规划执行</text>
+      <text x="458" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="501" y="54" fill="#0d1b2f" font-size="22" font-weight="700">A1 工具调度</text>
+      <text x="674" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="717" y="54" fill="#0d1b2f" font-size="22" font-weight="700">G1 审批门</text>
+      <text x="867" y="54" fill="#9a6a18" font-size="24">+</text>
+      <text x="910" y="54" fill="#0d1b2f" font-size="22" font-weight="700">G2 爆炸半径</text>
+      <text x="284" y="103" fill="#607087" font-size="19">完成条件：具体意图获准，影响范围受限，执行后由业务系统读回并验收。</text>
+    </g>
+
+    <g transform="translate(92 688)">
+      <rect width="1416" height="144" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <rect width="250" height="144" rx="6" fill="#5a456a"/>
+      <text x="28" y="55" fill="#f1c979" font-size="18" font-weight="700">MULTI-AGENT</text>
+      <text x="28" y="94" fill="#ffffff" font-size="27" font-weight="700">研究与评审</text>
+      <text x="284" y="54" fill="#0d1b2f" font-size="22" font-weight="700">P3 渐进发现</text>
+      <text x="458" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="501" y="54" fill="#0d1b2f" font-size="22" font-weight="700">R3 并行探索</text>
+      <text x="674" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="717" y="54" fill="#0d1b2f" font-size="22" font-weight="700">C2 扇出聚合</text>
+      <text x="890" y="54" fill="#9a6a18" font-size="24">→</text>
+      <text x="933" y="54" fill="#0d1b2f" font-size="22" font-weight="700">C3 对抗评审</text>
+      <text x="284" y="103" fill="#607087" font-size="19">完成条件：分支证据独立，聚合规则明确，评审者没有继承同一份错误前提。</text>
+    </g>
+  </g>
+
+  <line x1="92" y1="882" x2="1508" y2="882" stroke="#c8912f" stroke-width="3"/>
+  <text x="800" y="921" text-anchor="middle" fill="#0d1b2f" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="21" font-weight="700">X1 可观测性 · X2 评测与验证 · X3 安全与身份，按任务风险贯穿整条路径</text>
+</svg>

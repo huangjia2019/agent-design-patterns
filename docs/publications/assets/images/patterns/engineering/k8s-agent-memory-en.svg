@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">Persistent Agent Memory on Kubernetes</title>
+  <desc id="desc">Requests pass identity and scope checks. Authoritative records live in durable stores, indexes can be rebuilt, and Pods hold isolated workspace projections.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#31516f"/></marker>
+    <style>
+      .t{font-family:Inter,Arial,sans-serif;fill:#102238;letter-spacing:0}
+      .title{font-size:32px;font-weight:700} .sub{font-size:16px;fill:#587087}
+      .h{font-size:21px;font-weight:700} .b{font-size:17px} .small{font-size:14px;fill:#587087} .state{font-size:14px;font-weight:600}
+      .box{fill:#fff;stroke:#c8d2dc;stroke-width:2} .strong{fill:#f7f2e8;stroke:#b77a17;stroke-width:2.5}
+      .store{fill:#f5f8fb;stroke:#67829a;stroke-width:2} .pod{fill:#eef6f3;stroke:#3b7b69;stroke-width:2}
+      .inner{fill:#fff;stroke:#d7bd8d;stroke-width:1.5} .lane{fill:#fff;stroke:#d6dee5;stroke-width:1.5}
+      .line{fill:none;stroke:#31516f;stroke-width:2.5;marker-end:url(#arrow)} .return{fill:none;stroke:#3b7b69;stroke-width:2.5;marker-end:url(#arrow)}
+      .dash{fill:none;stroke:#8094a6;stroke-width:2;stroke-dasharray:7 7;marker-end:url(#arrow)} .thin{stroke:#9aabba;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1400" height="760" fill="#fff"/>
+  <text class="t title" x="52" y="58">Persistent Agent Memory on Kubernetes</text>
+  <text class="t sub" x="52" y="88">Files can remain the agent interface; the authoritative record cannot live in one Pod.</text>
+  <rect class="box" x="52" y="158" width="210" height="156" rx="8"/>
+  <text class="t h" x="78" y="198">Request and identity</text>
+  <text class="t b" x="78" y="234">tenant_id</text>
+  <text class="t b" x="78" y="263">user_id</text>
+  <text class="t b" x="78" y="292">project_id</text>
+  <rect class="strong" x="340" y="126" width="334" height="220" rx="8"/>
+  <text class="t h" x="370" y="169">Memory service</text>
+  <line x1="370" y1="187" x2="644" y2="187" stroke="#d7bd8d" stroke-width="1.5"/>
+  <text class="t b" x="370" y="224">Candidate and sensitive-data checks</text>
+  <text class="t b" x="370" y="258">Scope, provenance, and authorization</text>
+  <text class="t b" x="370" y="292">Version commit, conflict handling, audit</text>
+  <text class="t small" x="370" y="324">Confirm “saved” only after a durable commit</text>
+  <path class="line" d="M262 236H340"/>
+  <text class="t small" x="272" y="222">write / read</text>
+  <rect class="store" x="762" y="112" width="250" height="126" rx="8"/>
+  <text class="t h" x="787" y="151">Database</text>
+  <text class="t b" x="787" y="184">metadata · versions · checkpoints</text>
+  <text class="t small" x="787" y="211">authoritative state and query entry</text>
+  <rect class="store" x="1058" y="112" width="286" height="126" rx="8"/>
+  <text class="t h" x="1083" y="151">Object storage</text>
+  <text class="t b" x="1083" y="184">large bodies · attachments · snapshots</text>
+  <text class="t small" x="1083" y="211">references and versions live in the DB</text>
+  <rect class="store" x="910" y="278" width="286" height="126" rx="8"/>
+  <text class="t h" x="935" y="317">Retrieval indexes</text>
+  <text class="t b" x="935" y="350">full text · vector · entity</text>
+  <text class="t small" x="935" y="377">bound to sources; rebuilt from authority</text>
+  <path class="line" d="M674 188H762"/>
+  <path class="line" d="M674 235C734 235 744 175 762 175"/>
+  <path class="line" d="M674 278C764 278 816 341 910 341"/>
+  <path class="dash" d="M1052 278V241C1052 218 1032 210 1012 210"/>
+  <text class="t small" x="706" y="371">retrieval returns source_ref and version</text>
+  <rect class="pod" x="250" y="510" width="304" height="146" rx="8"/>
+  <text class="t h" x="278" y="551">Pod A · isolated workspace</text>
+  <text class="t b" x="278" y="586">/workspace/memory.md</text>
+  <text class="t small" x="278" y="621">drafts, cache, on-demand projection</text>
+  <rect class="pod" x="716" y="510" width="304" height="146" rx="8"/>
+  <text class="t h" x="744" y="551">Pod B · next request</text>
+  <text class="t b" x="744" y="586">loads the active version by identity</text>
+  <text class="t small" x="744" y="621">does not depend on Pod A surviving</text>
+  <path class="dash" d="M430 346V510"/>
+  <path class="dash" d="M584 510C616 458 716 458 808 510"/>
+  <path class="line" d="M910 404C910 454 868 464 868 510"/>
+  <text class="t small" x="435" y="434">workspace projection</text>
+  <text class="t small" x="585" y="483">recover from authority after Pod removal</text>
+  <rect x="52" y="696" width="1292" height="2" fill="#d9e0e6"/>
+  <text class="t small" x="52" y="728">Verify: cross-Pod reads · concurrent version conflicts · index deletion · tenant isolation · replay protection</text>
+</svg>

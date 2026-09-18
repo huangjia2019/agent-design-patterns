@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">ADPS 六步选型法</title>
+  <desc id="desc">从限定架构决策、运行最小基线、诊断约束、生成候选，到接缝审查和实验，最后形成决策回执并设置重开条件。</desc>
+  <rect width="1600" height="900" fill="#f7f9fc"/>
+  <text x="96" y="102" fill="#0d1b2f" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="48" font-weight="700">六步选型法</text>
+  <text x="96" y="148" fill="#607087" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="24">从一项业务决策，走到有证据的模式组合</text>
+
+  <line x1="190" y1="440" x2="1410" y2="440" stroke="#c8912f" stroke-width="5"/>
+  <g font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <g transform="translate(76 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/>
+      <text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">1</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="26" font-weight="700">限定完成</text>
+      <text x="24" y="94" fill="#607087" font-size="19">目标、范围、失败代价</text>
+      <text x="24" y="126" fill="#607087" font-size="19">完成条件、排除项</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="18" font-weight="700">产物</text>
+      <text x="24" y="312" fill="#0d1b2f" font-size="19">任务完成契约</text>
+    </g>
+    <g transform="translate(324 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/>
+      <text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">2</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="26" font-weight="700">运行基线</text>
+      <text x="24" y="94" fill="#607087" font-size="19">最简单方案在同一负载下</text>
+      <text x="24" y="126" fill="#607087" font-size="19">具体失败在哪里</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="18" font-weight="700">产物</text>
+      <text x="24" y="312" fill="#0d1b2f" font-size="19">基线证据</text>
+    </g>
+    <g transform="translate(572 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/>
+      <text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">3</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="26" font-weight="700">诊断约束</text>
+      <text x="24" y="94" fill="#607087" font-size="19">把失败改写为可验证的</text>
+      <text x="24" y="126" fill="#607087" font-size="19">状态、权限或接缝缺口</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="18" font-weight="700">产物</text>
+      <text x="24" y="312" fill="#0d1b2f" font-size="19">约束诊断</text>
+    </g>
+    <g transform="translate(820 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/>
+      <text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">4</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="26" font-weight="700">生成候选</text>
+      <text x="24" y="94" fill="#607087" font-size="19">每组模式必须对应一条</text>
+      <text x="24" y="126" fill="#607087" font-size="19">已经观察到的缺口</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="18" font-weight="700">产物</text>
+      <text x="24" y="312" fill="#0d1b2f" font-size="19">候选组合</text>
+    </g>
+    <g transform="translate(1068 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/>
+      <text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">5</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="26" font-weight="700">接缝与实验</text>
+      <text x="24" y="94" fill="#607087" font-size="19">先查所有权和版本</text>
+      <text x="24" y="126" fill="#607087" font-size="19">再做对照与逐项消融</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="18" font-weight="700">产物</text>
+      <text x="24" y="312" fill="#0d1b2f" font-size="19">实验记录</text>
+    </g>
+    <g transform="translate(1316 250)">
+      <rect width="222" height="330" rx="6" fill="#0d1b2f" stroke="#0d1b2f" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/>
+      <text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">6</text>
+      <text x="24" y="54" fill="#ffffff" font-size="26" font-weight="700">裁决与重开</text>
+      <text x="24" y="94" fill="#cbd5e1" font-size="19">采用、拒绝或保留基线</text>
+      <text x="24" y="126" fill="#cbd5e1" font-size="19">并写下重新评估的条件</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#40506a"/>
+      <text x="24" y="280" fill="#e0b35f" font-size="18" font-weight="700">产物</text>
+      <text x="24" y="312" fill="#ffffff" font-size="19">决策回执</text>
+    </g>
+  </g>
+
+  <path d="M1427 622 C1427 742 1318 790 1168 790 L360 790 C214 790 142 722 142 624" fill="none" stroke="#607087" stroke-width="3" stroke-dasharray="10 10"/>
+  <polygon points="133,632 142,612 151,632" fill="#607087"/>
+  <text x="800" y="844" text-anchor="middle" fill="#607087" font-family="Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="21">负载、权限、模型、工具、数据或接缝发生变化，旧回执失效，重新从第 1 步开始</text>
+</svg>

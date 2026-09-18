@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="650" viewBox="0 0 1400 650" role="img" aria-label="任务工具集的形成与双层授权">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0f3a5f"/></marker>
+  </defs>
+  <rect width="1400" height="650" fill="#ffffff"/>
+  <g font-family="Inter, Arial, 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif">
+    <text x="700" y="47" text-anchor="middle" font-size="30" font-weight="700" fill="#0f3a5f"><tspan x="700" dy="0">任务工具集的形成与双层授权</tspan></text>
+    <text x="700" y="82" text-anchor="middle" font-size="17" font-weight="400" fill="#64748b"><tspan x="700" dy="0">任务相关性负责收窄候选，授权负责限制可见性与执行</tspan></text>
+    <rect x="180" y="105" width="1040" height="44" rx="6" fill="#fff7e8" stroke="#b8842b"/>
+    <text x="700" y="133" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="700" dy="0">最终能力集 = 候选能力 ∩ Agent 声明 ∩ 当前 Skill ∩ 主体权限</tspan></text>
+    <rect x="35" y="185" width="250" height="100" rx="8" fill="#eef4f8" stroke="#0f3a5f" stroke-width="2"/><text x="160" y="229" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="160" dy="0">全局候选</tspan><tspan x="160" dy="25">内置 · 配置 · MCP · ACP</tspan></text>
+    <path d="M285,235 L297,235" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <rect x="305" y="185" width="250" height="100" rx="8" fill="#eef4f8" stroke="#0f3a5f" stroke-width="2"/><text x="430" y="216" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="430" dy="0">Agent 能力边界</tspan><tspan x="430" dy="25">tool_groups · channel</tspan><tspan x="430" dy="25">subagent allow / deny</tspan></text>
+    <path d="M555,235 L567,235" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <rect x="575" y="185" width="250" height="100" rx="8" fill="#eef4f8" stroke="#0f3a5f" stroke-width="2"/><text x="700" y="229" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="700" dy="0">当前任务语境</tspan><tspan x="700" dy="25">已激活 Skill · allowed-tools</tspan></text>
+    <path d="M825,235 L837,235" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <rect x="845" y="185" width="250" height="100" rx="8" fill="#fff7e8" stroke="#b8842b" stroke-width="2"/><text x="970" y="229" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="970" dy="0">装配时授权</tspan><tspan x="970" dy="25">filter_resources</tspan></text>
+    <path d="M1095,235 L1107,235" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <rect x="1115" y="185" width="250" height="100" rx="8" fill="#eef4f8" stroke="#0f3a5f" stroke-width="2"/><text x="1240" y="216" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="1240" dy="0">模型可见工具集</tspan><tspan x="1240" dy="25">含已授权的</tspan><tspan x="1240" dy="25">deferred catalog</tspan></text>
+    <path d="M1240,285 L1240,350" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <rect x="35" y="350" width="250" height="100" rx="8" fill="#eef4f8" stroke="#0f3a5f" stroke-width="2"/><text x="160" y="394" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="160" dy="0">结果与证据</tspan><tspan x="160" dy="25">RunJournal · trace</tspan></text>
+    <rect x="305" y="350" width="250" height="100" rx="8" fill="#eef4f8" stroke="#0f3a5f" stroke-width="2"/><text x="430" y="394" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="430" dy="0">工具 / Sandbox</tspan><tspan x="430" dy="25">受控执行</tspan></text>
+    <rect x="575" y="350" width="250" height="100" rx="8" fill="#fff7e8" stroke="#b8842b" stroke-width="2"/><text x="700" y="381" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="700" dy="0">显式 Guardrail</tspan><tspan x="700" dy="25">参数 · 风险</tspan><tspan x="700" dy="25">外部策略</tspan></text>
+    <rect x="845" y="350" width="250" height="100" rx="8" fill="#fff7e8" stroke="#b8842b" stroke-width="2"/><text x="970" y="381" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="970" dy="0">运行时授权</tspan><tspan x="970" dy="25">复用同一个</tspan><tspan x="970" dy="25">AuthorizationProvider</tspan></text>
+    <rect x="1115" y="350" width="250" height="100" rx="8" fill="#eef4f8" stroke="#0f3a5f" stroke-width="2"/><text x="1240" y="394" text-anchor="middle" font-size="17" font-weight="600" fill="#132433"><tspan x="1240" dy="0">模型提出调用</tspan><tspan x="1240" dy="25">只从可见集合选择</tspan></text>
+    <path d="M1115,400 L1103,400" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <path d="M845,400 L833,400" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <path d="M575,400 L563,400" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <path d="M305,400 L293,400" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <rect x="575" y="515" width="250" height="82" rx="8" fill="#f3f4f6" stroke="#64748b" stroke-width="2"/><text x="700" y="537" text-anchor="middle" font-size="16" font-weight="600" fill="#132433"><tspan x="700" dy="0">拒绝</tspan><tspan x="700" dy="25">结构化原因</tspan><tspan x="700" dy="25">安全事件</tspan></text>
+    <path d="M970,450 L760,515" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)" stroke-dasharray="7 6"/>
+    <path d="M700,450 L700,507" fill="none" stroke="#0f3a5f" stroke-width="2.5" marker-end="url(#arrow)" stroke-dasharray="7 6"/>
+    <text x="935" y="487" text-anchor="middle" font-size="14" font-weight="700" fill="#b8842b"><tspan x="935" dy="0">拒绝</tspan></text>
+  </g>
+</svg>

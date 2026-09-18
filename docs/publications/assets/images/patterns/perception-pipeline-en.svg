@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+  <title id="title">Perception module runtime pipeline</title>
+  <desc id="desc">External signals pass through ingress, preprocessing, semantic aggregation, and event assessment before entering the current decision context.</desc>
+  <rect width="1200" height="430" fill="#ffffff"/>
+  <text x="60" y="52" fill="#0f2742" font-family="Arial, sans-serif" font-size="24" font-weight="700">Perception controls which information may influence the current decision</text>
+  <text x="60" y="82" fill="#64748b" font-family="Arial, sans-serif" font-size="15">Goals, constraints, and current state define the admission criteria</text>
+
+  <rect x="60" y="128" width="180" height="126" rx="6" fill="#f5f7fa" stroke="#cbd5e1"/>
+  <text x="150" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, sans-serif" font-size="19" font-weight="700">Signal ingress</text>
+  <text x="150" y="193" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Event · Poll · Stream</text>
+  <text x="150" y="218" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Source corroboration</text>
+  <path d="M240 191 H290" stroke="#b37a1a" stroke-width="3"/><path d="M290 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="290" y="128" width="180" height="126" rx="6" fill="#edf7f6" stroke="#a9cfc9"/>
+  <text x="380" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, sans-serif" font-size="19" font-weight="700">Preprocess</text>
+  <text x="380" y="193" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Dedupe · Clean · Normalize</text>
+  <text x="380" y="218" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Provenance and freshness</text>
+  <path d="M470 191 H520" stroke="#b37a1a" stroke-width="3"/><path d="M520 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="520" y="128" width="180" height="126" rx="6" fill="#edf7f6" stroke="#a9cfc9"/>
+  <text x="610" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, sans-serif" font-size="19" font-weight="700">Aggregate</text>
+  <text x="610" y="193" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Correlate one event</text>
+  <text x="610" y="218" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Resolve entities and context</text>
+  <path d="M700 191 H750" stroke="#b37a1a" stroke-width="3"/><path d="M750 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="750" y="128" width="180" height="126" rx="6" fill="#fff8e8" stroke="#d6b36c"/>
+  <text x="840" y="166" text-anchor="middle" fill="#0f2742" font-family="Arial, sans-serif" font-size="19" font-weight="700">Assess event</text>
+  <text x="840" y="193" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Type · Severity · Confidence</text>
+  <text x="840" y="218" text-anchor="middle" fill="#475569" font-family="Arial, sans-serif" font-size="14">Trigger advice and evidence</text>
+  <path d="M930 191 H980" stroke="#b37a1a" stroke-width="3"/><path d="M980 191 l-10 -6 v12 z" fill="#b37a1a"/>
+
+  <rect x="980" y="128" width="160" height="126" rx="6" fill="#0f2742"/>
+  <text x="1060" y="174" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="18" font-weight="700">Context Contract</text>
+  <text x="1060" y="207" text-anchor="middle" fill="#dce7f0" font-family="Arial, sans-serif" font-size="13">For reasoning</text>
+  <text x="1060" y="229" text-anchor="middle" fill="#dce7f0" font-family="Arial, sans-serif" font-size="13">and action</text>
+
+  <path d="M380 254 V308 H840 V254" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 5" fill="none"/>
+  <rect x="394" y="290" width="432" height="72" rx="4" fill="#f8fafc" stroke="#d8dee7"/>
+  <text x="610" y="319" text-anchor="middle" fill="#334155" font-family="Arial, sans-serif" font-size="15" font-weight="700">Rejected signals remain accountable</text>
+  <text x="610" y="344" text-anchor="middle" fill="#64748b" font-family="Arial, sans-serif" font-size="13">Record source, rule version, and reason; quarantine for review where required</text>
+  <line x1="60" y1="394" x2="1140" y2="394" stroke="#d8dee7"/>
+  <text x="60" y="418" fill="#64748b" font-family="Arial, sans-serif" font-size="13">The output is traceable event context, not the business action itself.</text>
+</svg>

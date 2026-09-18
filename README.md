@@ -1,8 +1,10 @@
 # Agent Design Patterns
 
-> **A 7×6 framework for agent architecture. 28 patterns, each placed at a coordinate, each with runnable code and a verified engineering slice from real production codebases.**
+Reference code and editable ADPS documentation for agent architecture: 27 core patterns, extension patterns, and three cross-cutting engineering concerns.
 
-*The model spends. The harness budgets. This repo is the vocabulary you can put in your project tomorrow.*
+[**English documents**](docs/publications/en/README.md) · [**中文文档**](docs/publications/zh/README.md) · [**Review and publishing**](docs/CONTRIBUTING.md)
+
+Code and documentation now share this repository. Propose article changes through a PR, or comment on a passage on the website. Accepted source revisions are published separately; each website article links to the exact source commit it displays.
 
 [简体中文 README](README.zh-CN.md) · [**Pattern Docs**](https://adpsagent.com/zh/patterns/) · [**Manning · *Designing AI Agents***](https://hubs.la/Q04hCsH10) · [Paper · arXiv:2605.13850](https://arxiv.org/abs/2605.13850) · [极客时间专栏](https://time.geekbang.org/) · [Newsletter](https://agentpatterns.substack.com) · [Author site](https://kage-ai.com)
 
@@ -66,11 +68,13 @@ Every agent pattern sits at the intersection of two orthogonal axes.
 * **Cognitive function** — *what the agent is doing*
   ↳ perceive · remember · reason · act · reflect · collaborate · govern
 * **Execution topology** — *how the work is laid out at runtime*
-  ↳ single-step · sequential · parallel · loop · router · hierarchy
+  ↳ chain · route · parallel · loop · hierarchy · orchestrate
 
-Seven × six = 42 cells. The 28 cells where interesting patterns live are
-the chapters of *Designing AI Agents* (Manning) and the lectures of the
-极客时间 column.
+The current public framework places 27 core patterns in the seven-by-six
+matrix. Observability, Evaluation & Validation, and Security & Identity
+are cross-cutting concerns. The book and older examples may use earlier
+catalogue versions; the [current pattern documentation](docs/publications/en/patterns.md)
+records the public definitions and historical entries.
 
 The framework's claim is not that everything fits the matrix. The claim
 is that **giving a pattern a coordinate forces an answer to "why is this
@@ -81,21 +85,23 @@ question. A matrix does not.
 
 ## The matrix — click into any pattern
 
-![Two-Axis Framework matrix: 7 cognitive functions × 6 execution topologies = 42 cells, 28 patterns](./docs/matrix.png)
+![Agent Design Patterns: cognitive function and execution topology](./docs/publications/assets/images/matrix-v08-en-20260825.png)
 
 Every pattern below lives at one coordinate. Click any pattern name to
 enter that folder's code and README. Cells marked ✅ have runnable code;
 cells marked 🟡 are scaffolded.
 
-|  | **Chain** | **Parallel** | **Route** | **Loop** | **Orchestrate** | **Hierarchy** |
+|  | **Chain** | **Route** | **Parallel** | **Loop** | **Hierarchy** | **Orchestrate** |
 |---|---|---|---|---|---|---|
-| **Perceive** | [Semantic Compaction ✅](./perception/b-semantic-compaction/) | [Multi-Modal Fusion ✅](./perception/d-multimodal-fusion/) | [Context Triage ✅](./perception/a-context-triage/) | — | [Progressive Discovery ✅](./perception/c-progressive-discovery/) | — |
-| **Remember** | [RAG ✅](./memory/b-rag/) | — | [Hierarchical Retention ✅](./memory/a-hierarchical-retention/) | [Failure Journals ✅](./memory/d-failure-journals/) | [Progress Tracking ✅](./memory/c-progress-tracking/) | — |
-| **Reason** | [Chain of Thought ✅](./reasoning/a-chain-of-thought/) | [Parallel Exploration ✅](./reasoning/c-parallel-exploration/) | [Complexity Routing ✅](./reasoning/b-complexity-routing/) | [Iterative Hypothesis ✅](./reasoning/d-iterative-hypothesis/) | — | — |
-| **Act** | [Prompt Chaining ✅](./action/c-prompt-chaining/) | — | [Tool Dispatch ✅](./action/a-tool-dispatch/) | — | [Plan & Execute ✅](./action/b-plan-and-execute/) | [Guardrail Sandwich ✅](./action/d-guardrail-sandwich/) |
-| **Reflect** | [Generator-Critic ✅](./reflection/a-generator-critic/) | — | [Skill Package 🟡](./reflection/b-skill-package/) | [Self-Heal Loop 🟡](./reflection/d-self-heal-loop/) | — | [Experience Replay 🟡](./reflection/c-experience-replay/) |
-| **Collaborate** | [Handoff Chain ✅](./collaboration/d-handoff-chain/) | [Fan-out & Gather ✅](./collaboration/b-fan-out-gather/) | — | [Adversarial Review ✅](./collaboration/c-adversarial-review/) | — | [Hierarchical Delegation ✅](./collaboration/a-hierarchical-delegation/) |
-| **Govern** | [Progressive Commitment ✅](./governance/c-progressive-commitment/) | — | [Approval Gate ✅](./governance/a-approval-gate/) | — | [Observability Harness ✅](./governance/d-observability-harness/) | [Blast Radius ✅](./governance/b-blast-radius/) |
+| **Perceive** | [Semantic Compaction ✅](./perception/b-semantic-compaction/) | [Context Triage ✅](./perception/a-context-triage/) | [Multi-Modal Fusion ✅](./perception/d-multimodal-fusion/) | [Progressive Discovery ✅](./perception/c-progressive-discovery/) | — | — |
+| **Remember** | [RAG ✅](./memory/b-rag/) | — | — | [Failure Journals ✅](./memory/d-failure-journals/) | [Hierarchical Retention ✅](./memory/a-hierarchical-retention/) | [Progress Tracking ✅](./memory/c-progress-tracking/) |
+| **Reason** | [Chain of Thought ✅](./reasoning/a-chain-of-thought/) | [Complexity Routing ✅](./reasoning/b-complexity-routing/) | [Parallel Exploration ✅](./reasoning/c-parallel-exploration/) | [Iterative Hypothesis Testing ✅](./reasoning/d-iterative-hypothesis/) | — | — |
+| **Act** | [Prompt Chaining ✅](./action/c-prompt-chaining/) | [Tool Dispatch ✅](./action/a-tool-dispatch/) | — | — | [Guardrail Sandwich ✅](./action/d-guardrail-sandwich/) | [Plan & Execute ✅](./action/b-plan-and-execute/) |
+| **Reflect** | [Generator-Critic ✅](./reflection/a-generator-critic/) | [Skill Package 🟡](./reflection/b-skill-package/) | — | [Self-Heal Loop 🟡](./reflection/d-self-heal-loop/) | [Experience Replay 🟡](./reflection/c-experience-replay/) | — |
+| **Collaborate** | [Handoff Chain ✅](./collaboration/d-handoff-chain/) | — | [Fan-out & Gather ✅](./collaboration/b-fan-out-gather/) | [Adversarial Review ✅](./collaboration/c-adversarial-review/) | [Hierarchical Delegation ✅](./collaboration/a-hierarchical-delegation/) | — |
+| **Govern** | [Progressive Commitment ✅](./governance/c-progressive-commitment/) | [Approval Gate ✅](./governance/a-approval-gate/) | — | — | [Blast Radius ✅](./governance/b-blast-radius/) | — |
+
+[X1 Observability](docs/publications/en/patterns/x1-observability.md) retains the existing [Observability Harness code](governance/d-observability-harness/). Its folder is not moved, so older book and course links continue to work. See also [X2 Evaluation & Validation](docs/publications/en/patterns/x2-evals-and-testing.md) and [X3 Security & Identity](docs/publications/en/patterns/x3-security-and-identity.md).
 
 **Composition** (putting patterns together):
 [Pattern Selection Card](./composition/a-pattern-selection-card/) ·
@@ -103,9 +109,8 @@ cells marked 🟡 are scaffolded.
 [Argus Full Case Study](./composition/c-argus-full-case/) ·
 [Checklist Benchmark Case](./composition/d-checklist-benchmark/)
 
-The 14 empty cells mark either industry gaps no production harness has
-filled yet, or topology-function combinations whose patterns haven't
-crystallized.
+Empty cells do not establish an industry gap. A pattern may have several
+implementations; the matrix records its primary coordinate.
 
 Each pattern folder follows the same shape: `pattern.py` (the minimal
 honest reference, 50–250 lines), `example.py` (a real-scenario case that
@@ -296,4 +301,4 @@ If this framework is useful in your work, please cite the paper:
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Code: MIT, see [LICENSE](LICENSE). Publication text and third-party media retain their [document-specific terms](docs/publications/LICENSE.md).

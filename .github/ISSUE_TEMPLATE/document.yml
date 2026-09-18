@@ -1,0 +1,27 @@
+name: Document review / 文档评审
+description: Suggest a correction, implementation detail or new evidence.
+title: "[Docs] "
+body:
+  - type: input
+    id: article
+    attributes:
+      label: Article URL / 文章地址
+    validations:
+      required: true
+  - type: textarea
+    id: passage
+    attributes:
+      label: Passage and proposed change / 原文与修改建议
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sources and use case / 来源与应用场景
+  - type: checkboxes
+    id: public
+    attributes:
+      label: Publication / 公开范围
+      options:
+        - label: This submission contains only material I can share publicly. / 本提交仅包含可以公开的材料。
+          required: true

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">ADPS Six-Step Selection Method</title>
+  <desc id="desc">A six-step evidence chain from bounding one architecture decision and running a baseline through diagnosing constraints, forming candidates, testing seams and ablations, and issuing a decision receipt with reopen conditions.</desc>
+  <rect width="1600" height="900" fill="#f7f9fc"/>
+  <text x="96" y="102" fill="#0d1b2f" font-family="Arial, sans-serif" font-size="48" font-weight="700">Six-Step Selection Method</text>
+  <text x="96" y="148" fill="#607087" font-family="Arial, sans-serif" font-size="24">From one bounded decision to an evidence-backed pattern composition</text>
+
+  <line x1="190" y1="440" x2="1410" y2="440" stroke="#c8912f" stroke-width="5"/>
+  <g font-family="Arial, sans-serif">
+    <g transform="translate(76 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/><text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">1</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="25" font-weight="700">Bound</text><text x="24" y="86" fill="#0d1b2f" font-size="25" font-weight="700">completion</text>
+      <text x="24" y="124" fill="#607087" font-size="18">Goal, scope, failure cost,</text><text x="24" y="153" fill="#607087" font-size="18">acceptance and exclusions</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="17" font-weight="700">ARTIFACT</text><text x="24" y="312" fill="#0d1b2f" font-size="18">Task Completion Contract</text>
+    </g>
+    <g transform="translate(324 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/><text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">2</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="25" font-weight="700">Run the</text><text x="24" y="86" fill="#0d1b2f" font-size="25" font-weight="700">baseline</text>
+      <text x="24" y="124" fill="#607087" font-size="18">Observe where the simplest</text><text x="24" y="153" fill="#607087" font-size="18">design fails on one workload</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="17" font-weight="700">ARTIFACT</text><text x="24" y="312" fill="#0d1b2f" font-size="19">Baseline evidence</text>
+    </g>
+    <g transform="translate(572 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/><text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">3</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="25" font-weight="700">Diagnose</text><text x="24" y="86" fill="#0d1b2f" font-size="25" font-weight="700">constraints</text>
+      <text x="24" y="124" fill="#607087" font-size="18">Tie each failure to a state,</text><text x="24" y="153" fill="#607087" font-size="18">authority, or seam defect</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="17" font-weight="700">ARTIFACT</text><text x="24" y="312" fill="#0d1b2f" font-size="19">Constraint diagnosis</text>
+    </g>
+    <g transform="translate(820 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/><text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">4</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="25" font-weight="700">Form</text><text x="24" y="86" fill="#0d1b2f" font-size="25" font-weight="700">candidates</text>
+      <text x="24" y="124" fill="#607087" font-size="18">Map every pattern to an</text><text x="24" y="153" fill="#607087" font-size="18">observed engineering gap</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="17" font-weight="700">ARTIFACT</text><text x="24" y="312" fill="#0d1b2f" font-size="19">Candidate designs</text>
+    </g>
+    <g transform="translate(1068 250)">
+      <rect width="222" height="330" rx="6" fill="#ffffff" stroke="#d7dee8" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/><text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">5</text>
+      <text x="24" y="54" fill="#0d1b2f" font-size="25" font-weight="700">Review seams</text><text x="24" y="86" fill="#0d1b2f" font-size="25" font-weight="700">and test</text>
+      <text x="24" y="124" fill="#607087" font-size="18">Check ownership and versions;</text><text x="24" y="153" fill="#607087" font-size="18">compare and ablate</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#e2e7ee"/>
+      <text x="24" y="280" fill="#9a6a18" font-size="17" font-weight="700">ARTIFACT</text><text x="24" y="312" fill="#0d1b2f" font-size="19">Experiment record</text>
+    </g>
+    <g transform="translate(1316 250)">
+      <rect width="222" height="330" rx="6" fill="#0d1b2f" stroke="#0d1b2f" stroke-width="2"/>
+      <circle cx="111" cy="190" r="26" fill="#c8912f"/><text x="111" y="199" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="700">6</text>
+      <text x="24" y="54" fill="#ffffff" font-size="25" font-weight="700">Decide and</text><text x="24" y="86" fill="#ffffff" font-size="25" font-weight="700">set reopening</text>
+      <text x="24" y="124" fill="#cbd5e1" font-size="18">Adopt, reject, or retain the</text><text x="24" y="153" fill="#cbd5e1" font-size="18">baseline; name what invalidates it</text>
+      <line x1="24" y1="238" x2="198" y2="238" stroke="#40506a"/>
+      <text x="24" y="280" fill="#e0b35f" font-size="17" font-weight="700">ARTIFACT</text><text x="24" y="312" fill="#ffffff" font-size="19">Decision receipt</text>
+    </g>
+  </g>
+
+  <path d="M1427 622 C1427 742 1318 790 1168 790 L360 790 C214 790 142 722 142 624" fill="none" stroke="#607087" stroke-width="3" stroke-dasharray="10 10"/>
+  <polygon points="133,632 142,612 151,632" fill="#607087"/>
+  <text x="800" y="844" text-anchor="middle" fill="#607087" font-family="Arial, sans-serif" font-size="21">Reopen from Step 1 when the workload, authority, model, tool, data, or seam changes</text>
+</svg>

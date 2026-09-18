@@ -1,0 +1,65 @@
+<p style="font-size: 0.9rem; color: var(--color-text-faint); margin-bottom: 1.75rem;"><a href="https://adpsagent.com/concepts/" style="color: var(--color-text-muted);">Concepts</a><span style="margin:0 0.45rem;">/</span>Concept</p>
+
+<header class="publication-head">
+<p class="publication-series">ADPS Engineering Concept Registry</p>
+<h1>Resumable Clarification Job: Pause the Same Task When Information Is Missing</h1><p class="publication-deck">Pause the same durable job when one required field is missing, then resume it.</p>
+</header>
+
+## Start with an unresolved scope
+
+A user asks to create a diagram under “Turnstile Control,” but the project index has no unique match. The system already knows the action and diagram type. Starting a new conversation would discard confirmed fields and risk producing a second interpretation.
+
+## Definition
+
+A resumable clarification job represents the question as durable runtime state. It stores the job ID, confirmed fields, missing fields, candidates, current stage, resume cursor, and host model revision. The user's answer resumes the original job.
+
+<pre><code class="language-text">PendingOperation = {
+  job_id,
+  confirmed_fields,
+  missing_fields,
+  candidates,
+  stage,
+  resume_cursor,
+  host_revision
+}
+</code></pre>
+
+Before resuming, the runtime revalidates the candidate scope and host revision. If the project changed, it returns to scope resolution.
+
+## Boundary
+
+The dialog only collects information. Correctness comes from freezing, persisting, and resuming the job. In-memory state alone does not cover process restarts, delayed responses, or multi-user work.
+
+## Provenance
+
+- Initial research source: the AI4MBSE modeling agent project by Liangding Yuan; the name is an ADPS synthesis.
+- Lineage: durable execution, continuations, checkpointed interrupts, and workflow wait states.
+- ADPS contribution: keeps clarification fields, candidate engineering objects, the resume cursor, and host revision in one job contract.
+- Definition status: ADPS restatement.
+
+<section aria-labelledby="concept-provenance-title" class="concept-provenance">
+<h2 id="concept-provenance-title">Proposal and provenance</h2>
+<dl>
+<div><dt>Concept group</dt><dd><a href="https://adpsagent.com/concepts/#group-planning-execution">Planning, execution, and write-back</a></dd></div>
+<div><dt>Initial source within ADPS</dt><dd>Initial research practice: Liangding Yuan</dd></div>
+<div><dt>First recorded in</dt><dd><a href="https://adpsagent.com/cases/ark-mbse-agent/">AI4MBSE modeling-agent project</a> (<time datetime="2026-08-02">2026-08-02</time>)</dd></div>
+<div><dt>ADPS editorial work</dt><dd>ADPS placed clarification fields, candidate objects, a resume cursor, and host revision in one job contract.</dd></div>
+<div><dt>Current standing</dt><dd>ADPS restatement</dd></div>
+</dl>
+</section>
+
+<div class="document-citation"><p><strong>Initial source:</strong> <a href="https://adpsagent.com/cases/ark-mbse-agent/">AI4MBSE modeling agent project</a>; authored by Liangding Yuan.</p><p><a href="https://adpsagent.com/concepts/">Concept registry</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p></div>
+
+<!-- PAGE-CHRONICLE:START -->
+
+<section aria-labelledby="page-chronicle-title" class="page-chronicle">
+<h2 id="page-chronicle-title">Chronicle</h2>
+<dl>
+<div><dt>Recorded source</dt><dd><a href="https://adpsagent.com/cases/ark-mbse-agent/">AI4MBSE modeling-agent project</a> (<time datetime="2026-08-02">2026-08-02</time>)</dd></div>
+<div><dt>Source date</dt><dd><time datetime="2026-08-02">2026-08-02</time></dd></div>
+<div><dt>First published on ADPS</dt><dd><time datetime="2026-08-02">2026-08-02</time></dd></div>
+</dl>
+<p><a href="https://adpsagent.com/chronicle/#concepts-resumable-clarification-job">View in the ADPS Chronicle</a></p>
+</section>
+
+<!-- PAGE-CHRONICLE:END -->

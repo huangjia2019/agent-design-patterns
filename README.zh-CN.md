@@ -1,6 +1,10 @@
 # Agent 设计模式之美 · 配套代码
 
-> **一个 7×6 的 agent 架构设计框架。28 个模式，每个模式都有坐标位置，每个都附带可跑代码 + 真实生产代码引用。**
+ADPS 的参考代码与可协作编辑的文档，涵盖 27 个核心模式、扩展模式和三个横切工程面。
+
+[**中文文档目录**](docs/publications/zh/README.md) · [**English documents**](docs/publications/en/README.md) · [**文档协作与发布**](docs/CONTRIBUTING.zh-CN.md)
+
+代码与文档在同一仓库维护。你可以通过 PR 修改文章，也可以在网站上针对段落提建议。采纳修订后另行发布，网站文末可查看当前页面对应的确切源稿版本。
 
 *模型负责花，Harness 负责管账。这个仓库是你明天就能用进项目里的设计语言。*
 
@@ -53,9 +57,9 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 * **认知功能**——agent 在做什么
   ↳ perceive / remember / reason / act / reflect / collaborate / govern
 * **执行拓扑**——runtime 是怎么编排的
-  ↳ single-step / sequential / parallel / loop / router / hierarchy
+  ↳ 链式 / 路由 / 并行 / 循环 / 层级 / 编排
 
-七 × 六 = 42 格。其中 28 个有意思的格子，就是 *Designing AI Agents* 这本书的章节、极客时间专栏的讲次、和这个仓库的代码。
+当前公开框架在七行六列的矩阵中列出 27 个核心模式，可观测性、评测与验证、安全与身份放在横切工程面。书稿与部分旧例子保留各自版本，[当前模式文档](docs/publications/zh/patterns.md)记录公开定义与历史入口。
 
 框架不主张"所有东西都能塞进矩阵"。它主张的是：**给一个模式分配坐标，强制你回答"为什么这个模式在这儿、不在别处"**。平铺清单允许你跳过这个问题，矩阵不允许。
 
@@ -63,19 +67,21 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 
 ## 双轴矩阵 · 点击进入每一个模式
 
-![双轴正交框架矩阵：7 认知功能 × 6 执行拓扑 = 42 格，28 模式](./docs/matrix.png)
+![Agent 设计模式：认知功能与执行拓扑](./docs/publications/assets/images/matrix-v08-zh-20260825.png)
 
 下面每个模式都坐落在一个坐标上。**点击模式名直接进入文件夹**看代码和 README。✅ 表示有可跑代码，🟡 表示占位脚手架。
 
-|  | **串行** | **并行** | **路由** | **循环** | **交接** | **层级** |
+|  | **链式** | **路由** | **并行** | **循环** | **层级** | **编排** |
 |---|---|---|---|---|---|---|
-| **感知** | [语义压缩 ✅](./perception/b-semantic-compaction/) | [多模态融合 ✅](./perception/d-multimodal-fusion/) | [上下文分诊 ✅](./perception/a-context-triage/) | — | [渐进发现 ✅](./perception/c-progressive-discovery/) | — |
-| **记忆** | [RAG ✅](./memory/b-rag/) | — | [分层保留 ✅](./memory/a-hierarchical-retention/) | [失败日记 ✅](./memory/d-failure-journals/) | [进度追踪 ✅](./memory/c-progress-tracking/) | — |
-| **推理** | [思维链 ✅](./reasoning/a-chain-of-thought/) | [并行探索 ✅](./reasoning/c-parallel-exploration/) | [复杂度路由 ✅](./reasoning/b-complexity-routing/) | [迭代假设 ✅](./reasoning/d-iterative-hypothesis/) | — | — |
-| **行动** | [提示链 ✅](./action/c-prompt-chaining/) | — | [工具调度 ✅](./action/a-tool-dispatch/) | — | [规划执行 ✅](./action/b-plan-and-execute/) | [护栏三明治 ✅](./action/d-guardrail-sandwich/) |
-| **反思** | [生成评审 ✅](./reflection/a-generator-critic/) | — | [技能包 🟡](./reflection/b-skill-package/) | [自愈循环 🟡](./reflection/d-self-heal-loop/) | — | [经验回放 🟡](./reflection/c-experience-replay/) |
-| **协作** | [交接链 ✅](./collaboration/d-handoff-chain/) | [扇出聚合 ✅](./collaboration/b-fan-out-gather/) | — | [对抗评审 ✅](./collaboration/c-adversarial-review/) | — | [层级委派 ✅](./collaboration/a-hierarchical-delegation/) |
-| **治理** | [渐进承诺 ✅](./governance/c-progressive-commitment/) | — | [审批门 ✅](./governance/a-approval-gate/) | — | [可观测性 ✅](./governance/d-observability-harness/) | [爆炸半径 ✅](./governance/b-blast-radius/) |
+| **感知** | [语义压缩 ✅](./perception/b-semantic-compaction/) | [上下文分诊 ✅](./perception/a-context-triage/) | [多模态融合 ✅](./perception/d-multimodal-fusion/) | [渐进发现 ✅](./perception/c-progressive-discovery/) | — | — |
+| **记忆** | [RAG ✅](./memory/b-rag/) | — | — | [失败日记 ✅](./memory/d-failure-journals/) | [分层保留 ✅](./memory/a-hierarchical-retention/) | [进度追踪 ✅](./memory/c-progress-tracking/) |
+| **推理** | [思维链 ✅](./reasoning/a-chain-of-thought/) | [复杂度路由 ✅](./reasoning/b-complexity-routing/) | [并行探索 ✅](./reasoning/c-parallel-exploration/) | [迭代假设验证 ✅](./reasoning/d-iterative-hypothesis/) | — | — |
+| **行动** | [提示链 ✅](./action/c-prompt-chaining/) | [工具调度 ✅](./action/a-tool-dispatch/) | — | — | [护栏三明治 ✅](./action/d-guardrail-sandwich/) | [规划执行 ✅](./action/b-plan-and-execute/) |
+| **反思** | [生成评审 ✅](./reflection/a-generator-critic/) | [技能包 🟡](./reflection/b-skill-package/) | — | [自愈循环 🟡](./reflection/d-self-heal-loop/) | [经验回放 🟡](./reflection/c-experience-replay/) | — |
+| **协作** | [交接链 ✅](./collaboration/d-handoff-chain/) | — | [扇出聚合 ✅](./collaboration/b-fan-out-gather/) | [对抗评审 ✅](./collaboration/c-adversarial-review/) | [层级委派 ✅](./collaboration/a-hierarchical-delegation/) | — |
+| **治理** | [渐进承诺 ✅](./governance/c-progressive-commitment/) | [审批门 ✅](./governance/a-approval-gate/) | — | — | [爆炸半径控制 ✅](./governance/b-blast-radius/) | — |
+
+[X1 可观测性](docs/publications/zh/patterns/x1-observability.md)继续使用已有[可观测性代码目录](governance/d-observability-harness/)，保留书稿和课程的旧链接。另见 [X2 评测与验证](docs/publications/zh/patterns/x2-evals-and-testing.md)与 [X3 安全与身份](docs/publications/zh/patterns/x3-security-and-identity.md)。
 
 **组合**（把模式组装起来）：
 [模式选型卡](./composition/a-pattern-selection-card/) ·
@@ -83,7 +89,7 @@ Function × Execution Topology](https://arxiv.org/abs/2605.13850)**
 [Argus 完整案例](./composition/c-argus-full-case/) ·
 [清单抽取基准案例](./composition/d-checklist-benchmark/)
 
-14 个空格子标的是工业还没填上的空白，或那种拓扑-功能组合下还没有结晶的模式。
+你会注意到矩阵中存在空格。这些位置尚未收录独立模式，并不表示行业没有相关实践。一个模式也可能采用多种拓扑实现，矩阵记录其主坐标。
 
 每个模式文件夹结构一致：`pattern.py`（最小诚实参考实现，50-250 行）+ `example.py`（拟真场景，无需 API key 也能跑）+ `test_pattern.py`（不变量测试）+ 中英双语 README。
 
@@ -227,4 +233,4 @@ pytest
 
 ## 许可证
 
-MIT。见 [LICENSE](LICENSE)。
+代码采用 MIT，见 [LICENSE](LICENSE)。文档与第三方图片保留[各篇原有许可与署名](docs/publications/LICENSE.md)。

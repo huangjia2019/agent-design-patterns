@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">K8s 中 Agent 记忆的持久化与恢复</title>
+  <desc id="desc">请求经身份和作用域检查进入记忆服务，权威记录存入数据库和对象存储，检索索引可重建，Pod 只持有隔离的工作区投影。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#31516f"/></marker>
+    <style>
+      .t{font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;fill:#102238;letter-spacing:0}
+      .title{font-size:32px;font-weight:700} .sub{font-size:16px;fill:#587087}
+      .h{font-size:21px;font-weight:700} .b{font-size:17px} .small{font-size:14px;fill:#587087} .state{font-size:14px;font-weight:600}
+      .box{fill:#fff;stroke:#c8d2dc;stroke-width:2} .strong{fill:#f7f2e8;stroke:#b77a17;stroke-width:2.5}
+      .store{fill:#f5f8fb;stroke:#67829a;stroke-width:2} .pod{fill:#eef6f3;stroke:#3b7b69;stroke-width:2}
+      .inner{fill:#fff;stroke:#d7bd8d;stroke-width:1.5} .lane{fill:#fff;stroke:#d6dee5;stroke-width:1.5}
+      .line{fill:none;stroke:#31516f;stroke-width:2.5;marker-end:url(#arrow)} .return{fill:none;stroke:#3b7b69;stroke-width:2.5;marker-end:url(#arrow)}
+      .dash{fill:none;stroke:#8094a6;stroke-width:2;stroke-dasharray:7 7;marker-end:url(#arrow)} .thin{stroke:#9aabba;stroke-width:1.5}
+    </style>
+  </defs>
+  <rect width="1400" height="760" fill="#fff"/>
+  <text class="t title" x="52" y="58">K8s 中 Agent 记忆的持久化与恢复</text>
+  <text class="t sub" x="52" y="88">文件可以继续作为操作界面，但权威记录不能只留在某个 Pod</text>
+  <rect class="box" x="52" y="158" width="210" height="156" rx="8"/>
+  <text class="t h" x="78" y="198">请求与身份</text>
+  <text class="t b" x="78" y="234">tenant_id</text>
+  <text class="t b" x="78" y="263">user_id</text>
+  <text class="t b" x="78" y="292">project_id</text>
+  <rect class="strong" x="340" y="126" width="334" height="220" rx="8"/>
+  <text class="t h" x="370" y="169">记忆服务</text>
+  <line x1="370" y1="187" x2="644" y2="187" stroke="#d7bd8d" stroke-width="1.5"/>
+  <text class="t b" x="370" y="224">候选记录与敏感信息检查</text>
+  <text class="t b" x="370" y="258">作用域、来源与权限准入</text>
+  <text class="t b" x="370" y="292">版本提交、冲突处理与审计</text>
+  <text class="t small" x="370" y="324">提交成功后，Agent 才确认“已经保存”</text>
+  <path class="line" d="M262 236H340"/>
+  <text class="t small" x="272" y="222">写入 / 读取</text>
+  <rect class="store" x="762" y="112" width="250" height="126" rx="8"/>
+  <text class="t h" x="787" y="151">数据库</text>
+  <text class="t b" x="787" y="184">元数据 · 版本 · checkpoint</text>
+  <text class="t small" x="787" y="211">权威状态与查询入口</text>
+  <rect class="store" x="1058" y="112" width="286" height="126" rx="8"/>
+  <text class="t h" x="1083" y="151">对象存储</text>
+  <text class="t b" x="1083" y="184">大文档 · 附件 · 原始快照</text>
+  <text class="t small" x="1083" y="211">由数据库保存引用与版本</text>
+  <rect class="store" x="910" y="278" width="286" height="126" rx="8"/>
+  <text class="t h" x="935" y="317">检索索引</text>
+  <text class="t b" x="935" y="350">全文 · 向量 · 实体索引</text>
+  <text class="t small" x="935" y="377">绑定源记录；可由权威内容重建</text>
+  <path class="line" d="M674 188H762"/>
+  <path class="line" d="M674 235C734 235 744 175 762 175"/>
+  <path class="line" d="M674 278C764 278 816 341 910 341"/>
+  <path class="dash" d="M1052 278V241C1052 218 1032 210 1012 210"/>
+  <text class="t small" x="706" y="371">检索命中返回 source_ref 与 version</text>
+  <rect class="pod" x="250" y="510" width="304" height="146" rx="8"/>
+  <text class="t h" x="278" y="551">Pod A · 隔离工作区</text>
+  <text class="t b" x="278" y="586">/workspace/memory.md</text>
+  <text class="t small" x="278" y="621">草稿、缓存、按需投影</text>
+  <rect class="pod" x="716" y="510" width="304" height="146" rx="8"/>
+  <text class="t h" x="744" y="551">Pod B · 新请求</text>
+  <text class="t b" x="744" y="586">按身份读取活动版本</text>
+  <text class="t small" x="744" y="621">不依赖 Pod A 继续存活</text>
+  <path class="dash" d="M430 346V510"/>
+  <path class="dash" d="M584 510C616 458 716 458 808 510"/>
+  <path class="line" d="M910 404C910 454 868 464 868 510"/>
+  <text class="t small" x="435" y="434">工作区投影</text>
+  <text class="t small" x="585" y="483">Pod 删除后，从权威存储恢复</text>
+  <rect x="52" y="696" width="1292" height="2" fill="#d9e0e6"/>
+  <text class="t small" x="52" y="728">验证重点：跨 Pod 读取 · 并发版本冲突 · 索引删除同步 · 租户隔离 · 不可逆动作防重放</text>
+</svg>

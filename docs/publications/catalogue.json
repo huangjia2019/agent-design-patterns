@@ -1,0 +1,2974 @@
+{
+  "schema": 1,
+  "translation_pending": [
+    "/zh/patterns/a1-tool-dispatch/cases/liangbo/",
+    "/zh/patterns/a2-plan-and-execute/cases/liangbo/",
+    "/zh/patterns/g1-approval-gate/cases/liangbo/",
+    "/zh/patterns/m1-hierarchical-retention/cases/liangbo/",
+    "/zh/patterns/m3-progress-tracking/cases/liangbo/",
+    "/zh/patterns/p1-context-triage/cases/liangbo/",
+    "/zh/patterns/r1-chain-of-thought/cases/liangbo/",
+    "/zh/patterns/r2-complexity-based-routing/cases/liangbo/",
+    "/zh/patterns/x1-observability/cases/liangbo/"
+  ],
+  "repository": "huangjia2019/agent-design-patterns",
+  "imported_from_site_commit": "44b7b7f0b7129f4863c69cd706bae23eb36ebb2d",
+  "documents": [
+    {
+      "id": "cases/ark-mbse-agent",
+      "language": "en",
+      "path": "docs/publications/en/cases/ark-mbse-agent.md",
+      "url": "/cases/ark-mbse-agent/",
+      "title": "AI4MBSE Modeling Agent: Qualifying Natural-Language Plans for Model Write-Back",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/deepagents-dynamic-orchestration",
+      "language": "en",
+      "path": "docs/publications/en/cases/deepagents-dynamic-orchestration.md",
+      "url": "/cases/deepagents-dynamic-orchestration/",
+      "title": "Deep Agents: From Fixed Graphs to Code-Generated Collaboration",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/deerflow-guardrail",
+      "language": "en",
+      "path": "docs/publications/en/cases/deerflow-guardrail.md",
+      "url": "/cases/deerflow-guardrail/",
+      "title": "DeerFlow Guardrails: From Pre-Call Interception to Two-Layer Authorization",
+      "first_published": "2026-08-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/liangbo-execution-agent",
+      "language": "en",
+      "path": "docs/publications/en/cases/liangbo-execution-agent.md",
+      "url": "/cases/liangbo-execution-agent/",
+      "title": "Dongfang Yiteng's Execution Agent: Preserve Business State Across a Workflow",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/xuanxu-gis-agent",
+      "language": "en",
+      "path": "docs/publications/en/cases/xuanxu-gis-agent.md",
+      "url": "/cases/xuanxu-gis-agent/",
+      "title": "Xuanxu Technology's GIS Publishing Agent: Turn Runtime Experience into Verifiable Pipelines",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/abstraction-reconstruction-loop",
+      "language": "en",
+      "path": "docs/publications/en/concepts/abstraction-reconstruction-loop.md",
+      "url": "/concepts/abstraction-reconstruction-loop/",
+      "title": "Abstraction-Reconstruction Loop",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/anchor-ledger-collection",
+      "language": "en",
+      "path": "docs/publications/en/concepts/anchor-ledger-collection.md",
+      "url": "/concepts/anchor-ledger-collection/",
+      "title": "Anchor, Ledger, Collection",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/business-evaluation-set",
+      "language": "en",
+      "path": "docs/publications/en/concepts/business-evaluation-set.md",
+      "url": "/concepts/business-evaluation-set/",
+      "title": "Business Evaluation Set",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/capability-certification-lifecycle",
+      "language": "en",
+      "path": "docs/publications/en/concepts/capability-certification-lifecycle.md",
+      "url": "/concepts/capability-certification-lifecycle/",
+      "title": "Capability Certification Lifecycle: How a Capability Earns Automatic Execution Rights",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/code-as-action",
+      "language": "en",
+      "path": "docs/publications/en/concepts/code-as-action.md",
+      "url": "/concepts/code-as-action/",
+      "title": "CodeAct: Code as Action",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/context-contract",
+      "language": "en",
+      "path": "docs/publications/en/concepts/context-contract.md",
+      "url": "/concepts/context-contract/",
+      "title": "Context Contract",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/control-narrative-dualism",
+      "language": "en",
+      "path": "docs/publications/en/concepts/control-narrative-dualism.md",
+      "url": "/concepts/control-narrative-dualism/",
+      "title": "Control and Narrative Planes",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/disk-fact-plane",
+      "language": "en",
+      "path": "docs/publications/en/concepts/disk-fact-plane.md",
+      "url": "/concepts/disk-fact-plane/",
+      "title": "Disk Fact Plane: Connect Runtime Stages through External Contracts",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/dual-feedback-clock",
+      "language": "en",
+      "path": "docs/publications/en/concepts/dual-feedback-clock.md",
+      "url": "/concepts/dual-feedback-clock/",
+      "title": "Dual Feedback Clock",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/dual-scale-governance",
+      "language": "en",
+      "path": "docs/publications/en/concepts/dual-scale-governance.md",
+      "url": "/concepts/dual-scale-governance/",
+      "title": "Dual-Scale Governance",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/durable-intent",
+      "language": "en",
+      "path": "docs/publications/en/concepts/durable-intent.md",
+      "url": "/concepts/durable-intent/",
+      "title": "Durable Intent",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/execution-vs-content",
+      "language": "en",
+      "path": "docs/publications/en/concepts/execution-vs-content.md",
+      "url": "/concepts/execution-vs-content/",
+      "title": "Execution vs Content Agents",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/external-acceptance-probe",
+      "language": "en",
+      "path": "docs/publications/en/concepts/external-acceptance-probe.md",
+      "url": "/concepts/external-acceptance-probe/",
+      "title": "External Acceptance Probe: Let the User-Side Result Decide Success",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/failure-to-rule-loop",
+      "language": "en",
+      "path": "docs/publications/en/concepts/failure-to-rule-loop.md",
+      "url": "/concepts/failure-to-rule-loop/",
+      "title": "Failure-to-Rule Loop: Make an Incident Change the Next Run",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/handoff-contract",
+      "language": "en",
+      "path": "docs/publications/en/concepts/handoff-contract.md",
+      "url": "/concepts/handoff-contract/",
+      "title": "Handoff Contract",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/hitl-block-resume",
+      "language": "en",
+      "path": "docs/publications/en/concepts/hitl-block-resume.md",
+      "url": "/concepts/hitl-block-resume/",
+      "title": "HITL Block and Resume",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/hook-composition",
+      "language": "en",
+      "path": "docs/publications/en/concepts/hook-composition.md",
+      "url": "/concepts/hook-composition/",
+      "title": "Hook Composition",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/intent-as-compilation",
+      "language": "en",
+      "path": "docs/publications/en/concepts/intent-as-compilation.md",
+      "url": "/concepts/intent-as-compilation/",
+      "title": "Intent as Compilation",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/judge-migration",
+      "language": "en",
+      "path": "docs/publications/en/concepts/judge-migration.md",
+      "url": "/concepts/judge-migration/",
+      "title": "Judge Migration",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/knowledge-compilation",
+      "language": "en",
+      "path": "docs/publications/en/concepts/knowledge-compilation.md",
+      "url": "/concepts/knowledge-compilation/",
+      "title": "Knowledge Compilation",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/layered-memory",
+      "language": "en",
+      "path": "docs/publications/en/concepts/layered-memory.md",
+      "url": "/concepts/layered-memory/",
+      "title": "Layered Memory L1/L2/L3",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/mechanical-state-plane",
+      "language": "en",
+      "path": "docs/publications/en/concepts/mechanical-state-plane.md",
+      "url": "/concepts/mechanical-state-plane/",
+      "title": "Mechanical State Plane",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/memory-envelope",
+      "language": "en",
+      "path": "docs/publications/en/concepts/memory-envelope.md",
+      "url": "/concepts/memory-envelope/",
+      "title": "Memory Envelope",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/observability-glass-dome",
+      "language": "en",
+      "path": "docs/publications/en/concepts/observability-glass-dome.md",
+      "url": "/concepts/observability-glass-dome/",
+      "title": "Activity Events and Timeline",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/one-diagram-unit-of-work",
+      "language": "en",
+      "path": "docs/publications/en/concepts/one-diagram-unit-of-work.md",
+      "url": "/concepts/one-diagram-unit-of-work/",
+      "title": "One-Diagram Unit of Work: Commit One Verifiable Modeling Increment",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/orchestrator",
+      "language": "en",
+      "path": "docs/publications/en/concepts/orchestrator.md",
+      "url": "/concepts/orchestrator/",
+      "title": "Responsibility Boundary Between the Orchestrator and MessageHandler",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/plan-compilation",
+      "language": "en",
+      "path": "docs/publications/en/concepts/plan-compilation.md",
+      "url": "/concepts/plan-compilation/",
+      "title": "Plan Compilation",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/probabilistic-core-deterministic-shell",
+      "language": "en",
+      "path": "docs/publications/en/concepts/probabilistic-core-deterministic-shell.md",
+      "url": "/concepts/probabilistic-core-deterministic-shell/",
+      "title": "Probabilistic Core, Deterministic Shell",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/programmatic-tool-calling",
+      "language": "en",
+      "path": "docs/publications/en/concepts/programmatic-tool-calling.md",
+      "url": "/concepts/programmatic-tool-calling/",
+      "title": "Programmatic Tool Calling",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/react-loop",
+      "language": "en",
+      "path": "docs/publications/en/concepts/react-loop.md",
+      "url": "/concepts/react-loop/",
+      "title": "ReAct Reasoning-Action Loop",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/reasoning-assetization",
+      "language": "en",
+      "path": "docs/publications/en/concepts/reasoning-assetization.md",
+      "url": "/concepts/reasoning-assetization/",
+      "title": "Reasoning Assetization: Move Repeated Decisions into Runtime Assets",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/resumable-clarification-job",
+      "language": "en",
+      "path": "docs/publications/en/concepts/resumable-clarification-job.md",
+      "url": "/concepts/resumable-clarification-job/",
+      "title": "Resumable Clarification Job: Pause the Same Task When Information Is Missing",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/scenario-benchmark-contract",
+      "language": "en",
+      "path": "docs/publications/en/concepts/scenario-benchmark-contract.md",
+      "url": "/concepts/scenario-benchmark-contract/",
+      "title": "Scenario–Benchmark Contract",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/scratchpad",
+      "language": "en",
+      "path": "docs/publications/en/concepts/scratchpad.md",
+      "url": "/concepts/scratchpad/",
+      "title": "Scratchpad Board: A Short-Lived Work Surface for an Agent",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/structural-writeback-gate",
+      "language": "en",
+      "path": "docs/publications/en/concepts/structural-writeback-gate.md",
+      "url": "/concepts/structural-writeback-gate/",
+      "title": "Structural Write-Back Gate: Check Engineering Invariants before Side Effects",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/task-dag-state-machine",
+      "language": "en",
+      "path": "docs/publications/en/concepts/task-dag-state-machine.md",
+      "url": "/concepts/task-dag-state-machine/",
+      "title": "Task DAG and State Machine",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/three-collaboration-planes",
+      "language": "en",
+      "path": "docs/publications/en/concepts/three-collaboration-planes.md",
+      "url": "/concepts/three-collaboration-planes/",
+      "title": "Three Collaboration Planes",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/three-powers-of-agency",
+      "language": "en",
+      "path": "docs/publications/en/concepts/three-powers-of-agency.md",
+      "url": "/concepts/three-powers-of-agency/",
+      "title": "Three Powers of Agency",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/topology-governance-matrix",
+      "language": "en",
+      "path": "docs/publications/en/concepts/topology-governance-matrix.md",
+      "url": "/concepts/topology-governance-matrix/",
+      "title": "Topology Governance Matrix",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/topology-lowering",
+      "language": "en",
+      "path": "docs/publications/en/concepts/topology-lowering.md",
+      "url": "/concepts/topology-lowering/",
+      "title": "Topology Lowering",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/typed-ir-chain",
+      "language": "en",
+      "path": "docs/publications/en/concepts/typed-ir-chain.md",
+      "url": "/concepts/typed-ir-chain/",
+      "title": "Typed Intermediate Representation Chain: Narrow Language into Verifiable Structure",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/unified-convergence-node",
+      "language": "en",
+      "path": "docs/publications/en/concepts/unified-convergence-node.md",
+      "url": "/concepts/unified-convergence-node/",
+      "title": "Unified Convergence Node",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/unified-session-state",
+      "language": "en",
+      "path": "docs/publications/en/concepts/unified-session-state.md",
+      "url": "/concepts/unified-session-state/",
+      "title": "Three Session-State Planes",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/vocabulary-equivalence-layer",
+      "language": "en",
+      "path": "docs/publications/en/concepts/vocabulary-equivalence-layer.md",
+      "url": "/concepts/vocabulary-equivalence-layer/",
+      "title": "Vocabulary Equivalence Layer: Align Planning Terms with the Host Metamodel",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/write-conflict-domain",
+      "language": "en",
+      "path": "docs/publications/en/concepts/write-conflict-domain.md",
+      "url": "/concepts/write-conflict-domain/",
+      "title": "Write-Conflict Domain",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a1-tool-dispatch",
+      "language": "en",
+      "path": "docs/publications/en/patterns/a1-tool-dispatch.md",
+      "url": "/patterns/a1-tool-dispatch/",
+      "title": "A1 · Tool Dispatch",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a2-plan-and-execute",
+      "language": "en",
+      "path": "docs/publications/en/patterns/a2-plan-and-execute.md",
+      "url": "/patterns/a2-plan-and-execute/",
+      "title": "A2 · Plan-and-Execute",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a3-prompt-chaining",
+      "language": "en",
+      "path": "docs/publications/en/patterns/a3-prompt-chaining.md",
+      "url": "/patterns/a3-prompt-chaining/",
+      "title": "A3 · Prompt Chaining",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a4-guardrail-sandwich",
+      "language": "en",
+      "path": "docs/publications/en/patterns/a4-guardrail-sandwich.md",
+      "url": "/patterns/a4-guardrail-sandwich/",
+      "title": "A4 · Guardrail Sandwich",
+      "first_published": "2026-07-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a5-minimal-tool-set",
+      "language": "en",
+      "path": "docs/publications/en/patterns/a5-minimal-tool-set.md",
+      "url": "/patterns/a5-minimal-tool-set/",
+      "title": "A5 · Minimal Tool Set",
+      "first_published": "2026-07-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/action",
+      "language": "en",
+      "path": "docs/publications/en/patterns/action.md",
+      "url": "/patterns/action/",
+      "title": "Action Module · Turn a Decision into a Verifiable External Change",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c1-hierarchical-delegation",
+      "language": "en",
+      "path": "docs/publications/en/patterns/c1-hierarchical-delegation.md",
+      "url": "/patterns/c1-hierarchical-delegation/",
+      "title": "C1 · Hierarchical Delegation",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c2-fan-out-gather",
+      "language": "en",
+      "path": "docs/publications/en/patterns/c2-fan-out-gather.md",
+      "url": "/patterns/c2-fan-out-gather/",
+      "title": "C2 · Fan-out / Gather",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c3-adversarial-review",
+      "language": "en",
+      "path": "docs/publications/en/patterns/c3-adversarial-review.md",
+      "url": "/patterns/c3-adversarial-review/",
+      "title": "C3 · Adversarial Review",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c4-handoff-chain",
+      "language": "en",
+      "path": "docs/publications/en/patterns/c4-handoff-chain.md",
+      "url": "/patterns/c4-handoff-chain/",
+      "title": "C4 · Handoff Chain",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c5-sub-agent-isolation",
+      "language": "en",
+      "path": "docs/publications/en/patterns/c5-sub-agent-isolation.md",
+      "url": "/patterns/c5-sub-agent-isolation/",
+      "title": "C5 · Sub-Agent Isolation",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c6-choreography",
+      "language": "en",
+      "path": "docs/publications/en/patterns/c6-choreography.md",
+      "url": "/patterns/c6-choreography/",
+      "title": "C6 · Choreography",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/collaboration",
+      "language": "en",
+      "path": "docs/publications/en/patterns/collaboration.md",
+      "url": "/patterns/collaboration/",
+      "title": "Collaboration · How multiple participants complete one body of work",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/engineering/cross-agent-handoff",
+      "language": "en",
+      "path": "docs/publications/en/patterns/engineering/cross-agent-handoff.md",
+      "url": "/patterns/engineering/cross-agent-handoff/",
+      "title": "Connecting two agents: from context reference to task handoff",
+      "first_published": "2026-09-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/engineering",
+      "language": "en",
+      "path": "docs/publications/en/patterns/engineering.md",
+      "url": "/patterns/engineering/",
+      "title": "Pattern Engineering Notes",
+      "first_published": "2026-09-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/engineering/memory-storage-on-kubernetes",
+      "language": "en",
+      "path": "docs/publications/en/patterns/engineering/memory-storage-on-kubernetes.md",
+      "url": "/patterns/engineering/memory-storage-on-kubernetes/",
+      "title": "Agent memory on Kubernetes: storage layers and recovery tests",
+      "first_published": "2026-09-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f1-generator-critic",
+      "language": "en",
+      "path": "docs/publications/en/patterns/f1-generator-critic.md",
+      "url": "/patterns/f1-generator-critic/",
+      "title": "F1 · Generator-Critic",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f2-skill-package",
+      "language": "en",
+      "path": "docs/publications/en/patterns/f2-skill-package.md",
+      "url": "/patterns/f2-skill-package/",
+      "title": "F2 · Skill Package",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f3-experience-replay",
+      "language": "en",
+      "path": "docs/publications/en/patterns/f3-experience-replay.md",
+      "url": "/patterns/f3-experience-replay/",
+      "title": "F3 · Experience Replay",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f4-self-heal-loop",
+      "language": "en",
+      "path": "docs/publications/en/patterns/f4-self-heal-loop.md",
+      "url": "/patterns/f4-self-heal-loop/",
+      "title": "F4 · Self-Heal Loop",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g1-approval-gate",
+      "language": "en",
+      "path": "docs/publications/en/patterns/g1-approval-gate.md",
+      "url": "/patterns/g1-approval-gate/",
+      "title": "G1 · Approval Gate",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g2-blast-radius-control",
+      "language": "en",
+      "path": "docs/publications/en/patterns/g2-blast-radius-control.md",
+      "url": "/patterns/g2-blast-radius-control/",
+      "title": "G2 · Blast-Radius Control",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g3-progressive-commitment",
+      "language": "en",
+      "path": "docs/publications/en/patterns/g3-progressive-commitment.md",
+      "url": "/patterns/g3-progressive-commitment/",
+      "title": "G3 · Progressive Commitment",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g5-hooks-pipeline",
+      "language": "en",
+      "path": "docs/publications/en/patterns/g5-hooks-pipeline.md",
+      "url": "/patterns/g5-hooks-pipeline/",
+      "title": "G5 · Hooks Pipeline",
+      "first_published": "2026-07-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/governance",
+      "language": "en",
+      "path": "docs/publications/en/patterns/governance.md",
+      "url": "/patterns/governance/",
+      "title": "Governance Module: Making Agent Autonomy Manageable",
+      "first_published": "2026-08-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns",
+      "language": "en",
+      "path": "docs/publications/en/patterns.md",
+      "url": "/patterns/",
+      "title": "Pattern Catalog and Selection Framework",
+      "first_published": null,
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m1-hierarchical-retention",
+      "language": "en",
+      "path": "docs/publications/en/patterns/m1-hierarchical-retention.md",
+      "url": "/patterns/m1-hierarchical-retention/",
+      "title": "M1 · Hierarchical Retention",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m2-rag-pipeline",
+      "language": "en",
+      "path": "docs/publications/en/patterns/m2-rag-pipeline.md",
+      "url": "/patterns/m2-rag-pipeline/",
+      "title": "M2 · RAG Pipeline · Retrieval-Augmented Generation",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m3-progress-tracking",
+      "language": "en",
+      "path": "docs/publications/en/patterns/m3-progress-tracking.md",
+      "url": "/patterns/m3-progress-tracking/",
+      "title": "M3 · Progress Tracking",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m4-failure-journals",
+      "language": "en",
+      "path": "docs/publications/en/patterns/m4-failure-journals.md",
+      "url": "/patterns/m4-failure-journals/",
+      "title": "M4 · Failure Journals",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m5-procedural-memory",
+      "language": "en",
+      "path": "docs/publications/en/patterns/m5-procedural-memory.md",
+      "url": "/patterns/m5-procedural-memory/",
+      "title": "M5 · Procedural Memory",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/memory",
+      "language": "en",
+      "path": "docs/publications/en/patterns/memory.md",
+      "url": "/patterns/memory/",
+      "title": "Memory Module · Turning Past Work into a Governed Runtime Asset",
+      "first_published": "2026-08-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p1-context-triage",
+      "language": "en",
+      "path": "docs/publications/en/patterns/p1-context-triage.md",
+      "url": "/patterns/p1-context-triage/",
+      "title": "P1 · Context Triage",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p2-semantic-compaction",
+      "language": "en",
+      "path": "docs/publications/en/patterns/p2-semantic-compaction.md",
+      "url": "/patterns/p2-semantic-compaction/",
+      "title": "P2 · Semantic Compaction",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p3-progressive-discovery",
+      "language": "en",
+      "path": "docs/publications/en/patterns/p3-progressive-discovery.md",
+      "url": "/patterns/p3-progressive-discovery/",
+      "title": "P3 · Progressive Discovery",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p4-multi-modal-fusion",
+      "language": "en",
+      "path": "docs/publications/en/patterns/p4-multi-modal-fusion.md",
+      "url": "/patterns/p4-multi-modal-fusion/",
+      "title": "P4 · Multi-Modal Fusion",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/perception",
+      "language": "en",
+      "path": "docs/publications/en/patterns/perception.md",
+      "url": "/patterns/perception/",
+      "title": "Perception Module · Control What Enters the Current Decision",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r1-chain-of-thought",
+      "language": "en",
+      "path": "docs/publications/en/patterns/r1-chain-of-thought.md",
+      "url": "/patterns/r1-chain-of-thought/",
+      "title": "R1 · Chain-of-Thought",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r2-complexity-based-routing",
+      "language": "en",
+      "path": "docs/publications/en/patterns/r2-complexity-based-routing.md",
+      "url": "/patterns/r2-complexity-based-routing/",
+      "title": "R2 · Complexity-Based Routing",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r3-parallel-exploration",
+      "language": "en",
+      "path": "docs/publications/en/patterns/r3-parallel-exploration.md",
+      "url": "/patterns/r3-parallel-exploration/",
+      "title": "R3 · Parallel Exploration",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r4-iterative-hypothesis-testing",
+      "language": "en",
+      "path": "docs/publications/en/patterns/r4-iterative-hypothesis-testing.md",
+      "url": "/patterns/r4-iterative-hypothesis-testing/",
+      "title": "R4 · Iterative Hypothesis Testing",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r5-talker-reasoner",
+      "language": "en",
+      "path": "docs/publications/en/patterns/r5-talker-reasoner.md",
+      "url": "/patterns/r5-talker-reasoner/",
+      "title": "R5 · Talker-Reasoner · Dual-Process Architecture",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/reasoning",
+      "language": "en",
+      "path": "docs/publications/en/patterns/reasoning.md",
+      "url": "/patterns/reasoning/",
+      "title": "Reasoning · Compiling Evidence into Reviewable Decisions",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/reflection",
+      "language": "en",
+      "path": "docs/publications/en/patterns/reflection.md",
+      "url": "/patterns/reflection/",
+      "title": "Reflection Module: Turning Feedback into Controlled Change",
+      "first_published": "2026-08-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/x1-observability",
+      "language": "en",
+      "path": "docs/publications/en/patterns/x1-observability.md",
+      "url": "/patterns/x1-observability/",
+      "title": "X1 · Observability",
+      "first_published": "2026-08-20",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/x2-evals-and-testing",
+      "language": "en",
+      "path": "docs/publications/en/patterns/x2-evals-and-testing.md",
+      "url": "/patterns/x2-evals-and-testing/",
+      "title": "X2 · Evaluation & Validation",
+      "first_published": "2026-08-20",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/x3-security-and-identity",
+      "language": "en",
+      "path": "docs/publications/en/patterns/x3-security-and-identity.md",
+      "url": "/patterns/x3-security-and-identity/",
+      "title": "X3 · Security & Identity",
+      "first_published": "2026-08-20",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/evaluation-as-engineering",
+      "language": "en",
+      "path": "docs/publications/en/positions/evaluation-as-engineering.md",
+      "url": "/positions/evaluation-as-engineering/",
+      "title": "Evaluation as Engineering: From Design Constraints to Production Evidence",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/governance-and-safety",
+      "language": "en",
+      "path": "docs/publications/en/positions/governance-and-safety.md",
+      "url": "/positions/governance-and-safety/",
+      "title": "Governance and Safety: Engineering Runtime Control",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/when-to-use-multi-agent",
+      "language": "en",
+      "path": "docs/publications/en/positions/when-to-use-multi-agent.md",
+      "url": "/positions/when-to-use-multi-agent/",
+      "title": "Multi-Agent Systems: Adoption Criteria and Engineering Boundaries",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/where-prompt-engineering-fits",
+      "language": "en",
+      "path": "docs/publications/en/positions/where-prompt-engineering-fits.md",
+      "url": "/positions/where-prompt-engineering-fits/",
+      "title": "Where Prompt Engineering Fits in an Agent System",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/abstraction-reconstruction",
+      "language": "en",
+      "path": "docs/publications/en/topics/abstraction-reconstruction.md",
+      "url": "/topics/abstraction-reconstruction/",
+      "title": "Abstraction and Reconstruction · From field evidence to patterns and back",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/agent-design-lifecycle",
+      "language": "en",
+      "path": "docs/publications/en/topics/agent-design-lifecycle.md",
+      "url": "/topics/agent-design-lifecycle/",
+      "title": "Agent Design Lifecycle: From Capability Registration to Evolution and Retirement",
+      "first_published": "2026-08-25",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/agent-evals-and-testing",
+      "language": "en",
+      "path": "docs/publications/en/topics/agent-evals-and-testing.md",
+      "url": "/topics/agent-evals-and-testing/",
+      "title": "Agent Evaluation and Validation: From Output Scores to System Acceptance",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/agent-os-engineering",
+      "language": "en",
+      "path": "docs/publications/en/topics/agent-os-engineering.md",
+      "url": "/topics/agent-os-engineering/",
+      "title": "Agent OS · From analogy to engineering checklist",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/ai-driven-software-engineering",
+      "language": "en",
+      "path": "docs/publications/en/topics/ai-driven-software-engineering.md",
+      "url": "/topics/ai-driven-software-engineering/",
+      "title": "AI-Driven Software Engineering: Specifications, Context, Execution, and Feedback",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/enterprise-agent-evolution",
+      "language": "en",
+      "path": "docs/publications/en/topics/enterprise-agent-evolution.md",
+      "url": "/topics/enterprise-agent-evolution/",
+      "title": "Enterprise Agent Evolution and Operating Model: Research Agenda",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/hook-composition",
+      "language": "en",
+      "path": "docs/publications/en/topics/hook-composition.md",
+      "url": "/topics/hook-composition/",
+      "title": "Hook Composition · Make hidden callbacks a readable control structure",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/human-agent-interaction",
+      "language": "en",
+      "path": "docs/publications/en/topics/human-agent-interaction.md",
+      "url": "/topics/human-agent-interaction/",
+      "title": "Human-Agent Interaction: Intent, Authority, Intervention, and Accountability",
+      "first_published": "2026-08-25",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/malleable-software",
+      "language": "en",
+      "path": "docs/publications/en/topics/malleable-software.md",
+      "url": "/topics/malleable-software/",
+      "title": "Malleable Software: Adding Agents to Existing Business Systems",
+      "first_published": "2026-09-10",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/observability-driven-evolution",
+      "language": "en",
+      "path": "docs/publications/en/topics/observability-driven-evolution.md",
+      "url": "/topics/observability-driven-evolution/",
+      "title": "Observability-Driven Agent Evolution: From Runtime Timelines to Verifiable Changes",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/pattern-composition",
+      "language": "en",
+      "path": "docs/publications/en/topics/pattern-composition.md",
+      "url": "/topics/pattern-composition/",
+      "title": "Common Pattern Compositions: From Task Terrain to Runtime Architecture",
+      "first_published": "2026-08-25",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/pattern-selection-card",
+      "language": "en",
+      "path": "docs/publications/en/topics/pattern-selection-card.md",
+      "url": "/topics/pattern-selection-card/",
+      "title": "Pattern Selection Card: Turning Constraints into an Agent Design",
+      "first_published": "2026-09-03",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/six-step-methodology",
+      "language": "en",
+      "path": "docs/publications/en/topics/six-step-methodology.md",
+      "url": "/topics/six-step-methodology/",
+      "title": "Six-Step Selection Method: From Business Problem to Pattern Composition",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/action-2026-08-06",
+      "language": "en",
+      "path": "docs/publications/en/workshops/action-2026-08-06.md",
+      "url": "/workshops/action-2026-08-06/",
+      "title": "ADPS Design Pattern Workshop Series · First Action Module Workshop",
+      "first_published": "2026-08-09",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/collaboration-2026-08-25",
+      "language": "en",
+      "path": "docs/publications/en/workshops/collaboration-2026-08-25.md",
+      "url": "/workshops/collaboration-2026-08-25/",
+      "title": "First Collaboration Module Workshop",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/governance-2026-08-18",
+      "language": "en",
+      "path": "docs/publications/en/workshops/governance-2026-08-18.md",
+      "url": "/workshops/governance-2026-08-18/",
+      "title": "First Governance Module Workshop",
+      "first_published": "2026-08-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/memory-2026-08-05",
+      "language": "en",
+      "path": "docs/publications/en/workshops/memory-2026-08-05.md",
+      "url": "/workshops/memory-2026-08-05/",
+      "title": "ADPS Design Pattern Workshop Series · First Memory Module Workshop",
+      "first_published": "2026-08-09",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/perception-2026-08-13",
+      "language": "en",
+      "path": "docs/publications/en/workshops/perception-2026-08-13.md",
+      "url": "/workshops/perception-2026-08-13/",
+      "title": "ADPS Design Pattern Workshop · First Perception Workshop",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/reasoning-2026-08-26",
+      "language": "en",
+      "path": "docs/publications/en/workshops/reasoning-2026-08-26.md",
+      "url": "/workshops/reasoning-2026-08-26/",
+      "title": "First Reasoning Module Workshop",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/reflection-2026-08-12",
+      "language": "en",
+      "path": "docs/publications/en/workshops/reflection-2026-08-12.md",
+      "url": "/workshops/reflection-2026-08-12/",
+      "title": "ADPS Design Pattern Series: First Reflection Module Workshop",
+      "first_published": "2026-08-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/ark-mbse-agent",
+      "language": "zh",
+      "path": "docs/publications/zh/cases/ark-mbse-agent.md",
+      "url": "/zh/cases/ark-mbse-agent/",
+      "title": "AI4MBSE 建模 Agent：让自然语言取得工程模型写入资格",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/deepagents-dynamic-orchestration",
+      "language": "zh",
+      "path": "docs/publications/zh/cases/deepagents-dynamic-orchestration.md",
+      "url": "/zh/cases/deepagents-dynamic-orchestration/",
+      "title": "Deep Agents：从固定图到代码生成的动态协作",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/deerflow-guardrail",
+      "language": "zh",
+      "path": "docs/publications/zh/cases/deerflow-guardrail.md",
+      "url": "/zh/cases/deerflow-guardrail/",
+      "title": "DeerFlow Guardrail：从调用前拦截到双层授权",
+      "first_published": "2026-08-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/liangbo-execution-agent",
+      "language": "zh",
+      "path": "docs/publications/zh/cases/liangbo-execution-agent.md",
+      "url": "/zh/cases/liangbo-execution-agent/",
+      "title": "东方屹腾执行型 Agent：让业务状态沿流程准确传递",
+      "first_published": "2026-06-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/xuanxu-gis-agent",
+      "language": "zh",
+      "path": "docs/publications/zh/cases/xuanxu-gis-agent.md",
+      "url": "/zh/cases/xuanxu-gis-agent/",
+      "title": "玄宿科技 GIS 数据发布 Agent：把运行经验固化成可验收管线",
+      "first_published": "2026-07-30",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/abstraction-reconstruction-loop",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/abstraction-reconstruction-loop.md",
+      "url": "/zh/concepts/abstraction-reconstruction-loop/",
+      "title": "抽象—还原往返",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/anchor-ledger-collection",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/anchor-ledger-collection.md",
+      "url": "/zh/concepts/anchor-ledger-collection/",
+      "title": "锚、账、集：叙事状态的数据结构",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/business-evaluation-set",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/business-evaluation-set.md",
+      "url": "/zh/concepts/business-evaluation-set/",
+      "title": "业务评测集",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/capability-certification-lifecycle",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/capability-certification-lifecycle.md",
+      "url": "/zh/concepts/capability-certification-lifecycle/",
+      "title": "能力认证生命周期：能力如何取得自动运行权",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/code-as-action",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/code-as-action.md",
+      "url": "/zh/concepts/code-as-action/",
+      "title": "CodeAct：代码即行动",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/context-contract",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/context-contract.md",
+      "url": "/zh/concepts/context-contract/",
+      "title": "上下文合同",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/control-narrative-dualism",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/control-narrative-dualism.md",
+      "url": "/zh/concepts/control-narrative-dualism/",
+      "title": "控制平面与叙事平面",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/disk-fact-plane",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/disk-fact-plane.md",
+      "url": "/zh/concepts/disk-fact-plane/",
+      "title": "磁盘事实平面：用外置合同连接运行阶段",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/dual-feedback-clock",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/dual-feedback-clock.md",
+      "url": "/zh/concepts/dual-feedback-clock/",
+      "title": "双反馈时钟",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/dual-scale-governance",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/dual-scale-governance.md",
+      "url": "/zh/concepts/dual-scale-governance/",
+      "title": "双尺度治理",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/durable-intent",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/durable-intent.md",
+      "url": "/zh/concepts/durable-intent/",
+      "title": "持久化意图",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/execution-vs-content",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/execution-vs-content.md",
+      "url": "/zh/concepts/execution-vs-content/",
+      "title": "执行型与内容生成型 Agent",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/external-acceptance-probe",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/external-acceptance-probe.md",
+      "url": "/zh/concepts/external-acceptance-probe/",
+      "title": "外部验收探针：从用户一侧裁决成功",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/failure-to-rule-loop",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/failure-to-rule-loop.md",
+      "url": "/zh/concepts/failure-to-rule-loop/",
+      "title": "失败到规则闭环：让事故改变下一次运行",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/handoff-contract",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/handoff-contract.md",
+      "url": "/zh/concepts/handoff-contract/",
+      "title": "交接合同",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/hitl-block-resume",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/hitl-block-resume.md",
+      "url": "/zh/concepts/hitl-block-resume/",
+      "title": "HITL：阻塞、审批与恢复",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/hook-composition",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/hook-composition.md",
+      "url": "/zh/concepts/hook-composition/",
+      "title": "Hook 组合",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/intent-as-compilation",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/intent-as-compilation.md",
+      "url": "/zh/concepts/intent-as-compilation/",
+      "title": "意图编译：从自然语言到控制信号",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/judge-migration",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/judge-migration.md",
+      "url": "/zh/concepts/judge-migration/",
+      "title": "裁判迁移",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/knowledge-compilation",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/knowledge-compilation.md",
+      "url": "/zh/concepts/knowledge-compilation/",
+      "title": "知识编译",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/layered-memory",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/layered-memory.md",
+      "url": "/zh/concepts/layered-memory/",
+      "title": "L1/L2/L3 分层记忆与经验召回",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/mechanical-state-plane",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/mechanical-state-plane.md",
+      "url": "/zh/concepts/mechanical-state-plane/",
+      "title": "机械状态平面与 Provenance 来源坐标",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/memory-envelope",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/memory-envelope.md",
+      "url": "/zh/concepts/memory-envelope/",
+      "title": "记忆信封：推理步骤的上下文包",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/observability-glass-dome",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/observability-glass-dome.md",
+      "url": "/zh/concepts/observability-glass-dome/",
+      "title": "可观测性：活动事件与执行时间线",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/one-diagram-unit-of-work",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/one-diagram-unit-of-work.md",
+      "url": "/zh/concepts/one-diagram-unit-of-work/",
+      "title": "单图事务：一次提交一个可验证建模增量",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/orchestrator",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/orchestrator.md",
+      "url": "/zh/concepts/orchestrator/",
+      "title": "Orchestrator 与 MessageHandler 的职责边界",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/plan-compilation",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/plan-compilation.md",
+      "url": "/zh/concepts/plan-compilation/",
+      "title": "Plan 编译",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/probabilistic-core-deterministic-shell",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/probabilistic-core-deterministic-shell.md",
+      "url": "/zh/concepts/probabilistic-core-deterministic-shell/",
+      "title": "概率内核与确定性外壳",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/programmatic-tool-calling",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/programmatic-tool-calling.md",
+      "url": "/zh/concepts/programmatic-tool-calling/",
+      "title": "程序化工具调用",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/react-loop",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/react-loop.md",
+      "url": "/zh/concepts/react-loop/",
+      "title": "ReAct 推理—行动循环",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/reasoning-assetization",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/reasoning-assetization.md",
+      "url": "/zh/concepts/reasoning-assetization/",
+      "title": "推理资产化：把低频判断固化为运行资产",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/resumable-clarification-job",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/resumable-clarification-job.md",
+      "url": "/zh/concepts/resumable-clarification-job/",
+      "title": "可续跑澄清作业：缺信息时暂停同一任务",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/scenario-benchmark-contract",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/scenario-benchmark-contract.md",
+      "url": "/zh/concepts/scenario-benchmark-contract/",
+      "title": "场景–Benchmark 契约",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/scratchpad",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/scratchpad.md",
+      "url": "/zh/concepts/scratchpad/",
+      "title": "草稿纸看板：Agent 的短期工作面",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/structural-writeback-gate",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/structural-writeback-gate.md",
+      "url": "/zh/concepts/structural-writeback-gate/",
+      "title": "结构写回门禁：在副作用前检查工程不变量",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/task-dag-state-machine",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/task-dag-state-machine.md",
+      "url": "/zh/concepts/task-dag-state-machine/",
+      "title": "任务 DAG 与节点状态机",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/three-collaboration-planes",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/three-collaboration-planes.md",
+      "url": "/zh/concepts/three-collaboration-planes/",
+      "title": "三类协作关系",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/three-powers-of-agency",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/three-powers-of-agency.md",
+      "url": "/zh/concepts/three-powers-of-agency/",
+      "title": "Agent 的三种权力",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/topology-governance-matrix",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/topology-governance-matrix.md",
+      "url": "/zh/concepts/topology-governance-matrix/",
+      "title": "拓扑治理矩阵",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/topology-lowering",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/topology-lowering.md",
+      "url": "/zh/concepts/topology-lowering/",
+      "title": "拓扑降阶",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/typed-ir-chain",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/typed-ir-chain.md",
+      "url": "/zh/concepts/typed-ir-chain/",
+      "title": "类型化中间表示链：逐步收敛自然语言结构",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/unified-convergence-node",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/unified-convergence-node.md",
+      "url": "/zh/concepts/unified-convergence-node/",
+      "title": "统一收敛节点",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/unified-session-state",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/unified-session-state.md",
+      "url": "/zh/concepts/unified-session-state/",
+      "title": "会话统一状态：三个状态平面",
+      "first_published": "2026-06-21",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/vocabulary-equivalence-layer",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/vocabulary-equivalence-layer.md",
+      "url": "/zh/concepts/vocabulary-equivalence-layer/",
+      "title": "词表等价层：对齐规划词表与宿主元模型",
+      "first_published": "2026-08-02",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "concepts/write-conflict-domain",
+      "language": "zh",
+      "path": "docs/publications/zh/concepts/write-conflict-domain.md",
+      "url": "/zh/concepts/write-conflict-domain/",
+      "title": "写入冲突域",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a1-tool-dispatch/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/a1-tool-dispatch/cases/liangbo.md",
+      "url": "/zh/patterns/a1-tool-dispatch/cases/liangbo/",
+      "title": "A1 · 工具调度 · 东方屹腾执行型 Agent",
+      "first_published": "2026-06-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a1-tool-dispatch",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/a1-tool-dispatch.md",
+      "url": "/zh/patterns/a1-tool-dispatch/",
+      "title": "A1 · Tool Dispatch · 工具调度",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a2-plan-and-execute/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/a2-plan-and-execute/cases/liangbo.md",
+      "url": "/zh/patterns/a2-plan-and-execute/cases/liangbo/",
+      "title": "A2 · 规划执行 · 东方屹腾执行型 Agent",
+      "first_published": "2026-06-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a2-plan-and-execute",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/a2-plan-and-execute.md",
+      "url": "/zh/patterns/a2-plan-and-execute/",
+      "title": "A2 · Plan-and-Execute · 规划-执行",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a3-prompt-chaining",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/a3-prompt-chaining.md",
+      "url": "/zh/patterns/a3-prompt-chaining/",
+      "title": "A3 · Prompt Chaining · 提示链",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a4-guardrail-sandwich",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/a4-guardrail-sandwich.md",
+      "url": "/zh/patterns/a4-guardrail-sandwich/",
+      "title": "A4 · Guardrail Sandwich · 护栏三明治",
+      "first_published": "2026-07-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/a5-minimal-tool-set",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/a5-minimal-tool-set.md",
+      "url": "/zh/patterns/a5-minimal-tool-set/",
+      "title": "A5 · Minimal Tool Set · 最简工具集",
+      "first_published": "2026-07-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/action",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/action.md",
+      "url": "/zh/patterns/action/",
+      "title": "行动模块 · 把判断变成可验收的外部变化",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c1-hierarchical-delegation",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/c1-hierarchical-delegation.md",
+      "url": "/zh/patterns/c1-hierarchical-delegation/",
+      "title": "C1 · Hierarchical Delegation · 层级委派",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c2-fan-out-gather",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/c2-fan-out-gather.md",
+      "url": "/zh/patterns/c2-fan-out-gather/",
+      "title": "C2 · Fan-out / Gather · 扇出聚合",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c3-adversarial-review",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/c3-adversarial-review.md",
+      "url": "/zh/patterns/c3-adversarial-review/",
+      "title": "C3 · Adversarial Review · 对抗评审",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c4-handoff-chain",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/c4-handoff-chain.md",
+      "url": "/zh/patterns/c4-handoff-chain/",
+      "title": "C4 · Handoff Chain · 交接链",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c5-sub-agent-isolation",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/c5-sub-agent-isolation.md",
+      "url": "/zh/patterns/c5-sub-agent-isolation/",
+      "title": "C5 · Sub-Agent Isolation · 子代理隔离",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/c6-choreography",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/c6-choreography.md",
+      "url": "/zh/patterns/c6-choreography/",
+      "title": "C6 · Choreography · 编舞",
+      "first_published": "2026-06-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/collaboration",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/collaboration.md",
+      "url": "/zh/patterns/collaboration/",
+      "title": "协作模块 · 多个参与者怎样共同完成一项工作",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/engineering/cross-agent-handoff",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/engineering/cross-agent-handoff.md",
+      "url": "/zh/patterns/engineering/cross-agent-handoff/",
+      "title": "两个 Agent 怎样接上：从上下文引用到任务交接",
+      "first_published": "2026-09-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/engineering",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/engineering.md",
+      "url": "/zh/patterns/engineering/",
+      "title": "模式工程实现",
+      "first_published": "2026-09-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/engineering/memory-storage-on-kubernetes",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/engineering/memory-storage-on-kubernetes.md",
+      "url": "/zh/patterns/engineering/memory-storage-on-kubernetes/",
+      "title": "K8s 中的 Agent 记忆：存储分层与恢复验证",
+      "first_published": "2026-09-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f1-generator-critic",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/f1-generator-critic.md",
+      "url": "/zh/patterns/f1-generator-critic/",
+      "title": "F1 · Generator-Critic · 生成评审",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f2-skill-package",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/f2-skill-package.md",
+      "url": "/zh/patterns/f2-skill-package/",
+      "title": "F2 · Skill Package · 技能包",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f3-experience-replay",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/f3-experience-replay.md",
+      "url": "/zh/patterns/f3-experience-replay/",
+      "title": "F3 · Experience Replay · 经验回放",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/f4-self-heal-loop",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/f4-self-heal-loop.md",
+      "url": "/zh/patterns/f4-self-heal-loop/",
+      "title": "F4 · Self-Heal Loop · 自愈循环",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g1-approval-gate/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/g1-approval-gate/cases/liangbo.md",
+      "url": "/zh/patterns/g1-approval-gate/cases/liangbo/",
+      "title": "G1 · 审批门 · 东方屹腾执行型 Agent",
+      "first_published": "2026-07-30",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g1-approval-gate",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/g1-approval-gate.md",
+      "url": "/zh/patterns/g1-approval-gate/",
+      "title": "G1 · Approval Gate · 审批门",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g2-blast-radius-control",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/g2-blast-radius-control.md",
+      "url": "/zh/patterns/g2-blast-radius-control/",
+      "title": "G2 · Blast Radius Control · 爆炸半径控制",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g3-progressive-commitment",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/g3-progressive-commitment.md",
+      "url": "/zh/patterns/g3-progressive-commitment/",
+      "title": "G3 · Progressive Commitment · 渐进承诺",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/g5-hooks-pipeline",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/g5-hooks-pipeline.md",
+      "url": "/zh/patterns/g5-hooks-pipeline/",
+      "title": "G5 · Hooks Pipeline · 钩子流水线",
+      "first_published": "2026-07-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/governance",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/governance.md",
+      "url": "/zh/patterns/governance/",
+      "title": "治理模块 · 把 Agent 的自主权变成可管理的工程对象",
+      "first_published": "2026-08-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns.md",
+      "url": "/zh/patterns/",
+      "title": "模式目录与选型框架",
+      "first_published": null,
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m1-hierarchical-retention/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/m1-hierarchical-retention/cases/liangbo.md",
+      "url": "/zh/patterns/m1-hierarchical-retention/cases/liangbo/",
+      "title": "M1 · 分层保留 · 东方屹腾执行型 Agent",
+      "first_published": "2026-07-30",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m1-hierarchical-retention",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/m1-hierarchical-retention.md",
+      "url": "/zh/patterns/m1-hierarchical-retention/",
+      "title": "M1 · Hierarchical Retention · 分层保留",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m2-rag-pipeline",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/m2-rag-pipeline.md",
+      "url": "/zh/patterns/m2-rag-pipeline/",
+      "title": "M2 · RAG Pipeline · 检索增强生成",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m3-progress-tracking/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/m3-progress-tracking/cases/liangbo.md",
+      "url": "/zh/patterns/m3-progress-tracking/cases/liangbo/",
+      "title": "M3 · 进度追踪 · 东方屹腾执行型 Agent",
+      "first_published": "2026-07-30",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m3-progress-tracking",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/m3-progress-tracking.md",
+      "url": "/zh/patterns/m3-progress-tracking/",
+      "title": "M3 · Progress Tracking · 进度追踪",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m4-failure-journals",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/m4-failure-journals.md",
+      "url": "/zh/patterns/m4-failure-journals/",
+      "title": "M4 · Failure Journals · 失败日记",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/m5-procedural-memory",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/m5-procedural-memory.md",
+      "url": "/zh/patterns/m5-procedural-memory/",
+      "title": "M5 · Procedural Memory · 程序性记忆",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/memory",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/memory.md",
+      "url": "/zh/patterns/memory/",
+      "title": "记忆模块 · 把过去变成可治理的运行资产",
+      "first_published": "2026-08-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p1-context-triage/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/p1-context-triage/cases/liangbo.md",
+      "url": "/zh/patterns/p1-context-triage/cases/liangbo/",
+      "title": "P1 · 上下文分诊 · 东方屹腾执行型 Agent",
+      "first_published": "2026-07-30",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p1-context-triage",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/p1-context-triage.md",
+      "url": "/zh/patterns/p1-context-triage/",
+      "title": "P1 · Context Triage · 上下文分诊",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p2-semantic-compaction",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/p2-semantic-compaction.md",
+      "url": "/zh/patterns/p2-semantic-compaction/",
+      "title": "P2 · Semantic Compaction · 语义压缩",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p3-progressive-discovery",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/p3-progressive-discovery.md",
+      "url": "/zh/patterns/p3-progressive-discovery/",
+      "title": "P3 · Progressive Discovery · 渐进发现",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/p4-multi-modal-fusion",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/p4-multi-modal-fusion.md",
+      "url": "/zh/patterns/p4-multi-modal-fusion/",
+      "title": "P4 · Multi-Modal Fusion · 多模态融合",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/perception",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/perception.md",
+      "url": "/zh/patterns/perception/",
+      "title": "感知模块 · 控制什么进入这一轮判断",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r1-chain-of-thought/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/r1-chain-of-thought/cases/liangbo.md",
+      "url": "/zh/patterns/r1-chain-of-thought/cases/liangbo/",
+      "title": "R1 · 思维链 · 东方屹腾执行型 Agent",
+      "first_published": "2026-07-30",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r1-chain-of-thought",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/r1-chain-of-thought.md",
+      "url": "/zh/patterns/r1-chain-of-thought/",
+      "title": "R1 · Chain-of-Thought · 思维链",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r2-complexity-based-routing/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/r2-complexity-based-routing/cases/liangbo.md",
+      "url": "/zh/patterns/r2-complexity-based-routing/cases/liangbo/",
+      "title": "R2 · 复杂度路由 · 东方屹腾执行型 Agent",
+      "first_published": "2026-07-30",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r2-complexity-based-routing",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/r2-complexity-based-routing.md",
+      "url": "/zh/patterns/r2-complexity-based-routing/",
+      "title": "R2 · Complexity-Based Routing · 复杂度路由",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r3-parallel-exploration",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/r3-parallel-exploration.md",
+      "url": "/zh/patterns/r3-parallel-exploration/",
+      "title": "R3 · Parallel Exploration · 并行探索",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r4-iterative-hypothesis-testing",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/r4-iterative-hypothesis-testing.md",
+      "url": "/zh/patterns/r4-iterative-hypothesis-testing/",
+      "title": "R4 · Iterative Hypothesis Testing · 迭代假设验证",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/r5-talker-reasoner",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/r5-talker-reasoner.md",
+      "url": "/zh/patterns/r5-talker-reasoner/",
+      "title": "R5 · Talker-Reasoner · 双模架构",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/reasoning",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/reasoning.md",
+      "url": "/zh/patterns/reasoning/",
+      "title": "推理模块 · 把证据编译成可检查的判断",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/reflection",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/reflection.md",
+      "url": "/zh/patterns/reflection/",
+      "title": "反思模块 · 从运行反馈到受控修改",
+      "first_published": "2026-08-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/x1-observability/cases/liangbo",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/x1-observability/cases/liangbo.md",
+      "url": "/zh/patterns/x1-observability/cases/liangbo/",
+      "title": "X1 · 可观测性 Observability Harness · 东方屹腾执行型 Agent",
+      "first_published": "2026-08-20",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/x1-observability",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/x1-observability.md",
+      "url": "/zh/patterns/x1-observability/",
+      "title": "X1 · Observability · 可观测性",
+      "first_published": "2026-08-20",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/x2-evals-and-testing",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/x2-evals-and-testing.md",
+      "url": "/zh/patterns/x2-evals-and-testing/",
+      "title": "X2 · Evaluation & Validation · 评测与验证",
+      "first_published": "2026-08-20",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "patterns/x3-security-and-identity",
+      "language": "zh",
+      "path": "docs/publications/zh/patterns/x3-security-and-identity.md",
+      "url": "/zh/patterns/x3-security-and-identity/",
+      "title": "X3 · Security & Identity · 安全与身份",
+      "first_published": "2026-08-20",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/evaluation-as-engineering",
+      "language": "zh",
+      "path": "docs/publications/zh/positions/evaluation-as-engineering.md",
+      "url": "/zh/positions/evaluation-as-engineering/",
+      "title": "Eval 的工程化：从设计约束到生产证据",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/governance-and-safety",
+      "language": "zh",
+      "path": "docs/publications/zh/positions/governance-and-safety.md",
+      "url": "/zh/positions/governance-and-safety/",
+      "title": "治理与 Safety：运行时控制的工程边界",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/when-to-use-multi-agent",
+      "language": "zh",
+      "path": "docs/publications/zh/positions/when-to-use-multi-agent.md",
+      "url": "/zh/positions/when-to-use-multi-agent/",
+      "title": "多 Agent：采用条件与工程边界",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "positions/where-prompt-engineering-fits",
+      "language": "zh",
+      "path": "docs/publications/zh/positions/where-prompt-engineering-fits.md",
+      "url": "/zh/positions/where-prompt-engineering-fits/",
+      "title": "Prompt Engineering 在 Agent 系统中的位置",
+      "first_published": "2026-06-07",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/abstraction-reconstruction",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/abstraction-reconstruction.md",
+      "url": "/zh/topics/abstraction-reconstruction/",
+      "title": "抽象—还原 · 从工程现场到模式，再回到工程现场",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/agent-design-lifecycle",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/agent-design-lifecycle.md",
+      "url": "/zh/topics/agent-design-lifecycle/",
+      "title": "Agent 设计生命周期 · 从能力登记到演进与退役",
+      "first_published": "2026-08-25",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/agent-evals-and-testing",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/agent-evals-and-testing.md",
+      "url": "/zh/topics/agent-evals-and-testing/",
+      "title": "Agent 评测与验证 · 从输出评分到系统验收",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/agent-os-engineering",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/agent-os-engineering.md",
+      "url": "/zh/topics/agent-os-engineering/",
+      "title": "Agent OS · 从类比到工程清单",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/ai-driven-software-engineering",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/ai-driven-software-engineering.md",
+      "url": "/zh/topics/ai-driven-software-engineering/",
+      "title": "AI 驱动的软件工程 · 规格、上下文、执行与反馈",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/enterprise-agent-evolution",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/enterprise-agent-evolution.md",
+      "url": "/zh/topics/enterprise-agent-evolution/",
+      "title": "企业 Agent 演进与组织运行 · 研究议程",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/hook-composition",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/hook-composition.md",
+      "url": "/zh/topics/hook-composition/",
+      "title": "Hook 组合 · 把隐藏回调变成可读的控制结构",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/human-agent-interaction",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/human-agent-interaction.md",
+      "url": "/zh/topics/human-agent-interaction/",
+      "title": "人与 Agent 的协作边界 · 意图、授权、接管与责任",
+      "first_published": "2026-08-25",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/malleable-software",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/malleable-software.md",
+      "url": "/zh/topics/malleable-software/",
+      "title": "可塑软件：在既有业务上增加 Agent 能力",
+      "first_published": "2026-09-10",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/observability-driven-evolution",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/observability-driven-evolution.md",
+      "url": "/zh/topics/observability-driven-evolution/",
+      "title": "可观测性驱动的 Agent 演进 · 从运行时间线到可验证变更",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/pattern-composition",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/pattern-composition.md",
+      "url": "/zh/topics/pattern-composition/",
+      "title": "常见模式组合：从任务地形到可运行架构",
+      "first_published": "2026-08-25",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/pattern-selection-card",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/pattern-selection-card.md",
+      "url": "/zh/topics/pattern-selection-card/",
+      "title": "模式选型卡：从场景约束到 Agent 架构",
+      "first_published": "2026-09-03",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "topics/six-step-methodology",
+      "language": "zh",
+      "path": "docs/publications/zh/topics/six-step-methodology.md",
+      "url": "/zh/topics/six-step-methodology/",
+      "title": "六步选型法：从业务问题到模式组合",
+      "first_published": "2026-09-04",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/action-2026-08-06",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/action-2026-08-06.md",
+      "url": "/zh/workshops/action-2026-08-06/",
+      "title": "ADPS 设计模式系列研讨会 · 行动模块第一次研讨会",
+      "first_published": "2026-08-09",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/collaboration-2026-08-25",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/collaboration-2026-08-25.md",
+      "url": "/zh/workshops/collaboration-2026-08-25/",
+      "title": "协作模块第一次研讨会",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/governance-2026-08-18",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/governance-2026-08-18.md",
+      "url": "/zh/workshops/governance-2026-08-18/",
+      "title": "治理模块第一次研讨会",
+      "first_published": "2026-08-19",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/memory-2026-08-05",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/memory-2026-08-05.md",
+      "url": "/zh/workshops/memory-2026-08-05/",
+      "title": "ADPS 设计模式系列研讨会 · 记忆模块第一次研讨会",
+      "first_published": "2026-08-09",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/perception-2026-08-13",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/perception-2026-08-13.md",
+      "url": "/zh/workshops/perception-2026-08-13/",
+      "title": "ADPS 设计模式系列研讨会 · 感知模块第一次研讨会",
+      "first_published": "2026-08-14",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/reasoning-2026-08-26",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/reasoning-2026-08-26.md",
+      "url": "/zh/workshops/reasoning-2026-08-26/",
+      "title": "推理模块第一次研讨会",
+      "first_published": "2026-08-26",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "workshops/reflection-2026-08-12",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/reflection-2026-08-12.md",
+      "url": "/zh/workshops/reflection-2026-08-12/",
+      "title": "ADPS 设计模式系列研讨会 · 反思模块第一次研讨会",
+      "first_published": "2026-08-13",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "contribute/guide",
+      "language": "zh",
+      "path": "docs/CONTRIBUTING.zh-CN.md",
+      "url": "/zh/contribute/guide/",
+      "title": "文档协作与发布",
+      "first_published": "2026-09-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "contribute/guide",
+      "language": "en",
+      "path": "docs/CONTRIBUTING.md",
+      "url": "/contribute/guide/",
+      "title": "Document Collaboration and Publishing",
+      "first_published": "2026-09-18",
+      "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    }
+  ],
+  "assets": [
+    {
+      "path": "docs/publications/assets/images/cases/deepagents-dynamic-review-en.svg",
+      "site_path": "images/cases/deepagents-dynamic-review-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/deepagents-dynamic-review-zh.svg",
+      "site_path": "images/cases/deepagents-dynamic-review-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/deepagents-three-layers-en.svg",
+      "site_path": "images/cases/deepagents-three-layers-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/deepagents-three-layers-zh.svg",
+      "site_path": "images/cases/deepagents-three-layers-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/deerflow-guardrail-evolution-en.svg",
+      "site_path": "images/cases/deerflow-guardrail-evolution-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/deerflow-guardrail-evolution-zh.svg",
+      "site_path": "images/cases/deerflow-guardrail-evolution-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/deerflow-tool-assembly-en.svg",
+      "site_path": "images/cases/deerflow-tool-assembly-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/deerflow-tool-assembly-zh.svg",
+      "site_path": "images/cases/deerflow-tool-assembly-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/anchor-ledger-collection.png",
+      "site_path": "images/concepts/anchor-ledger-collection.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/control-narrative-dualism.png",
+      "site_path": "images/concepts/control-narrative-dualism.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/en/mechanical-state-plane.png",
+      "site_path": "images/concepts/en/mechanical-state-plane.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/en/orchestrator.png",
+      "site_path": "images/concepts/en/orchestrator.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/en/unified-session-state.png",
+      "site_path": "images/concepts/en/unified-session-state.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/execution-vs-content.png",
+      "site_path": "images/concepts/execution-vs-content.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/hitl-block-resume.png",
+      "site_path": "images/concepts/hitl-block-resume.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/intent-as-compilation.png",
+      "site_path": "images/concepts/intent-as-compilation.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/layered-memory.png",
+      "site_path": "images/concepts/layered-memory.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/mechanical-state-plane.png",
+      "site_path": "images/concepts/mechanical-state-plane.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/memory-envelope.png",
+      "site_path": "images/concepts/memory-envelope.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/observability-glass-dome.png",
+      "site_path": "images/concepts/observability-glass-dome.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/orchestrator.png",
+      "site_path": "images/concepts/orchestrator.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/task-dag-state-machine.png",
+      "site_path": "images/concepts/task-dag-state-machine.png"
+    },
+    {
+      "path": "docs/publications/assets/images/concepts/unified-session-state.png",
+      "site_path": "images/concepts/unified-session-state.png"
+    },
+    {
+      "path": "docs/publications/assets/images/matrix-v08-en-20260825.png",
+      "site_path": "images/matrix-v08-en-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/matrix-v08-zh-20260825.png",
+      "site_path": "images/matrix-v08-zh-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/action-runtime-en.svg",
+      "site_path": "images/patterns/action-runtime-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/action-runtime-zh.svg",
+      "site_path": "images/patterns/action-runtime-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/adps-framework-v05-en.svg",
+      "site_path": "images/patterns/adps-framework-v05-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/adps-framework-v05-zh.svg",
+      "site_path": "images/patterns/adps-framework-v05-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/agent-governance-control-plane-en.svg",
+      "site_path": "images/patterns/agent-governance-control-plane-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/agent-governance-control-plane-zh.svg",
+      "site_path": "images/patterns/agent-governance-control-plane-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/agent-governance-lifecycle-en.svg",
+      "site_path": "images/patterns/agent-governance-lifecycle-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/agent-governance-lifecycle-zh.svg",
+      "site_path": "images/patterns/agent-governance-lifecycle-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/engineering/agent-handoff-control-plane-en.svg",
+      "site_path": "images/patterns/engineering/agent-handoff-control-plane-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/engineering/agent-handoff-control-plane-zh.svg",
+      "site_path": "images/patterns/engineering/agent-handoff-control-plane-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/engineering/k8s-agent-memory-en.svg",
+      "site_path": "images/patterns/engineering/k8s-agent-memory-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/engineering/k8s-agent-memory-zh.svg",
+      "site_path": "images/patterns/engineering/k8s-agent-memory-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/memory-lifecycle-en.svg",
+      "site_path": "images/patterns/memory-lifecycle-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/memory-lifecycle-zh.svg",
+      "site_path": "images/patterns/memory-lifecycle-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/perception-pipeline-en.svg",
+      "site_path": "images/patterns/perception-pipeline-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/patterns/perception-pipeline-zh.svg",
+      "site_path": "images/patterns/perception-pipeline-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/abstraction-reconstruction-en.svg",
+      "site_path": "images/topics/abstraction-reconstruction-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/abstraction-reconstruction-zh.svg",
+      "site_path": "images/topics/abstraction-reconstruction-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/agent-design-lifecycle-v01-en-20260825.png",
+      "site_path": "images/topics/agent-design-lifecycle-v01-en-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/agent-design-lifecycle-v01-zh-20260825.png",
+      "site_path": "images/topics/agent-design-lifecycle-v01-zh-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/common-pattern-compositions-en-20260904.svg",
+      "site_path": "images/topics/common-pattern-compositions-en-20260904.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/common-pattern-compositions-zh-20260904.svg",
+      "site_path": "images/topics/common-pattern-compositions-zh-20260904.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/human-agent-interaction-v01-en-20260825.png",
+      "site_path": "images/topics/human-agent-interaction-v01-en-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/human-agent-interaction-v01-zh-20260825.png",
+      "site_path": "images/topics/human-agent-interaction-v01-zh-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/malleable-software/boundary-en.png",
+      "site_path": "images/topics/malleable-software/boundary-en.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/malleable-software/boundary-zh.png",
+      "site_path": "images/topics/malleable-software/boundary-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/malleable-software/choices-en.png",
+      "site_path": "images/topics/malleable-software/choices-en.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/malleable-software/choices-zh.png",
+      "site_path": "images/topics/malleable-software/choices-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/malleable-software/review-en.png",
+      "site_path": "images/topics/malleable-software/review-en.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/malleable-software/review-zh.png",
+      "site_path": "images/topics/malleable-software/review-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/pattern-composition-v02-en-20260825.png",
+      "site_path": "images/topics/pattern-composition-v02-en-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/pattern-composition-v02-zh-20260825.png",
+      "site_path": "images/topics/pattern-composition-v02-zh-20260825.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/pattern-selection-card-en-20260903.png",
+      "site_path": "images/topics/pattern-selection-card-en-20260903.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/pattern-selection-card-example-en-20260903.svg",
+      "site_path": "images/topics/pattern-selection-card-example-en-20260903.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/pattern-selection-card-example-zh-20260903.svg",
+      "site_path": "images/topics/pattern-selection-card-example-zh-20260903.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/pattern-selection-card-zh-20260903.png",
+      "site_path": "images/topics/pattern-selection-card-zh-20260903.png"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/six-step-methodology-en-20260904.svg",
+      "site_path": "images/topics/six-step-methodology-en-20260904.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/topics/six-step-methodology-zh-20260904.svg",
+      "site_path": "images/topics/six-step-methodology-zh-20260904.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/action-plan-compilation-en.svg",
+      "site_path": "images/workshops/action-plan-compilation-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/action-plan-compilation-zh.svg",
+      "site_path": "images/workshops/action-plan-compilation-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/collaboration-three-planes-en.svg",
+      "site_path": "images/workshops/collaboration-three-planes-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/collaboration-three-planes-zh.svg",
+      "site_path": "images/workshops/collaboration-three-planes-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/governance-dual-scale-en.svg",
+      "site_path": "images/workshops/governance-dual-scale-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/governance-dual-scale-zh.svg",
+      "site_path": "images/workshops/governance-dual-scale-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/memory-lifecycle-en.svg",
+      "site_path": "images/workshops/memory-lifecycle-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/memory-lifecycle-zh.svg",
+      "site_path": "images/workshops/memory-lifecycle-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/orchestration-vs-choreography-en.svg",
+      "site_path": "images/workshops/orchestration-vs-choreography-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/orchestration-vs-choreography-zh.svg",
+      "site_path": "images/workshops/orchestration-vs-choreography-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/perception-funnel-en.svg",
+      "site_path": "images/workshops/perception-funnel-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/perception-funnel-zh.svg",
+      "site_path": "images/workshops/perception-funnel-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-evaluation-ladder-en.svg",
+      "site_path": "images/workshops/reasoning-evaluation-ladder-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-evaluation-ladder-zh.svg",
+      "site_path": "images/workshops/reasoning-evaluation-ladder-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-nested-topology-en.svg",
+      "site_path": "images/workshops/reasoning-nested-topology-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-nested-topology-zh.svg",
+      "site_path": "images/workshops/reasoning-nested-topology-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-selection-en.svg",
+      "site_path": "images/workshops/reasoning-selection-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-selection-zh.svg",
+      "site_path": "images/workshops/reasoning-selection-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-speculative-execution-en.svg",
+      "site_path": "images/workshops/reasoning-speculative-execution-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reasoning-speculative-execution-zh.svg",
+      "site_path": "images/workshops/reasoning-speculative-execution-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reflection-dual-clock-en.svg",
+      "site_path": "images/workshops/reflection-dual-clock-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/reflection-dual-clock-zh.svg",
+      "site_path": "images/workshops/reflection-dual-clock-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/topology-governance-matrix-en.svg",
+      "site_path": "images/workshops/topology-governance-matrix-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/topology-governance-matrix-zh.svg",
+      "site_path": "images/workshops/topology-governance-matrix-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-01-progress-line.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-01-progress-line.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-02-canvas-writeback.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-02-canvas-writeback.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-03-writeback-summary.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-03-writeback-summary.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-04-clarify-scope.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-04-clarify-scope.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-05-resume-timeline.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-05-resume-timeline.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-06-degraded-success.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-06-degraded-success.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-07-blocked-failure.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-07-blocked-failure.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-a1-intent-card.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-a1-intent-card.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-a2-canvas-result.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-a2-canvas-result.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/fig-a3-prewrite-clarify.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/fig-a3-prewrite-clarify.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/log-intent-recognition.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/log-intent-recognition.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/log-relation-writeback.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/log-relation-writeback.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/shot-magicdraw-flycar.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/shot-magicdraw-flycar.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/ark-mbse-agent/assets/shot-satellite-bdd.jpg",
+      "site_path": "zh/cases/ark-mbse-agent/assets/shot-satellite-bdd.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/xuanxu-gis-agent/assets/cesium-s57-viewer.jpg",
+      "site_path": "zh/cases/xuanxu-gis-agent/assets/cesium-s57-viewer.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/xuanxu-gis-agent/assets/console-datasets.jpg",
+      "site_path": "zh/cases/xuanxu-gis-agent/assets/console-datasets.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/xuanxu-gis-agent/assets/console-overview.jpg",
+      "site_path": "zh/cases/xuanxu-gis-agent/assets/console-overview.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/xuanxu-gis-agent/assets/knowledge-card.jpg",
+      "site_path": "zh/cases/xuanxu-gis-agent/assets/knowledge-card.jpg"
+    },
+    {
+      "path": "docs/publications/assets/zh/cases/xuanxu-gis-agent/assets/knowledge-card2.jpg",
+      "site_path": "zh/cases/xuanxu-gis-agent/assets/knowledge-card2.jpg"
+    }
+  ]
+}
