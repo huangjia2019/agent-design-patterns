@@ -10,6 +10,8 @@ Traditional software tests remain essential for agents. Data structures, permiss
 
 Agent evals address this uncertain layer. They work alongside unit tests, integration tests, sandbox acceptance, production monitoring, and human review.
 
+The [29 September 2026 Evaluation and Validation workshop](https://adpsagent.com/workshops/evaluation-2026-09-29/) records concrete approaches from vehicle-display testing, business datasets, security detection, AI-assisted development, and engineering drawing review.
+
 ## Why validation is the dividing line
 
 For most of the past decade, practice in artificial intelligence has run ahead of theory. The rapid spread of agents since late 2025 is a clear case: it did not follow from a body of theory, but accumulated as one concrete problem after another was solved. The first question any theory now owes an answer to is why agents sit at the centre of a "large model plus agent" system.

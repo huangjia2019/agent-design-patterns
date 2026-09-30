@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 410" role="img" aria-labelledby="title desc">
+  <title id="title">Agent 评测的证据闭环</title>
+  <desc id="desc">业务任务与正确结果、可复位的环境、Agent 运行与留痕、独立验收构成主链路。失败样本经人工复核进入下一版回归集。</desc>
+  <rect width="1280" height="410" fill="#f7f9f8"/>
+  <text x="48" y="49" font-family="Arial, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="28" font-weight="700" fill="#172c3c">一次运行怎么变成可信的评测</text>
+  <text x="49" y="82" font-family="Arial, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="16" fill="#516673">同一任务可以重放，最终结果由 Agent 之外的证据裁决</text>
+  <g font-family="Arial, PingFang SC, Noto Sans CJK SC, sans-serif">
+    <g fill="#fff" stroke="#a9bdc4" stroke-width="2">
+      <rect x="48" y="118" width="264" height="148" rx="5"/>
+      <rect x="356" y="118" width="264" height="148" rx="5"/>
+      <rect x="664" y="118" width="264" height="148" rx="5"/>
+      <rect x="972" y="118" width="260" height="148" rx="5"/>
+    </g>
+    <g fill="#047d75"><rect x="48" y="118" width="264" height="7"/><rect x="356" y="118" width="264" height="7"/></g>
+    <g fill="#b67922"><rect x="664" y="118" width="264" height="7"/><rect x="972" y="118" width="260" height="7"/></g>
+    <g fill="#172c3c" font-size="22" font-weight="700">
+      <text x="70" y="161">业务任务与标准</text><text x="378" y="161">可复位环境</text><text x="686" y="161">Agent 执行</text><text x="994" y="161">独立验收</text>
+    </g>
+    <g fill="#516673" font-size="17">
+      <text x="70" y="201">目标、真值、风险等级</text><text x="70" y="230">允许停止的条件</text>
+      <text x="378" y="201">数据、工具、版本</text><text x="378" y="230">预算与初始状态</text>
+      <text x="686" y="201">结果、轨迹、证据</text><text x="686" y="230">多次运行的波动</text>
+      <text x="994" y="201">规则、评委、人工</text><text x="994" y="230">检查结果与理由</text>
+    </g>
+    <g stroke="#365967" stroke-width="3" fill="none">
+      <path d="M320 192 H343"/><path d="M628 192 H651"/><path d="M936 192 H959"/>
+    </g>
+    <g fill="#365967"><path d="M350 192 l-10 -7 v14 z"/><path d="M658 192 l-10 -7 v14 z"/><path d="M966 192 l-10 -7 v14 z"/></g>
+    <path d="M1102 274 V339 H198 V275" fill="none" stroke="#b67922" stroke-width="3" stroke-dasharray="8 6"/>
+    <path d="M198 274 l-7 12 h14 z" fill="#b67922"/>
+    <rect x="423" y="307" width="456" height="54" rx="4" fill="#fff4df" stroke="#dfbd86"/>
+    <text x="651" y="341" text-anchor="middle" font-size="18" font-weight="700" fill="#75460a">失败样本 → 人工复核 → 下版回归集</text>
+  </g>
+</svg>

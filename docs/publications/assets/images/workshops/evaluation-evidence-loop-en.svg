@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 410" role="img" aria-labelledby="title desc">
+  <title id="title">An evidence loop for agent evaluation</title>
+  <desc id="desc">Business task, resettable environment, agent run and independent acceptance form the main path. Failure cases are reviewed and added to the next regression set.</desc>
+  <rect width="1280" height="410" fill="#f7f9f8"/>
+  <text x="48" y="49" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#172c3c">From a run to a trustworthy evaluation</text>
+  <text x="49" y="82" font-family="Arial, sans-serif" font-size="16" fill="#516673">Replay the same task; judge the result with evidence outside the agent</text>
+  <g font-family="Arial, sans-serif">
+    <g fill="#fff" stroke="#a9bdc4" stroke-width="2">
+      <rect x="48" y="118" width="264" height="148" rx="5"/>
+      <rect x="356" y="118" width="264" height="148" rx="5"/>
+      <rect x="664" y="118" width="264" height="148" rx="5"/>
+      <rect x="972" y="118" width="260" height="148" rx="5"/>
+    </g>
+    <g fill="#047d75"><rect x="48" y="118" width="264" height="7"/><rect x="356" y="118" width="264" height="7"/></g>
+    <g fill="#b67922"><rect x="664" y="118" width="264" height="7"/><rect x="972" y="118" width="260" height="7"/></g>
+    <g fill="#172c3c" font-size="22" font-weight="700">
+      <text x="70" y="161">Task and standard</text><text x="378" y="161">Resettable setting</text><text x="686" y="161">Agent run</text><text x="994" y="161">Independent check</text>
+    </g>
+    <g fill="#516673" font-size="17">
+      <text x="70" y="201">Goal, ground truth, risk</text><text x="70" y="230">Valid stop conditions</text>
+      <text x="378" y="201">Data, tools, versions</text><text x="378" y="230">Budget and initial state</text>
+      <text x="686" y="201">Result, trace, evidence</text><text x="686" y="230">Variance across runs</text>
+      <text x="994" y="201">Rules, judges, people</text><text x="994" y="230">Decision and reasons</text>
+    </g>
+    <g stroke="#365967" stroke-width="3" fill="none">
+      <path d="M320 192 H343"/><path d="M628 192 H651"/><path d="M936 192 H959"/>
+    </g>
+    <g fill="#365967"><path d="M350 192 l-10 -7 v14 z"/><path d="M658 192 l-10 -7 v14 z"/><path d="M966 192 l-10 -7 v14 z"/></g>
+    <path d="M1102 274 V339 H198 V275" fill="none" stroke="#b67922" stroke-width="3" stroke-dasharray="8 6"/>
+    <path d="M198 274 l-7 12 h14 z" fill="#b67922"/>
+    <rect x="423" y="307" width="456" height="54" rx="4" fill="#fff4df" stroke="#dfbd86"/>
+    <text x="651" y="341" text-anchor="middle" font-size="18" font-weight="700" fill="#75460a">Failure → human review → regression</text>
+  </g>
+</svg>

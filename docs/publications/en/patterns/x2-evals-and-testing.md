@@ -65,7 +65,7 @@ X1 records what happened. X2 judges the result against a contract. X3 limits wha
 
 <div class="document-citation">
 <p><strong>Suggested citation:</strong> ADPS, <em>X2 · Evaluation &amp; Validation</em>, ADPS Cross-cutting Engineering Plane Specification v0.5, 20 August 2026.</p>
-<p><a href="https://adpsagent.com/topics/agent-evals-and-testing/">Agent evaluation and validation topic</a> · <a href="https://adpsagent.com/workshops/reflection-2026-08-12/">Reflection workshop</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
+<p><a href="https://adpsagent.com/topics/agent-evals-and-testing/">Agent evaluation and validation topic</a> · <a href="https://adpsagent.com/workshops/evaluation-2026-09-29/">Evaluation and Validation workshop</a> · <a href="https://adpsagent.com/workshops/reflection-2026-08-12/">Reflection workshop</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
 <p class="publication-disclaimer"><strong>Scope:</strong> This page defines engineering scope and interfaces; it does not certify products. Attributed practices remain governed by their case pages and public code.</p>
 </div>
 

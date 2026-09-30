@@ -65,7 +65,7 @@ X1 记录发生了什么，X2 按合同判断结果是否合格，X3 限制评�
 
 <div class="document-citation">
 <p><strong>引用建议：</strong>ADPS，《X2 · Evaluation &amp; Validation · 评测与验证》，ADPS 横切工程面规范 v0.5，2026-08-20。</p>
-<p><a href="https://adpsagent.com/zh/topics/agent-evals-and-testing/">Agent 评测与验证专题</a> · <a href="https://adpsagent.com/zh/workshops/reflection-2026-08-12/">反思研讨会</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
+<p><a href="https://adpsagent.com/zh/topics/agent-evals-and-testing/">Agent 评测与验证专题</a> · <a href="https://adpsagent.com/zh/workshops/evaluation-2026-09-29/">评测与验证研讨会</a> · <a href="https://adpsagent.com/zh/workshops/reflection-2026-08-12/">反思研讨会</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
 <p class="publication-disclaimer"><strong>使用边界：</strong>本页定义工程范围与接口，不构成产品认证。具名实践以案例页与公开代码为准。</p>
 </div>
 
