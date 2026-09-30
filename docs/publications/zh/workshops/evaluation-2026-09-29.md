@@ -73,9 +73,9 @@
 
 ## 7. 从讨论形成的工程检查表
 
-<figure class="workshop-diagram"><img alt="评测任务由业务事实、可复位环境、运行轨迹和独立验收组成；失败样本回流到下一版测试集" loading="lazy" src="../../assets/images/workshops/evaluation-evidence-loop-zh.svg"/><figcaption>根据本次讨论整理的评测闭环示意，不是某位嘉宾的系统截图。</figcaption></figure>
+<figure class="workshop-diagram"><a href="../../assets/images/workshops/evaluation-evidence-loop-zh.svg"><img alt="评测任务由业务事实、可复位环境、运行轨迹和独立验收组成；失败样本回流到下一版测试集" loading="lazy" src="../../assets/images/workshops/evaluation-evidence-loop-zh.svg"/></a><figcaption>根据本次讨论整理的评测闭环示意，不是某位嘉宾的系统截图。点击查看原图。</figcaption></figure>
 
-<table><thead><tr><th>要写清的事</th><th>本次讨论给出的检查方式</th></tr></thead><tbody>
+<table class="evaluation-checklist"><thead><tr><th>要写清的事</th><th>本次讨论给出的检查方式</th></tr></thead><tbody>
 <tr><td>任务与结果</td><td>谁的任务？正确答案、允许的停止条件和风险等级分别是什么？</td></tr>
 <tr><td>运行条件</td><td>任务数据、环境、模型、Harness、工具与预算能否记录并重放？</td></tr>
 <tr><td>裁判</td><td>程序、业务规则、模型评委和人各判什么？评委如何用人工样本校准？</td></tr>

@@ -73,9 +73,9 @@ His example was a large project's drawing review. If a prerequisite geotechnical
 
 ## 7. Checks to carry into an evaluation plan
 
-<figure class="workshop-diagram"><img alt="Evaluation runs from business truth and a replayable task through the agent trace to independent acceptance; failure cases update the next test set" loading="lazy" src="../../assets/images/workshops/evaluation-evidence-loop-en.svg"/><figcaption>Synthesis of the workshop discussion, not a screenshot of any speaker's system.</figcaption></figure>
+<figure class="workshop-diagram"><a href="../../assets/images/workshops/evaluation-evidence-loop-en.svg"><img alt="Evaluation runs from business truth and a replayable task through the agent trace to independent acceptance; failure cases update the next test set" loading="lazy" src="../../assets/images/workshops/evaluation-evidence-loop-en.svg"/></a><figcaption>Synthesis of the workshop discussion, not a screenshot of any speaker's system. Open the full-size diagram.</figcaption></figure>
 
-<table><thead><tr><th>Decision</th><th>Question to answer</th></tr></thead><tbody>
+<table class="evaluation-checklist"><thead><tr><th>Decision</th><th>Question to answer</th></tr></thead><tbody>
 <tr><td>Task and outcome</td><td>Whose task is it? What counts as a correct result, a justified stop, or an unacceptable risk?</td></tr>
 <tr><td>Run conditions</td><td>Can the data, environment, model, harness, tools, and budget be recorded and replayed?</td></tr>
 <tr><td>Judge</td><td>Which checks belong to code, domain rules, model judges, and people? How is a judge calibrated?</td></tr>
