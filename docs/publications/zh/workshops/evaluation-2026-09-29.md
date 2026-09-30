@@ -103,7 +103,7 @@
 <dl>
 <div><dt>来源记录</dt><dd>Agent 评测与验证研讨会；会议日期 <time datetime="2026-09-29">2026-09-29</time></dd></div>
 <div><dt>来源日期</dt><dd><time datetime="2026-09-29">2026-09-29</time></dd></div>
-<div><dt>本页首次公开</dt><dd><time datetime="2026-09-30">2026-09-30</time></dd></div>
+<div><dt>本页首次公开</dt><dd><time datetime="2026-10-01">2026-10-01</time></dd></div>
 </dl>
 <p><a href="https://adpsagent.com/zh/chronicle/">查看 ADPS 来源时间线</a></p>
 </section>

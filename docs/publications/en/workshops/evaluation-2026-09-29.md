@@ -103,7 +103,7 @@ The workshop did not settle how to reset a long-running interrupted task, how to
 <dl>
 <div><dt>Source</dt><dd>Agent Evaluation and Validation workshop, <time datetime="2026-09-29">29 September 2026</time></dd></div>
 <div><dt>Source date</dt><dd><time datetime="2026-09-29">29 September 2026</time></dd></div>
-<div><dt>First published</dt><dd><time datetime="2026-09-30">30 September 2026</time></dd></div>
+<div><dt>First published</dt><dd><time datetime="2026-10-01">1 October 2026</time></dd></div>
 </dl>
 <p><a href="https://adpsagent.com/chronicle/">ADPS source timeline</a></p>
 </section>
