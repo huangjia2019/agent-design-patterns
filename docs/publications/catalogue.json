@@ -1175,6 +1175,15 @@
       "source_authority": "collaboration_repo"
     },
     {
+      "id": "workshops/evaluation-2026-09-29",
+      "language": "en",
+      "path": "docs/publications/en/workshops/evaluation-2026-09-29.md",
+      "url": "/workshops/evaluation-2026-09-29/",
+      "title": "Agent Evaluation and Validation Workshop",
+      "first_published": "2026-09-30",
+      "source_authority": "collaboration_repo"
+    },
+    {
       "id": "workshops/governance-2026-08-18",
       "language": "en",
       "path": "docs/publications/en/workshops/governance-2026-08-18.md",
@@ -2475,6 +2484,15 @@
       "source_authority": "collaboration_repo"
     },
     {
+      "id": "workshops/evaluation-2026-09-29",
+      "language": "zh",
+      "path": "docs/publications/zh/workshops/evaluation-2026-09-29.md",
+      "url": "/zh/workshops/evaluation-2026-09-29/",
+      "title": "Agent 评测与验证研讨会",
+      "first_published": "2026-09-30",
+      "source_authority": "collaboration_repo"
+    },
+    {
       "id": "workshops/governance-2026-08-18",
       "language": "zh",
       "path": "docs/publications/zh/workshops/governance-2026-08-18.md",
@@ -2813,6 +2831,30 @@
     {
       "path": "docs/publications/assets/images/workshops/collaboration-three-planes-zh.svg",
       "site_path": "images/workshops/collaboration-three-planes-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/evaluation-evidence-loop-en.svg",
+      "site_path": "images/workshops/evaluation-evidence-loop-en.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/evaluation-evidence-loop-zh.svg",
+      "site_path": "images/workshops/evaluation-evidence-loop-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/evaluation-opening-gis-zh.png",
+      "site_path": "images/workshops/evaluation-opening-gis-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/evaluation-opening-regression-zh.png",
+      "site_path": "images/workshops/evaluation-opening-regression-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/evaluation-opening-science-zh.png",
+      "site_path": "images/workshops/evaluation-opening-science-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/workshops/evaluation-opening-software-zh.png",
+      "site_path": "images/workshops/evaluation-opening-software-zh.png"
     },
     {
       "path": "docs/publications/assets/images/workshops/governance-dual-scale-en.svg",
