@@ -3,7 +3,7 @@
 <header class="publication-head">
 <p class="publication-series">ADPS 设计模式系列研讨会</p>
 <h1>协作模块第一次研讨会</h1>
-<p class="publication-deck">从多 Agent 分工走向可解释、可交接、可约束的协作系统。</p>
+<p class="publication-deck">多 Agent 的任务分派、权限传递、跨 Session 冲突与团队决策。</p>
 </header>
 
 <p class="publication-date">2026-08-25</p>
@@ -13,9 +13,9 @@
 <tr><td><strong>核心研讨嘉宾</strong></td><td>张栋、王伟</td></tr>
 </tbody></table>
 
-讨论从 LangGraph、Deep Agents 与 ADPS 六个协作模式的对照展开，随后进入权限传递、跨 Session 冲突、异构 Agent、Hook 编排、人机关系与 Agent OS。现场几次追问改变了协作模块的阅读结构，也把 C6 编舞和 G5 Hook 容易混淆的边界摆到了台面上。
+本次研讨结合 LangGraph、Deep Agents 和协作模式，讨论动态工作流、权限传递、跨 Session 冲突、Hook 编排、人机关系及 Agent OS。
 
-<figure><img alt="Agent 与 Agent、人与 Agent、Agent 环境中的人与人三类协作关系" src="../../assets/images/workshops/collaboration-three-planes-zh.svg"/><figcaption>协作系统同时包含三类关系。只画 Agent 之间的箭头，会漏掉意图、授权、团队决策和接管。</figcaption></figure>
+<figure><img alt="Agent 与 Agent、人与 Agent、Agent 环境中的人与人三类协作关系" src="../../assets/images/workshops/collaboration-three-planes-zh.svg"/><figcaption>三类协作关系分别涉及任务交接、人的授权与接管、团队决定的记录。</figcaption></figure>
 
 ## 1. 动态子 Agent 仍可能是中心编排
 
@@ -27,13 +27,11 @@
 
 ## 2. 六种设计拓扑怎样落到运行图
 
-<p class="workshop-field-note"><strong>张栋提出，许多 runtime graph 最终都能拆成串行、并行和路由。</strong>这项判断解决的是框架实现，不是设计语义。一个“负责人分派—Worker 执行—负责人验收”的层级任务，和一个“生成者—评审者—裁决者”的对抗任务，可以使用相似的边，却不能交换责任和权限。</p>
-
-讨论中提出，许多企业协作图最终都能分解为串行、并行和路由。这个判断适用于 runtime graph，却不足以替代循环、层级和编排的设计语义。
+<p class="workshop-field-note">张栋提出，许多运行图最终都能拆成串行、并行和路由。不过，图中节点的职责仍需单独说明：“负责人分派—Worker 执行—负责人验收”中的负责人掌握整个任务；“生成者—评审者—裁决者”中的评审者检查产物，裁决者处理分歧。</p>
 
 层级委派可以执行成“路由任务—并行 Worker—聚合结果”；对抗评审可以执行成“生成—评审—裁决—条件回路”。底层边相似，谁持有全局状态、谁负责验收、失败后由谁收口并不相同。ADPS 将这一步称为[拓扑降阶](https://adpsagent.com/zh/concepts/topology-lowering/)：设计时保留责任语义，部署时编译为框架支持的运行原语。
 
-<figure><img alt="串行、并行、路由与身份、权限、防护、溯源组成的拓扑治理矩阵" src="../../assets/images/workshops/topology-governance-matrix-zh.svg"/><figcaption>运行图决定控制怎样展开；身份、权限、防护和溯源决定它能否进入生产。</figcaption></figure>
+<figure><img alt="串行、并行、路由与身份、权限、防护、溯源组成的拓扑治理矩阵" src="../../assets/images/workshops/topology-governance-matrix-zh.svg"/><figcaption>按运行结构检查节点身份、资源权限、校验位置和追踪记录。</figcaption></figure>
 
 ## 3. 每一种拓扑都要再过四层检查
 
@@ -45,7 +43,7 @@
 <tr><td>路由</td><td>身份与风险等级匹配</td><td>高风险分支收紧权限</td><td>入口筛选与差异控制</td><td>路由依据与完整路径</td></tr>
 </tbody></table>
 
-一个发起人有权查看较大范围的数据，不等于负责单条核验的 Worker 应继承相同范围。有效权限应由用户权限、本次任务、Agent 职责、工具权限与资源范围共同收敛。长期 Token 沿协作链共享，会把人的最大权限扩散到整张图。
+有效权限需要同时受用户权限、本次任务、Agent 职责、工具权限与资源范围限制。如果整条协作链共享用户的长期 Token，每个 Worker 都可能取得用户的全部权限，单条记录的核验也就无法限制在这条记录内。
 
 ## 4. 越接近生产，拓扑越需要固定
 
@@ -55,7 +53,7 @@
 
 ## 5. 协作对象不止 Agent 与 Agent
 
-<p class="workshop-field-note"><strong>王伟把遗漏的第三类关系补了出来。</strong>Agent 之间可以完整交接，人与 Agent 也可以完成审批，但产品、研发和测试在会议中形成的决定若不进入版本化资产，下一轮 Agent 仍然不知道哪些路径已经被否决。</p>
+<p class="workshop-field-note">王伟指出，产品、研发和测试在会议中形成的决定，也会影响 Agent 的后续工作。某个方案已经被团队否决，但原因只留在聊天中，下一轮 Agent 读取代码库时就可能再次提出它。</p>
 
 讨论把协作分为三个平面：Agent-Agent 处理拆分、并行、交接与复核；Human-Agent 处理意图、补证、批准、接管与验收；Human-Human 处理 Agent 环境中的团队决定与责任延续。
 
@@ -63,9 +61,9 @@
 
 ## 6. Worktree 隔离不了所有冲突
 
-<p class="workshop-field-note"><strong>王伟举了一个没有 Git 冲突的真实问题。</strong>两个 Session 在不同 worktree 中工作，却同时申请了同一个需求编号；类似冲突还会发生在公共配置、测试库、部署环境和 API 合同。隔离文件只解决了写入冲突域的一部分。</p>
+<p class="workshop-field-note">王伟遇到过两个 Session 在不同 worktree 中工作，却申请了同一个需求编号的情况。文件没有冲突，共享的编号分配却发生了冲突。</p>
 
-多个 Coding Agent 使用不同 worktree，可以隔离文件修改。需求编号、公共配置、测试数据库、部署环境和外部配额仍可能共享。调度器需要在启动前识别[写入冲突域](https://adpsagent.com/zh/concepts/write-conflict-domain/)：即使改动不同仓库，只要共同改变同一个 API 合同，仍然可能冲突。
+除了编号，公共配置、测试数据库、部署环境和外部配额也可能由多个 Session 共享。调度器需要在启动前识别[写入冲突域](https://adpsagent.com/zh/concepts/write-conflict-domain/)：即使改动不同仓库，只要共同改变同一个 API 合同，仍然可能冲突。
 
 领域对象比文件路径更能说明互斥关系。范围识别不清时先串行，确定可分片后再并行。
 
@@ -98,11 +96,9 @@ next_required: 可评审补丁与测试证据</code></pre>
 
 评审产物需要带上依据、风险、适用条件和复验要求。C3 对抗评审与 C4 交接链在这里连接：评审给出条件，交接传递条件，执行结果再回到外部验收。
 
-## 9. Hook 是机制，组合后才有职责
+## 9. Hook 的触发条件与组合
 
-<p class="workshop-field-note"><strong>王伟追问 Hook 是否构成独立协作模式。</strong>讨论把需求完成后启动编码、危险调用前暂停、调用后记 trace、失败后保存 checkpoint 分别归回编排、治理、观测和恢复。Hook 的价值在确定性插入点，模式地位取决于它承担的责任。</p>
-
-同一种 Hook 可以在需求完成后启动编码 Agent，也可以在高危调用前暂停审批，还可以记录 trace、保存 checkpoint 或清理资源。它分别承担编排、治理、观测和恢复职责。
+<p class="workshop-field-note">王伟问，Hook 是否应该作为独立协作模式？讨论涉及几种用途：需求完成后启动编码 Agent；高危调用前暂停并等待审批；调用后记录 trace；失败后保存 checkpoint。这些用途分别属于编排、治理、观测和恢复，同一种回调机制可以用于不同的设计。</p>
 
 本轮没有新增 C7。G5 继续保留历史编号，用于治理中的确定性执行点；跨模块的 Hook 用法进入[Hook 组合](https://adpsagent.com/zh/topics/hook-composition/)专题。组合设计必须声明事件、顺序、条件、幂等键、失败语义与后续事件，避免把控制流藏进互不透明的回调。
 
@@ -117,15 +113,15 @@ next_required: 可评审补丁与测试证据</code></pre>
 
 ## 11. Agent OS 是工程检查表
 
-<p class="workshop-field-note"><strong>张栋从进程、线程、协程和 IPC 出发，张海立再补入服务化子 Agent、标准协议与虚拟文件系统。</strong>两人的类比帮助检查调度、隔离、通信和存储是否缺位；研讨会没有据此宣称 Agent runtime 已经等同于操作系统。</p>
+<p class="workshop-field-note">张栋讨论了进程、线程、协程和 IPC 对多 Agent 运行时的参考价值。张海立介绍了服务化子 Agent、标准协议与虚拟文件系统。设计时可以据此逐项检查：谁调度任务，如何隔离运行环境，Agent 之间如何通信，产物存在哪里。</p>
 
-多 Agent runtime 可以借助操作系统类比检查缺项：调度、隔离、通信、存储、身份、观测、资源回收和故障处理各自放在哪里。这个类比有启发性，尚不足以证明 Agent OS 已有统一边界，也不能把进程、内存和系统调用逐项机械映射。
+身份管理、运行观测、资源回收和故障处理也需要明确归属。操作系统中的进程有确定的资源与隔离规则，而一个 Agent 可能跨多个服务调用模型和工具，因此要按实际运行边界设计，不能直接把一个 Agent 当作一个进程。
 
 ## 12. 抽象以后，还要能还原
 
-<p class="workshop-field-note"><strong>黄佳用两个看似相同的批处理任务检验抽象。</strong>800 份简历和 800 个代码文件都能画成并行分片，但前者涉及候选人隐私与招聘裁决，后者涉及 worktree、测试和仓库合并。若模式放回现场以后说不清这些差异，抽象就走得太远。</p>
+<p class="workshop-field-note">黄佳比较了处理 800 份简历和 800 个代码文件的设计。两者都可以并行分片，但简历任务要限制候选人信息的访问范围，并由招聘负责人作出录用决定；代码任务要隔离 worktree、运行测试并控制仓库合并。并行结构相同，授权和验收方式不同。</p>
 
-讨论最后回到模式方法。抽象负责从多个系统中提取共同结构；还原负责把结构放回角色、对象、状态、权限、证据和验收，检查它能否施工。
+抽象提取的是这些任务共有的分片、执行和汇总结构。还原则需要把它写回具体设计，说明每个 Worker 能读哪些数据、能改哪些对象，结果由谁检查。
 
 本轮形成一条判据：凡是会改变业务判断、状态迁移、权力边界、证据效力、后续动作、责任归属或验收结果的差异，都不能在抽象时抹掉。[抽象—还原往返](https://adpsagent.com/zh/concepts/abstraction-reconstruction-loop/)因此进入概念库，并成为 ADPS 审核新模式与案例的一项方法。
 

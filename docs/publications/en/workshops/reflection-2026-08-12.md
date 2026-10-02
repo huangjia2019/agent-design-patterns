@@ -28,13 +28,11 @@
 
 ADPS held its first Reflection Module workshop on 12 August 2026. Participants brought production experience from R&D security, retail algorithms, quality evaluation, telecom knowledge engineering, software development, and travel services. The discussion began with in-application Generator-Critic loops and moved into offline evaluation, Skill evolution, attribution, self-heal authority, and delayed business feedback.
 
-The workshop did not add a catalog number. It changed how the Reflection row should be read: F1–F4 describe different change targets and execution structures, while online/offline operation, feedback delay, evidence strength, and change authority determine how they enter production.
-
 ## 1. In-process reflection and out-of-process evaluation
 
-Across the agent development lifecycle, reflection spans more than the current run. In-process rubrics, graders, and revision loops help that run converge. Outside the application, datasets, evaluators, and trace analysis compare versions, detect regressions, and calibrate reviewers.
+Inside an application, rubrics and graders check the current artifact, and a revision loop corrects it. Outside the application, teams use datasets, evaluators, and execution traces to compare versions, check for broken functionality, and compare grader decisions with human judgments.
 
-The two share evaluation components but perform different jobs. Evaluation records a judgement. Reflection uses that judgement to propose or apply a change. A change without a re-run and regression evidence has not closed the loop.
+The same grader can serve both uses. Evaluation records the check result; reflection proposes or applies a change, followed by rerunning the relevant tasks to check its effect.
 
 The White Paper now records this boundary in the [Reflection Module Overview](https://adpsagent.com/patterns/reflection/).
 
@@ -42,27 +40,23 @@ The White Paper now records this boundary in the [Reflection Module Overview](ht
 
 ## 2. Online reflection fixes the current run; offline reflection fixes the system
 
-<p class="workshop-field-note"><strong>Wei Wang described an environment-building agent that accumulated online repairs.</strong> Over two months, the loop added a patch for each failure. Stability improved, but setup time grew from about five minutes to thirty, and some runs took an hour. Daily offline analysis exposed duplicate and conflicting constraints among dozens of patches.</p>
+<p class="workshop-field-note">Wei Wang described an environment-building agent that added a patch for each new failure. He observed improved stability over two months, but setup time grew from about five minutes to thirty, with some runs taking an hour. Daily analysis of run records exposed duplicate and conflicting constraints among dozens of patches.</p>
 
 Online reflection follows the current run and reacts to tool errors, invalid arguments, or incomplete artifacts. Offline reflection examines a period of trajectories and looks for repeated, conflicting, or systemic behaviour across runs.
 
-An anonymized environment-building agent added a local remedy whenever it met a new failure. The environment became more stable, but the execution path grew substantially longer. An offline review revealed duplicate and conflicting patches.
-
-This example gives online reflection a production constraint: keep its change surface small and rollback-safe, and subject accumulated changes to periodic global review.
+Offline review should identify patches for the same failure and conflicting constraints, then compare setup success and duration after consolidating them. Online repairs need change records and a rollback method.
 
 ## 3. Feedback delay determines loop length
 
 <p class="workshop-field-note"><strong>Li Jiaqi contrasted code with business analysis.</strong> Compilation, tests, and deployment logs can arrive immediately for code. A business recommendation may pass through product, operations, analysts, supply chain, and user behaviour before anyone knows whether it worked. The latter still has a feedback loop; it cannot fit inside the current session.</p>
 
-Support, operations, code generation, and business analysis show very different feedback delays. Code has compilation, tests, and deployment logs, so correctness evidence may arrive during the current run. A business recommendation may pass through product, operations, engineering, and user behaviour before anyone can judge it.
-
-Real time is therefore constrained by the arrival of ground truth, not only by agent speed. While the final outcome is unavailable, an online reviewer may still check structure, references, and known contradictions. Business value must wait for delayed labels and human attribution.
+While a business result is pending, the system can check the recommendation's format, references, and known contradictions. When the result arrives, link it to the recommendation and agent version so business reviewers can assess its effect and other factors that influenced the outcome.
 
 The workshop recorded immediate/delayed feedback and closed/open tasks as related but non-equivalent dimensions. Open-ended work may contain hard local checks, while the final user experience of a closed task may still arrive later.
 
 ## 4. Reflection needs hard evidence and a stopping rule
 
-Production reflection needs five properties: automation, termination, observability, reuse, and bounded cost. The workshop separated implementation into four layers:
+The workshop discussed four implementation responsibilities in a reflection workflow:
 
 1. Hard validation gives priority to machine-verifiable signals.
 2. Model diagnosis inspects artifacts and trajectories.
@@ -81,7 +75,7 @@ When a bad case appears in production, the team keeps the production path stable
 
 ## 6. Attribution is a separate engineering step before healing
 
-<p class="workshop-field-note"><strong>Qianchun Lu separated observation primitives into runtime, execution process, business outcome, and experience governance.</strong> Model failure, a missing step, and an unmet goal need different evidence. Even a correlated symptom can be a false positive, and missing domain knowledge or cross-team judgement may leave the system without authority to heal itself.</p>
+<p class="workshop-field-note">Qianchun Lu proposed organizing observation around runtime, execution, business outcomes, and user experience. Failed model calls need interface and error records; missing steps need execution traces; unmet goals need comparison with business requirements. Missing domain knowledge or conflicting team decisions require the relevant people to supply information or decide.</p>
 
 Reliability governance for organizational Agents and Skills connects pre-release admission and inspection, runtime health checks and circuit breaking, and post-run trace review, remediation, and re-testing. Instrumentation, failure classes, and evaluation can also be expressed as shared primitives across Agents and Skills.
 
@@ -91,11 +85,9 @@ This discussion tightened F4 Self-Heal Loop: it requires an identifiable failure
 
 ## 7. Skill evolution must address creation, comparison, and coexistence
 
-<p class="workshop-field-note"><strong>Wei Wang and Pylon Peng described reflection at skill-library and daily-run scale.</strong> Wang works with thousands of skills and found that one skill passing alone says little about routing among dozens. Peng uses an end-of-day hook to collect trajectories and propose changes to memory, skills, rules, or the harness before independent evaluation and release gates.</p>
+<p class="workshop-field-note">Wei Wang described managing thousands of Skills. A Skill can pass alone but trigger incorrectly, capture another Skill's route, or conflict with an existing workflow when loaded alongside dozens of others. Tests need to cover both individual Skills and deployed combinations, distinguishing agent behavior, Skill content, and routing decisions.</p>
 
-As a Skill estate grows, a Skill may work alone but mis-trigger, steal routing, or conflict with existing workflows in combination. Teams also need to separate the contribution of the agent, one Skill, and a bundle of Skills.
-
-One daily reflection process has a main agent evaluate sub-agent work. A post-run hook collects trajectories and analyses whether memory, Skills, rules, sub-agents, or harness components need to be created or updated. When a tool argument or business rule changes, the corresponding Skill documentation and validation cases change together.
+Pylon Peng described a daily reflection process. A main agent evaluates sub-agent results; a post-run hook collects trajectories to propose changes to memory, Skills, rules, sub-agents, or the harness. Changes to tool arguments or business rules also update Skill documentation and validation cases. Proposed changes pass independent evaluation before release.
 
 This daily batch process provides an implementation bridge between F2 Skill Package and F3 Experience Replay. Automatically generated assets still pass evaluation and a release gate before receiving durable authority.
 
@@ -103,7 +95,7 @@ This daily batch process provides an implementation bridge between F2 Skill Pack
 
 In an anonymized SQL generation and review system, some defects passed through when similar models generated and reviewed the SQL. Separating generation and review across models improved defect discovery in that setting.
 
-Cross-model review adds diversity but does not guarantee independence. Models may share data, assumptions, and rubrics. The White Paper treats model diversity as a supporting measure; tests, rules, source evidence, and expert review remain stronger grounds.
+Two models using the same incomplete rubric can still miss the same error. Cross-model review results need comparison with tests, business rules, source material, and expert judgments.
 
 ## 9. Concepts extracted from the workshop
 
@@ -144,8 +136,6 @@ Cross-model review adds diversity but does not guarantee independence. Models ma
 </tbody>
 </table>
 
-Meta-reflection, deliberative reflection, and prospective reflection remain research directions rather than new numbered patterns.
-
 ## 10. Changes entering the White Paper
 
 1. Add a bilingual [Reflection Module Overview](https://adpsagent.com/patterns/reflection/) defining the boundary among observability, evaluation, reflection, and release governance.
@@ -173,7 +163,7 @@ Meta-reflection, deliberative reflection, and prospective reflection remain rese
 - [F4 Self-Heal Loop](https://adpsagent.com/patterns/f4-self-heal-loop/)
 - [White Paper contributors](https://adpsagent.com/founders/#white-paper-contributors)
 
-<p class="publication-note publication-note-end">This page lists workshop participants and consolidates the discussion by theme. It does not map internal practice point by point to a person or organization. Conclusions adopted after comparison appear in the <a href="https://adpsagent.com/patterns/reflection/">Reflection module overview</a> and individual pattern specifications.</p>
+<p class="publication-note publication-note-end">Internal system details have been anonymized. Adopted revisions appear in the <a href="https://adpsagent.com/patterns/reflection/">Reflection module overview</a> and individual pattern specifications.</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

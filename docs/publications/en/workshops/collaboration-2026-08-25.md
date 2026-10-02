@@ -13,9 +13,9 @@
 <tr><td><strong>Core workshop guests</strong></td><td>Dong Zhang and Wei Wang</td></tr>
 </tbody></table>
 
-The session began with LangGraph, Deep Agents, and the six ADPS collaboration patterns, then moved into delegated authority, cross-session conflicts, heterogeneous agents, hook composition, human relationships, and the Agent OS analogy. Several questions changed how the module is organized and exposed an important boundary between C6 Choreography and G5 Hooks Pipeline.
+The workshop used LangGraph, Deep Agents, and the collaboration patterns to discuss dynamic workflows, delegated authority, cross-session conflicts, hook composition, human collaboration, and the Agent OS analogy.
 
-<figure><img alt="Three collaboration planes: agent-agent, human-agent, and human-human around agent systems" src="../../assets/images/workshops/collaboration-three-planes-en.svg"/><figcaption>A collaboration design that shows only agent-to-agent arrows misses intent, authority, team decisions, and takeover.</figcaption></figure>
+<figure><img alt="Three collaboration planes: agent-agent, human-agent, and human-human around agent systems" src="../../assets/images/workshops/collaboration-three-planes-en.svg"/><figcaption>The three relationships cover task handoffs, human authorization and takeover, and records of team decisions.</figcaption></figure>
 
 ## 1. Dynamic sub-agents can still be centrally orchestrated
 
@@ -27,13 +27,11 @@ An order flow makes choreography concrete. A payment service publishes `PaymentC
 
 ## 2. Six design topologies can lower to three runtime primitives
 
-<p class="workshop-field-note"><strong>Dong Zhang observed that many runtime graphs reduce to serial, parallel, and routing.</strong> That helps implementation, not design semantics. A lead-worker-acceptance hierarchy and a generator-reviewer-adjudicator review may use similar edges while retaining different responsibility and authority.</p>
-
-Many enterprise collaboration graphs eventually reduce to serial edges, parallel branches, and routing. That observation is useful at runtime, but it does not remove the design semantics of loops, hierarchy, or orchestration.
+<p class="workshop-field-note">Dong Zhang observed that many runtime graphs reduce to serial execution, parallel execution, and routing. Node responsibilities still need separate definitions. In a lead-worker hierarchy, the lead owns the task and accepts the work; in generator-reviewer-adjudicator review, the reviewer checks the artifact and the adjudicator resolves disagreements.</p>
 
 Hierarchical Delegation may execute as route, parallel workers, and gather. Adversarial Review may execute as generate, review, adjudicate, and conditional loop. Similar low-level edges still carry different ownership, acceptance, and failure responsibilities. ADPS calls this [topology lowering](https://adpsagent.com/concepts/topology-lowering/): preserve responsibility in design, then compile it into runtime primitives supported by the framework.
 
-<figure><img alt="Topology governance matrix across serial, parallel, routing and identity, authority, safeguards, provenance" src="../../assets/images/workshops/topology-governance-matrix-en.svg"/><figcaption>The runtime graph shows how control unfolds. Identity, authority, safeguards, and provenance determine whether it is ready for production.</figcaption></figure>
+<figure><img alt="Topology governance matrix across serial, parallel, routing and identity, authority, safeguards, provenance" src="../../assets/images/workshops/topology-governance-matrix-en.svg"/><figcaption>Check node identity, resource permissions, validation points, and trace records for each runtime structure.</figcaption></figure>
 
 ## 3. Every topology needs four more checks
 
@@ -45,15 +43,15 @@ Hierarchical Delegation may execute as route, parallel workers, and gather. Adve
 <tr><td>Routing</td><td>Route matches identity and risk</td><td>Tighter scope on high-risk routes</td><td>Ingress filtering and differentiated controls</td><td>Route reason and full path</td></tr>
 </tbody></table>
 
-A manager's broad data access should not automatically pass to a worker that verifies one record. Effective authority narrows across user scope, task scope, agent role, tool, and resource. Sharing a long-lived human token across the graph spreads the user's maximum authority to every participant.
+Effective authority is limited by user scope, task scope, agent role, tool permissions, and resource scope. If all workers share the user's long-lived token, each can acquire the user's full access, including workers assigned to verify just one record.
 
-## 4. Production requires a freezing gradient
+## 4. Versioning the graph for production
 
 Development can allow coding agents to split work and try new branches under close review. In test, the main graph, agent roles, tools, and policies become versioned. Staging approaches production conditions. Production pins agent, model, tool, and policy versions while keeping only evaluated dynamic choices.
 
 ## 5. Collaboration has three planes
 
-<p class="workshop-field-note"><strong>Wei Wang added a third relationship: project decisions must re-enter shared assets.</strong> Agents may hand off correctly and humans may approve, yet product, engineering, and test decisions made in meetings remain invisible to the next agent unless they enter versioned project assets.</p>
+<p class="workshop-field-note">Wei Wang noted that decisions made by product, engineering, and test teams affect later agent work. If a rejected approach and the reason for rejecting it remain only in chat, the next agent reading the repository may propose it again.</p>
 
 Agent-Agent collaboration covers decomposition, parallel work, hand-off, and review. Human-Agent collaboration covers intent, missing evidence, approval, takeover, and acceptance. Human-Human collaboration around the agent carries team decisions and responsibility over time.
 
@@ -61,7 +59,7 @@ The third plane often remains in meetings and chat. A later agent can read the r
 
 ## 6. Worktrees do not isolate every conflict
 
-<p class="workshop-field-note"><strong>Wei Wang described a conflict that separate Git worktrees did not prevent.</strong> Two sessions allocated the same requirement identifier. Shared configuration, test databases, deployment environments, and API contracts create the same class of conflict.</p>
+<p class="workshop-field-note">Wei Wang encountered two sessions allocating the same requirement identifier while working in separate Git worktrees. Their files did not conflict, but the shared identifier allocation did.</p>
 
 Separate worktrees isolate files, but concurrent sessions may still compete for requirement IDs, shared configuration, test databases, deployment environments, and external quotas. The scheduler must identify the [write-conflict domain](https://adpsagent.com/concepts/write-conflict-domain/) before launching parallel work.
 
@@ -91,11 +89,9 @@ A [Handoff Contract](https://adpsagent.com/concepts/handoff-contract/) transfers
 
 Separating generator and reviewer reduces self-review bias. Execution may then expose missing dependencies, version differences, or insufficient authority. Those facts must return to the review layer; otherwise the next run repeats an obsolete judgement.
 
-## 9. A hook is a mechanism whose role comes from composition
+## 9. Hook triggers and composition
 
-<p class="workshop-field-note"><strong>Wei Wang asked whether hooks form an independent collaboration pattern.</strong> Starting coding after requirements, pausing before a dangerous call, tracing after a call, and checkpointing on failure were assigned back to orchestration, governance, observation, and recovery. The hook supplies a deterministic insertion point; its design role comes from the responsibility it carries.</p>
-
-The same hook mechanism can start a coding agent after requirements, pause before a dangerous tool call, record trace data, save a checkpoint, or release resources. These are orchestration, governance, observation, and recovery roles.
+<p class="workshop-field-note">Wei Wang asked whether hooks should form an independent collaboration pattern. Participants discussed starting a coding agent after requirements are complete, pausing before a dangerous call for approval, recording a trace after a call, and saving a checkpoint on failure. These uses belong to orchestration, governance, observation, and recovery respectively; the same callback mechanism serves different designs.</p>
 
 No C7 was added. G5 keeps its historical identifier for deterministic governance enforcement. Cross-module use is documented in the [Hook Composition](https://adpsagent.com/topics/hook-composition/) topic.
 
@@ -110,15 +106,15 @@ Models handle open-ended understanding, planning, and candidate generation. Iden
 
 ## 11. Agent OS is an engineering checklist
 
-<p class="workshop-field-note"><strong>Dong Zhang began with processes, threads, coroutines, and IPC; Haili Zhang added service-based sub-agents, standard protocols, and virtual file systems.</strong> The analogy checks scheduling, isolation, communication, and storage. The workshop did not claim that today’s agent runtimes already constitute an operating system.</p>
+<p class="workshop-field-note">Dong Zhang discussed processes, threads, coroutines, and IPC as references for multi-agent runtimes. Haili Zhang described service-based sub-agents, standard protocols, and virtual file systems. They suggest concrete design questions: who schedules tasks, how environments are isolated, how agents communicate, and where artifacts are stored.</p>
 
-The operating-system analogy helps locate missing responsibilities: scheduling, isolation, communication, storage, identity, observability, reclamation, and failure handling. It is not evidence that Agent OS already has a stable industry boundary, and operating-system terms should not be mapped mechanically.
+Identity, observability, resource reclamation, and failure handling also need assigned components. An operating-system process has defined resource and isolation rules, whereas an agent may call models and tools across several services. Its actual runtime boundaries need to be specified rather than assumed to match a process.
 
 ## 12. Abstract, then reconstruct
 
-<p class="workshop-field-note"><strong>Jia Huang tested abstraction with two apparently similar batch jobs.</strong> Eight hundred résumés and eight hundred code files can both be sharded in parallel, but one carries candidate privacy and hiring adjudication while the other carries worktrees, tests, and repository merge authority. A pattern that cannot reconstruct those differences has abstracted too far.</p>
+<p class="workshop-field-note">Jia Huang compared processing eight hundred résumés with processing eight hundred code files. Both jobs can use parallel shards. Résumé processing needs candidate-data access limits and hiring decisions by a responsible person; code processing needs worktree isolation, tests, and repository merge controls. The parallel structure is shared, but authorization and acceptance differ.</p>
 
-Abstraction extracts recurring structure. Reconstruction restores roles, objects, state, authority, evidence, and acceptance to test whether the structure can be built. A difference must survive abstraction when it changes business judgement, state transition, power boundary, evidentiary effect, next action, responsibility, or acceptance.
+Abstraction extracts the shared split-execute-gather structure. Reconstruction specifies what each worker can read and change, and who checks its result. Differences affecting business decisions, state changes, authority, evidence, responsibility, or acceptance must remain explicit in that design.
 
 ## Resulting revisions
 

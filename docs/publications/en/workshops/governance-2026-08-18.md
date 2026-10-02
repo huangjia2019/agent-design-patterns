@@ -27,7 +27,7 @@
 </tbody>
 </table>
 
-The discussion covered dangerous tool calls, agent fleets, governance lifecycle, and organizational responsibility. Its conclusions changed the relationship between governance and the dual axis: observability moved to a cross-cutting plane, lifecycle became explicit, and local controls connected to registry, policy, enforcement, and evidence services.
+The workshop covered tool authorization, rechecking state after approval, and the registration, permissions, and retirement of multiple agents. Willem Jiang presented the evolution of DeerFlow Guardrail. Participants examined how to preserve a proposed action during an approval wait and what to check before resuming it.
 
 ## 1. Compliant actions can still drift from a long-running goal
 
@@ -37,7 +37,7 @@ This distinction led to three objectives: authorization, accountability, and con
 
 <figure class="workshop-diagram"><img alt="Action governance constrains the current call; goal governance checks whether the long-running job still advances." src="../../assets/images/workshops/governance-dual-scale-en.svg"/><figcaption>Action governance constrains the current call; goal governance checks whether the long-running job still advances.</figcaption></figure>
 
-## 2. A sandbox bounds reach; domain authorization decides this invocation
+## 2. Sandbox isolation and business authorization
 
 <p class="workshop-field-note"><strong>Willem Jiang’s DeerFlow history separates sandbox containment from domain authorization.</strong> The sandbox limits process, network, and file effects. Pre-tool middleware still obtains a trusted Principal and decides against the current tool, arguments, and resource. Assembly and invocation share the same policy source so a hidden tool cannot be reached indirectly and a visible tool still requires call-time authority.</p>
 
@@ -46,11 +46,13 @@ A sandbox isolates process, files, and network. It does not know whether the cur
 - **Assembly-time filtering** removes unauthorized tools from the model-visible set.
 - **Runtime review** evaluates principal, arguments, resource, environment, quota, and approval for each call.
 
-The same payroll tool can yield three different outcomes. Reading one's own payroll record may execute directly. Changing one employee's allowance requires fixed arguments and review. A batch payment above the daily ceiling is denied even when a reviewer is available. A sandbox cannot infer these domain distinctions.
+A payroll-tool design can apply three rules: allow users to read their own records, require approval with fixed arguments for an allowance change, and deny batch payments above a daily limit. This illustrative design is used throughout the authorization and approval sections below.
 
 The [public DeerFlow Guardrail case](https://adpsagent.com/cases/deerflow-guardrail/) provides inspectable implementation steps: a common pre-tool middleware, trusted Principal propagation, RunJournal, an independent RBAC provider, and shared policy across assembly and invocation.
 
-## 3. Tool assembly is an intersection, not one allowlist
+## 3. Assembling and filtering the tool set
+
+Which tools should an agent receive for a task? A candidate tool must meet the task needs, belong to the selected tool group, satisfy agent and sub-agent allow/deny rules, and comply with the active Skill policy and caller's permissions:
 
 ```
 task needs
@@ -65,11 +67,11 @@ Deferred discovery delays low-frequency tools. Discovery does not confer invocat
 
 An allowance change needs employee lookup, policy lookup, change preparation, review, and commit capabilities. Batch payment, employee deletion, and tenant administration should not become visible merely because they share a payroll tool package. The intersection is recomputed when task, role, or active skill changes.
 
-## 4. Approval needs durable intent after the button
+## 4. Approval records and resumed execution
 
 <p class="workshop-field-note"><strong>Yibo Xu separated identity and state across the approval wait.</strong> User delegation, agent workload, session, run, immutable tool version, canonical arguments, and policy version form Durable Intent; Approval binds only to that digest. Balance, risk, and target-resource version cannot be frozen, so resume must revalidate business preconditions.</p>
 
-The difficult question was how to prove, after a long pause, that execution is still the action the reviewer saw. Tool versions, arguments, and resource scope can be frozen, while balance, inventory, date, and target versions continue to change.
+Approval may take minutes or days. The request can preserve tool versions, arguments, and target scope, but balances, inventory, dates, and resource versions can change during the wait. Resumed execution must check whether the original business preconditions still hold.
 
 The workshop therefore split the control into Intent, Approval, and Execution. Intent fixes the action and preconditions. Approval records reviewer, expiry, and single use. Execution revalidates on resume and records the external receipt. Domains still need to define which changed preconditions invalidate approval.
 
@@ -79,7 +81,7 @@ Suppose the reviewer approved “employee E-1842, transport allowance 800→1000
 
 Every topology needs evidence, including decentralized choreography. Observability also serves debugging, evals, product analysis, and evolution. The discussion used three levels: task and business outcome; agent process; and foundation health.
 
-When an artifact cannot be scored immediately, downstream adoption can be useful evidence. Adoption is not correctness, but it is closer to business outcome than a page reaction.
+When an artifact cannot be scored immediately, record whether downstream work uses it and then track the outcome. Adoption and result quality need separate measures.
 
 ## 6. Agent sprawl requires a control plane
 
@@ -99,7 +101,7 @@ This separation also changes G5: a hook is an enforcement point, a provider supp
 
 ## 8. Progressive commitment is capability-specific and bidirectional
 
-<p class="workshop-field-note"><strong>Bin Wu asked whether blast radius should expand and contract with runtime evidence.</strong> The resulting progression is bidirectional: read capability may stay open while write capability is demoted after a version change or incident, then restored only for a specific capability, scenario, and scope after new regression evidence.</p>
+<p class="workshop-field-note">Bin Wu asked whether runtime records could justify expanding or reducing an agent's scope. After a write incident, for example, query access could remain available while automatic writes are suspended. A fix and regression checks would precede restoring writes for specified scenarios and resources.</p>
 
 One agent's query, validation, mutation, and release capabilities can require different tiers. The useful unit is agent version × capability × scenario × resource scope. Authority expands with evidence, and contracts after incidents, version changes, missing evaluation, missing ownership, or retirement.
 
@@ -116,11 +118,9 @@ Approval, clarification, pause, takeover, resume, and explanation belong to the 
 
 v0.5 does not assign an X identifier to human-agent interaction; the issue remains in topic research and in Action and Governance design.
 
-## 10. One payroll change through the governance structure
+## 10. Payroll-change design example
 
 <table><thead><tr><th>Stage</th><th>Runtime fact</th><th>Main control</th></tr></thead><tbody><tr><td>Intake</td><td>Change one employee's transport allowance from 800 to 1000 next month</td><td>Confirm delegated identity, target, field, desired state, and non-goals</td></tr><tr><td>Evidence</td><td>Current state comes from the HR API; policy comes from a versioned knowledge source</td><td>Keep mechanical state separate from policy evidence</td></tr><tr><td>Prepare</td><td>The agent creates a canonical intent with tool version, arguments, resource, and preconditions</td><td>G2 limits scope to one employee and one field</td></tr><tr><td>Approve</td><td>The reviewer sees before, after, delta, effective date, policy basis, and scope</td><td>G1 issues an expiring, single-use approval</td></tr><tr><td>Resume</td><td>The executor rereads employee state and policy version</td><td>Changed preconditions require new review or termination</td></tr><tr><td>Execute</td><td>A short-lived credential commits the change; hooks run deterministic pre- and post-checks</td><td>G5 enforces policy while G2 maintains quota and scope</td></tr><tr><td>Accept</td><td>Transaction receipt and after-read agree; the next payroll cycle enters reconciliation</td><td>X1 links request, evidence, verdict, state delta, and external outcome</td></tr><tr><td>Evolve</td><td>Anomaly enters regression; policy or tool change triggers revalidation</td><td>G3 holds, promotes, demotes, freezes, or retires authority</td></tr></tbody></table>
-
-The path makes the responsibilities visible. Approval handles one intent. Blast-radius limits remain active. Observability spans every stage. Progressive commitment governs authority across repeated runs. No single pattern replaces the lifecycle.
 
 ## 11. Changes adopted in v0.4
 
