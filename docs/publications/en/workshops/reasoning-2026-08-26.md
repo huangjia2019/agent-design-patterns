@@ -19,13 +19,11 @@
 <tr><td>Core participant</td><td>Didi Li</td><td>Business Lead, Shuzhi Yuanjing</td></tr>
 </tbody></table>
 
-The discussion ran for two hours and twenty-seven minutes. The six core participants drew on online question answering, large codebase analysis, multimodal generation, latency-sensitive user services, GIS toolchains, and physical simulation. These settings place reasoning control in different locations. A model may hold it in one system; a harness, deterministic program, or human business process may hold it in another.
-
-The session did not walk through R1–R5 as a catalog. It began with deciding which requests deserve deeper reasoning, then moved through tree search, speculative execution, mirror agents, external acceptance, and business evaluation sets. The closing concern was practical: after a reasoning run, what evidence and reusable control remain, and what allows the next release to be trusted?
+The workshop covered online question answering, large codebase analysis, multimodal generation, latency-sensitive services, GIS toolchains, and physical simulation. Participants discussed how to choose reasoning paths, control call costs, and verify results.
 
 <figure class="workshop-diagram"><img alt="A reasoning request is routed into serial, parallel, iterative, or layered reasoning before producing a structured decision" src="../../assets/images/workshops/reasoning-selection-en.svg"/><figcaption>The topology depends on difficulty, risk, evidence state, and latency. Several patterns may be nested.</figcaption></figure>
 
-## 1. The chairs began with five engineering questions
+## 1. Reasoning triggers, budgets, and acceptance
 
 <p class="workshop-field-note"><strong>Huisheng Yin framed System 1 and System 2 as five system-design questions.</strong> Which requests enter a slow path? Which topology does that path use? How much time, model usage, and tool usage may it consume? Who verifies the result? What evidence is sufficient to stop?</p>
 
@@ -39,7 +37,7 @@ The session did not walk through R1–R5 as a catalog. It began with deciding wh
 
 A request can be easy to understand yet dangerous to execute, such as restoring sensitive data to an earlier state. Difficulty controls reasoning depth; action risk controls approval, authority, and verification. A policy-change example made the same separation visible: old policy, new policy, and effective date may be checked in parallel, but they must converge under one evidence standard. A single complexity score would hide that distinction.
 
-An equipment alarm led into R4. The initial mechanical-failure hypothesis changed only after a field engineer reported a recent configuration deployment. Running the same check again is not iteration. Each pass needs new evidence and an explicit account of which hypothesis changed.
+An equipment alarm illustrates R4 Iterative Hypothesis Testing. The initial hypothesis is a mechanical fault. After a field engineer reports a recent configuration deployment, the next round adds a configuration check. The record should identify that new information and explain why the investigation changed direction.
 
 ## 2. Stronger models require controls to be measured again
 
@@ -57,7 +55,7 @@ After a model upgrade, teams can compare three versions: retain the current cont
 
 This preparation removes irrelevant material while retaining causal structure. Acceptance therefore checks more than compression ratio. Entry points, propagation paths, and critical states must survive. The work sits at the Perception–Reasoning boundary: Perception turns raw material into structure; Reasoning forms a decision on that structure.
 
-Dong Zhang described continuous improvement as “scenario plus benchmark.” A team builds a test set and acceptance threshold for one defined scenario. New bad cases return to the same data, where the team can determine whether the prompt, retrieval, harness, or model needs to change. The scenario gives the change a purpose; the benchmark determines whether it can ship.
+Dong Zhang described continuous improvement as “scenario plus benchmark.” A team builds a test set and acceptance threshold for one defined scenario. New failure cases are added to the dataset to test proposed changes to the prompt, retrieval, harness, or model before release.
 
 ## 4. Chains, trees, and reflection loops can nest
 
@@ -67,9 +65,9 @@ Stable steps fit a chain. Open questions expand into a tree of hypotheses. A bra
 
 <p class="workshop-field-note"><strong>Dong Zhang separated precompiled branches from runtime branches.</strong> A known business process may be encoded as a workflow. An exploratory task may allow the model to propose hypotheses while it runs. Both still need one convergence node that compares conflicting conclusions under the same evidence rules.</p>
 
-Tree search also needs maximum branch count, maximum depth, and a cheap pruning rule. Huisheng Yin placed retries at local nodes: a syntax error, a business-rule failure, and missing evidence require different repairs. A generic retry around the whole graph cannot explain why the system is trying again.
+Tree search also needs maximum branch count, maximum depth, and a cheap pruning rule. Huisheng Yin suggested handling retries at individual nodes: correct the format for a syntax error, reconsider the plan for a business-rule failure, and retrieve additional material when evidence is missing. The failure type determines which step to repeat.
 
-## 5. Five failure modes expose weak designs early
+## 5. Recursion, traceability, and permission failures
 
 <table><thead><tr><th>Failure</th><th>Observed behavior</th><th>Required control</th></tr></thead><tbody>
 <tr><td>Unbounded recursion</td><td>Agents call themselves or each other while consuming resources</td><td>Depth, count, time, and cost limits</td></tr>
@@ -79,17 +77,17 @@ Tree search also needs maximum branch count, maximum depth, and a cheap pruning 
 <tr><td>Decision sent directly to execution</td><td>A model judgment becomes a production command</td><td>Rule validation, risk classification, and required approval</td></tr>
 </tbody></table>
 
-<p class="workshop-field-note"><strong>Dong Zhang required failure and exit conditions before pattern selection.</strong> A reflection loop needs hard and soft exits. Hard exits cap rounds and resources. Soft exits test whether the goal is met, a quality gate has passed, or two consecutive rounds produced no material change.</p>
+<p class="workshop-field-note">Dong Zhang described two kinds of loop exit. Reaching a resource or round limit forces a stop. Reaching the goal, passing a quality check, or making no material progress for two rounds can also end the current loop.</p>
 
 ## 6. Online reasoning is constrained by the serving path
 
 <p class="workshop-field-note"><strong>Han Zhao separated serving-layer latency controls from agent-layer routing.</strong> Quantization, prefix caching, and request scheduling reduce repeated work at the serving layer. The agent layer then selects a model, Skill, prompt parameters, and reasoning effort for the task.</p>
 
-Prefix caching depends on the order of the system prompt, tool descriptions, and user messages. Multi-instance deployments must also handle cache locality. Providers expose different cache semantics, so “enable caching” is not a complete design.
+Prefix caching depends on the order of the system prompt, tool descriptions, and user messages. Multi-instance deployments must check cache hits when requests reach different instances and adapt scheduling to the provider's caching rules.
 
 A capable main model can choose a downstream model, yet that choice may itself consume too much latency and compute. Zhao described a lightweight classifier or small DAG that proposes a model from known scenarios. The proposal anchors the main model and does not replace its final decision. High-volume interactive services need to measure the saving; an offline task may not need the extra layer.
 
-Model, harness, and artifact evolution also run on different clocks. Prompts, Skills, agent definitions, and plugins can change quickly. Model updates require data preparation, training, deployment, and regression. Harness updates change routing, loops, and tool behavior, so they need separate compatibility and failure-path tests. The phrase “agent self-evolution” becomes operational only after the modified object and release gate are named.
+Models, harnesses, and artifacts have different update processes. Prompts, Skills, agent definitions, and plugins can change quickly. Model updates require data preparation, training, deployment, and regression. Harness updates affect routing, loops, and tool behavior, so they need compatibility and failure-path tests.
 
 ## 7. Speculative execution spends extra compute to reduce waiting
 
@@ -109,13 +107,13 @@ When the discussion reached confidence scores, Zhong described a layered evaluat
 
 Fuhai Zhong also described a mirror agent. In an offline environment, it reproduces the tool interfaces, prompt, configuration, and answer policy of a deployed business agent. A developer or coding agent can modify tools, prompts, model selection, and configuration, then run the existing test set. Product or operations staff sample the results. Approved changes move to production code and still pass end-to-end and regression tests. The mirror shortens experimentation; it does not replace production acceptance.
 
-## 9. Deterministic toolchains still need external acceptance
+## 9. Service requests and rendering checks in GIS publishing
 
-<p class="workshop-field-note"><strong>Yuke Xiong used a GIS publishing chain to show why tool success does not prove task completion.</strong> A coordinate error introduced during data processing may leave the publishing call successful while the rendered map is blank. Diagnosis must cross data processing, service publication, and visual rendering.</p>
+<p class="workshop-field-note">Yuke Xiong's GIS project checks data processing, service publication, and visual rendering. A coordinate error introduced during data processing can leave the publishing call successful while the browser shows a blank map. Diagnosis requires inspecting coordinate processing, service requests, and the rendered result.</p>
 
 Mature command-line tools, database statements, and REST APIs allow many decisions to be compiled into fixed stages, routing tables, and error maps. A known transient failure can follow a retry rule. An unknown error should stop the current path and update the hypothesis, or hand a person or agent the symptoms, hypotheses tested and rejected, and supporting evidence. A raw log bundle is large but does not tell the receiver where to continue.
 
-Completion comes from the external result. The system requests the published service, opens it in a headless browser, stores a screenshot, and uses image checks or stable tools to confirm that the map appears. A model's statement that the job is complete is not acceptance evidence.
+After publication, the system requests the service, opens it in a headless browser, stores a screenshot, and uses image checks or existing tools to confirm that the map appears.
 
 This setting currently favors serial checks. Evidence is cheap and precise, and the toolchain is stable. Parallel exploration would add cost and make causal diagnosis harder. A pattern catalog should preserve why a pattern was not selected as well as why another one was.
 
@@ -125,7 +123,7 @@ This setting currently favors serial checks. Evidence is cheap and precise, and 
 
 Passing individual technical metrics does not guarantee the assembled business result. Every component may pass inspection while the yield of the assembled module still falls. A business evaluation set follows real processes, weights critical scenarios, and connects them to business measures. Its version cadence differs from unit tests and should be maintained independently.
 
-The input itself can also be incomplete. Business users may not be able to state their intent fully, especially across roles and processes. More reasoning depth cannot invent missing facts. Jia Huang connected this issue to forward-deployed engineering (FDE) and enterprise modeling: interviews, questionnaires, and field study establish a usable business model before that model is given to an agent. The work crosses Perception, Reasoning, Evaluation, and organizational process.
+Business users may have difficulty describing requirements that span roles and processes. Jia Huang recommended the fieldwork methods used in forward-deployed engineering (FDE) and enterprise modeling: use interviews, questionnaires, and observation to establish business objects, processes, and acceptance requirements, then configure the agent's source material and tools accordingly.
 
 ## 11. Changes to the pattern specifications
 
@@ -134,7 +132,7 @@ The input itself can also be incomplete. Business users may not be able to state
 3. [R3 Parallel Exploration](https://adpsagent.com/patterns/r3-parallel-exploration/) adds speculative execution and distinguishes multiple solutions to one question from subtask fan-out.
 4. [R4 Iterative Hypothesis Testing](https://adpsagent.com/patterns/r4-iterative-hypothesis-testing/) adds known transients, unknown failures, reasoning handoff packages, and external acceptance.
 5. [R5 Talker-Reasoner](https://adpsagent.com/patterns/r5-talker-reasoner/) retains tests for topic changes, background cancellation, stale results, and front-channel overreach.
-6. Scenario–benchmark contracts, common convergence nodes, mirror agents, and business evaluation sets enter concept review. The workshop did not add an R6 simply to expand the catalog.
+6. Scenario–benchmark contracts, common convergence nodes, mirror agents, and business evaluation sets enter concept review.
 
 ## 12. Questions still open
 

@@ -28,8 +28,6 @@
 
 On 13 August 2026, ADPS held its first workshop on the perception module. The meeting followed two related tracks. The first tested whether P1–P4 explain signal ingress, context selection, compaction, discovery, and fusion in enterprise systems. The second used coding agents to examine how requirements, architecture, testing, review, and team responsibilities change when AI enters software engineering.
 
-The two tracks belong at different levels of the catalog. Perception findings enter the module overview and P1–P4. AI-driven software engineering crosses memory, action, reflection, and governance, so it has become a separate research topic.
-
 ## Workshop conclusions
 
 1. Perception scope should be designed backward from the decision goal. Available data does not automatically belong in the current context.
@@ -58,7 +56,7 @@ The workshop did not add Event-Driven as a new topology. Events define when work
 
 ## 3. Multi-source is not the same as multi-modal
 
-<p class="workshop-field-note"><strong>Yuke Xiong described post-deployment acceptance as a separate layer from algorithm boundary tests.</strong> Boundary tests can establish that the algorithm itself stays within limits, but map rendering, device behaviour in an advanced mode, and the final business outcome require further layers. An image-recognition task needs acceptance checks suited to its own downstream result.</p>
+<p class="workshop-field-note">Yuke Xiong discussed acceptance after algorithm deployment. In addition to boundary tests, the team needs to check map rendering, device behavior in advanced modes, and the final business result. Other tasks, such as image recognition, need checks designed for their outputs and intended use.</p>
 
 Enterprise security systems often fuse several sources that are all text or structured records. Game development exposes a genuine modality choice: an Unreal Engine Blueprint can be inspected visually or transformed into a script-like representation. The appropriate representation depends on the task, available parser, and token cost.
 
@@ -66,21 +64,19 @@ P4 now records source and modality separately. Source drives authorization, fres
 
 ## 4. Goal and constraints form the context
 
-<p class="workshop-field-note"><strong>Xianglong Huang organized software context as Why, What, How, and acceptance.</strong> Why identifies the user and problem; What pins scenarios and product behaviour; How carries architecture, sequence, API, and database design; acceptance cases exist before coding. The agent receives checkable engineering material rather than an ever-growing oral brief.</p>
+<p class="workshop-field-note">Xianglong Huang's software context includes Why, What, How, and acceptance material. Why identifies the user and problem; What records scenarios and product behavior; How includes architecture, sequences, APIs, and database design. Acceptance cases are prepared before coding for use during implementation and review.</p>
 
 A coding agent's context includes both goal and constraints. The goal defines the work. Tests, interface contracts, design rules, and business invariants define acceptance. Too little context prevents completion; too much unrelated material disperses attention.
-
-Algorithm development also exposes a layered acceptance problem. A passing algorithm test does not establish correct presentation, device behaviour, or final business operation. Different tasks require their own acceptance layers and cannot share one universal judge unchanged.
 
 These remarks now appear in the Context Contract in the perception overview and connect to the Action Contract and reflection evidence model.
 
 ## 5. From SDD to AI-driven software engineering
 
-<p class="workshop-field-note"><strong>Willem Jiang and Cheng Huang focused on brownfield systems.</strong> Jiang warned that a large repository accumulates architectural erosion through ordinary pull requests and that agents can accelerate it. Huang added ADRs, tests, task records, and reverse write-back so implementation decisions re-enter readable context. A new project can build from specifications; an old one must also recover its boundaries.</p>
+<p class="workshop-field-note">Willem Jiang noted that a large repository can drift from its architecture even when individual pull requests pass review; agents can accelerate that drift. Cheng Huang described using ADRs, tests, and task records to write implementation decisions back into project material for subsequent development. An existing project also needs a review of module responsibilities and dependencies.</p>
 
 The public OpenLogos and RunLogos projects show one specification-oriented path. OpenLogos organizes software context through Why, What, How, and acceptance artifacts. RunLogos places proposal, documentation, planning, vertical slices, implementation, review, verification, deployment, and archival in a workflow engine. Each slice is independently acceptable. Review loops carry explicit iteration, issue-count, evidence, and stop limits.
 
-An anonymized large-backend practice keeps existing product, development, and testing responsibilities while introducing agents into technical design, implementation, and code review. It records adoption, token use, design iterations, and post-delivery code changes. The near-term goal is to reduce human intervention through measured improvement without claiming an unattended process before evidence supports it.
+A large-backend development practice keeps existing product, development, and testing responsibilities while introducing agents into technical design, implementation, and code review. It records adoption, token use, design iterations, and post-delivery code changes to identify steps that need less human intervention.
 
 Greenfield and brownfield work require different adoption paths. A new system can establish specifications, design, and tests from the start. A high-traffic legacy system requires more cautious movement from peripheral modules toward the core, with stronger human and test gates.
 
@@ -139,8 +135,6 @@ The workshop also added an input-security concern. External tools, documents, pa
 </tbody>
 </table>
 
-These terms organize the workshop record. Apart from the existing Context Contract, they do not create new pattern numbers.
-
 ## 8. White Paper revisions
 
 1. A new [Perception Module Overview](https://adpsagent.com/patterns/perception/) records the four-stage funnel, ingress mechanisms, source and modality, the decision boundary, and input security.
@@ -168,7 +162,7 @@ These terms organize the workshop record. Apart from the existing Context Contra
 - [AI-Driven Software Engineering](https://adpsagent.com/topics/ai-driven-software-engineering/)
 - [White Paper contributors](https://adpsagent.com/founders/#white-paper-contributors)
 
-<p class="publication-note publication-note-end">This page lists workshop participants and consolidates the discussion by theme. It does not map internal practice point by point to a person or organization. Conclusions adopted after comparison appear in the <a href="https://adpsagent.com/patterns/perception/">Perception module overview</a> and individual pattern specifications.</p>
+<p class="publication-note publication-note-end">Internal system details have been anonymized. Adopted revisions appear in the <a href="https://adpsagent.com/patterns/perception/">Perception module overview</a> and individual pattern specifications.</p>
 
 <!-- PAGE-CHRONICLE:START -->
 
