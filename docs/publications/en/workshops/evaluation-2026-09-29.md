@@ -103,7 +103,7 @@ The opening material illustrates regression with map publishing. Suppose the old
 
 <figure class="workshop-diagram"><a href="../../assets/images/workshops/evaluation-opening-regression-zh.png"><img alt="Chinese diagram of error cases and valid-map regression tests after a map-publishing fix" loading="lazy" src="../../assets/images/workshops/evaluation-opening-regression-zh.png"/></a><figcaption>Map-publishing regression: check that XML errors are detected and valid maps can still be published.</figcaption></figure>
 
-<p class="publication-note publication-note-end">Based on the 29 September 2026 meeting transcript. Internal implementation details have been anonymized. The original Chinese opening slides are from Jia Huang's v0.4 deck; the additional diagram was prepared after the workshop.</p>
+<p class="publication-note publication-note-end">Based on the 29 September 2026 workshop transcript. Internal project details have been anonymized.</p>
 
 <!-- PAGE-CHRONICLE:START -->
 <section aria-labelledby="page-chronicle-title" class="page-chronicle">

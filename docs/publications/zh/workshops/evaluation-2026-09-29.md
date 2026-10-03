@@ -103,7 +103,7 @@
 
 <figure class="workshop-diagram"><a href="../../assets/images/workshops/evaluation-opening-regression-zh.png"><img alt="地图发布修复后的错误样例检查与正常地图回归" loading="lazy" src="../../assets/images/workshops/evaluation-opening-regression-zh.png"/></a><figcaption>地图发布回归：既检查 XML 错误是否被识别，也检查正常地图能否继续发布。</figcaption></figure>
 
-<p class="publication-note publication-note-end">本页依据 2026-09-29 会议逐字稿整理，姓名与公开身份采用嘉宾提供的口径；内部项目细节作了脱敏。开场图取自黄佳当晚使用的 PPT v0.4，新增示意图为会后整理。</p>
+<p class="publication-note publication-note-end">本页依据 2026 年 9 月 29 日会议逐字稿整理。内部项目细节已脱敏。</p>
 
 <!-- PAGE-CHRONICLE:START -->
 <section aria-labelledby="page-chronicle-title" class="page-chronicle">

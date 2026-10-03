@@ -182,7 +182,7 @@ This case maps to [C1](https://adpsagent.com/patterns/c1-hierarchical-delegation
 - [Deep Agents ARCHITECTURE.md](https://github.com/langchain-ai/deepagents/blob/main/libs/ARCHITECTURE.md)
 - [SubAgentMiddleware source](https://github.com/langchain-ai/deepagents/blob/main/libs/deepagents/deepagents/middleware/subagents.py)
 
-<div class="document-citation"><p><strong>Research source:</strong> Haili Zhang's LangGraph and Deep Agents research and demonstration at the first ADPS Collaboration workshop on 25 August 2026. ADPS checked the account against public documentation and source code.</p><p><strong>Evidence boundary:</strong> This article describes mechanisms in public frameworks and maps them to patterns. It is neither an official LangChain architecture document nor evidence of deployment outcomes.</p><p><a href="https://adpsagent.com/cases/">Cases and research reports</a> · <a href="https://adpsagent.com/patterns/collaboration/">Collaboration</a> · <a href="https://adpsagent.com/patterns/reflection/">Reflection</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p></div>
+<div class="document-citation"><p><strong>Research source:</strong> Haili Zhang's LangGraph and Deep Agents research and demonstration at the first ADPS Collaboration workshop on 25 August 2026.</p><p><a href="https://adpsagent.com/cases/">Cases and research reports</a> · <a href="https://adpsagent.com/patterns/collaboration/">Collaboration</a> · <a href="https://adpsagent.com/patterns/reflection/">Reflection</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p></div>
 
 <!-- PAGE-CHRONICLE:START -->
 

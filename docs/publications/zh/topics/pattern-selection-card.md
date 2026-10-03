@@ -55,7 +55,7 @@ ADPS 双轴矩阵用认知功能和执行拓扑定位模式。进入方案评审
 
 候选模式必须对应一个已经说清楚的需求。两到三个模式通常足以显露架构。横切工程面另外记录：[X1 可观测性](https://adpsagent.com/zh/patterns/x1-observability/)承载轨迹和证据，[X2 评测与验证](https://adpsagent.com/zh/patterns/x2-evals-and-testing/)提供验收和回归，[X3 安全与身份](https://adpsagent.com/zh/patterns/x3-security-and-identity/)提供主体、委派和策略边界。
 
-选型卡不是模式清单。一个模式若无法对应失败模式、接口或质量要求，就不应写进卡片。
+写入选型卡的每个模式，都应对应要处理的失败、接口问题或质量要求。
 
 ## 填写示例：技术文档审查
 

@@ -149,7 +149,7 @@ next_required: 可评审补丁与测试证据</code></pre>
 - [抽象—还原](https://adpsagent.com/zh/topics/abstraction-reconstruction/)
 - [Agent OS 工程清单](https://adpsagent.com/zh/topics/agent-os-engineering/)
 
-<p class="publication-note publication-note-end">公开稿按技术主题整理。涉及内部系统的名称、规模、规则与责任关系采用脱敏表述。</p>
+<p class="publication-note publication-note-end">本页依据 2026 年 8 月 25 日会议逐字稿整理。内部项目细节已脱敏。</p>
 
 <!-- RELATED-CASE-DEEPAGENTS:START -->
 

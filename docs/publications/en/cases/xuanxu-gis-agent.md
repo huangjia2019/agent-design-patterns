@@ -337,8 +337,8 @@ The structure can support media transcoding, model deployment, report publicatio
 <p class="case-evidence-label">Original runtime views</p>
 <h2 id="evidence-gis">How the console carries dataset facts and failure knowledge forward</h2>
 <div class="case-evidence-grid">
-<figure class="case-evidence"><img alt="Xuanxu GIS Agent dataset view" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/console-datasets.jpg"/><figcaption><strong>Dataset and processing facts</strong>Input files, recognition results, and outputs remain inspectable in one view.<span class="case-evidence-proof">The screenshot supports one runtime view, not coverage of every format.</span></figcaption></figure>
-<figure class="case-evidence"><img alt="Xuanxu GIS Agent failure knowledge card" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/knowledge-card.jpg"/><figcaption><strong>Failure knowledge card</strong>A field error becomes symptom, cause, fix, and prevention rule.<span class="case-evidence-proof">The screenshot supports the card mechanism; regression tests must still validate the rule.</span></figcaption></figure>
+<figure class="case-evidence"><img alt="Xuanxu GIS Agent dataset view" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/console-datasets.jpg"/><figcaption><strong>Dataset and processing facts</strong>Input files, recognition results, and outputs remain inspectable in one view.</figcaption></figure>
+<figure class="case-evidence"><img alt="Xuanxu GIS Agent failure knowledge card" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/knowledge-card.jpg"/><figcaption><strong>Failure knowledge card</strong>A field error becomes symptom, cause, fix, and prevention rule.</figcaption></figure>
 </div>
 </section>
 
@@ -438,7 +438,7 @@ The current material supports file-signature routing, the HTTP-200 false-success
 
 <div class="document-citation">
 <p><a href="https://adpsagent.com/cases/">Case-report registry</a> · <a href="https://adpsagent.com/patterns/">Pattern catalog</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
-<p class="publication-disclaimer"><strong>Evidence boundary:</strong> This report documents Xuanxu Technology's GIS data-publishing system. Yuke Xiong supplied the workflow, failure cases, and architecture decisions. The material has not been independently audited. Screenshots come from the case environment. ADPS reconstructed the example contracts to explain the disclosed mechanisms; they are not the implementation's field names.</p>
+<p class="publication-disclaimer">Case material and runtime screenshots supplied by Yuke Xiong. The example contracts illustrate the design.</p>
 </div>
 
 <!-- PAGE-CHRONICLE:START -->

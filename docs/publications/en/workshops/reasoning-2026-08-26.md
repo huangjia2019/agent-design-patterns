@@ -150,7 +150,7 @@ Business users may have difficulty describing requirements that span roles and p
 - [Agent evaluation and validation](https://adpsagent.com/topics/agent-evals-and-testing/)
 - [Reasoning assetization](https://adpsagent.com/concepts/reasoning-assetization/)
 
-<p class="publication-note publication-note-end">This public record is grounded in the workshop transcript and organized around the questions raised in the session. Internal system names, exact scale, configuration, and responsibility details have been anonymized.</p>
+<p class="publication-note publication-note-end">Based on the 26 August 2026 workshop transcript. Internal project details have been anonymized.</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

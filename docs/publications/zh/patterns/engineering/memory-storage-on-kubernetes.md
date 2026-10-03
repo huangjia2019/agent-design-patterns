@@ -6,9 +6,9 @@
 <p class="publication-deck">文件可以继续作为 Agent 的操作界面；跨 Pod 存活、版本冲突和恢复由持久后端负责。</p>
 </header>
 
-一位读者遇到的问题很具体：Agent 在工作目录中按日期写 Markdown 记忆，本地运行正常；服务部署到 Kubernetes 后，同一用户的下一轮请求可能落到另一个 Pod。刚刚写下的偏好还在 Pod A，Pod B 却读不到。
+一位读者的 Agent 在工作目录中按日期写 Markdown 记忆，本地运行正常；服务部署到 Kubernetes 后，同一用户的下一轮请求可能落到另一个 Pod。刚刚写下的偏好还在 Pod A，Pod B 却读不到。
 
-这不是 Markdown 的缺陷。Markdown 决定正文怎样表达，存储系统决定记录能否跨进程、跨 Pod、跨版本继续存在。生产系统需要把“Agent 看到的文件”与“记忆的权威存储”分开。
+Markdown 决定正文怎样表达，存储系统决定记录能否跨进程、跨 Pod、跨版本继续存在。生产系统需要把“Agent 看到的文件”与“记忆的权威存储”分开。
 
 ![K8s 中 Agent 记忆的写入、持久化与工作区投影](../../../assets/images/patterns/engineering/k8s-agent-memory-zh.svg)
 

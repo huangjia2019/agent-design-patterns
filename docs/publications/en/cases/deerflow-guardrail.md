@@ -201,9 +201,9 @@ A sandbox isolates processes and resources. Authorization answers whether this p
 
 ## 13. Work that remains outside this implementation
 
-The public implementation provides a substantial PRE authorization path, but it does not solve all production governance. High-risk actions still need POST business verification, idempotency keys, external receipts, and compensation. Human decisions require an ask state, approval expiry, resume-time state checks, and single consumption. Policy hot updates need versioning, atomic cutover, and rollback.
+The public implementation covers PRE authorization before tool calls. High-risk actions also need POST business verification, idempotency keys, external receipts, and compensation. Human decisions require an ask state, approval expiry, resume-time state checks, and single consumption. Policy hot updates need versioning, atomic cutover, and rollback.
 
-A production guardrail connects capability assembly, trusted identity, policy decisions, execution interception, and durable evidence. A deny list covers only one part of that path.
+This guardrail implementation connects capability assembly, trusted identity, policy decisions, execution interception, and durable evidence.
 
 <!-- CASE-V06-EVIDENCE-deerflow-guardrail-False:START -->
 
@@ -215,7 +215,6 @@ A production guardrail connects capability assembly, trusted identity, policy de
 <a href="https://github.com/bytedance/deer-flow/pull/4370" rel="noopener" target="_blank"><strong>PR #4370</strong><span>Assembly filtering, deferred catalog, and runtime recheck</span></a>
 <a href="https://github.com/bytedance/deer-flow/blob/main/backend/docs/GUARDRAILS.md" rel="noopener" target="_blank"><strong>Guardrails documentation</strong><span>Configuration, providers, failure modes, and boundaries</span></a>
 </div>
-<p class="case-source-note">The evolution and assembly diagrams are derived from public PRs and code. Commits establish that the mechanism exists; they do not substitute for a deployment's policy, identity system, sandbox, or business acceptance.</p>
 </section>
 
 <!-- CASE-V06-EVIDENCE-deerflow-guardrail-False:END -->
@@ -228,7 +227,6 @@ A production guardrail connects capability assembly, trusted identity, policy de
 - [PR #1240](https://github.com/bytedance/deer-flow/pull/1240) · [#3665](https://github.com/bytedance/deer-flow/pull/3665) · [#3837](https://github.com/bytedance/deer-flow/pull/3837) · [#4260](https://github.com/bytedance/deer-flow/pull/4260) · [#4370](https://github.com/bytedance/deer-flow/pull/4370)
 
 <div class="document-citation">
-<p><strong>Scope:</strong> ADPS independently prepared this case from DeerFlow's public code, pull requests, and documentation. It is not an official DeerFlow design document.</p>
 <p>DeerFlow source code is available under the MIT License. This article and its diagrams are released under <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a>.</p>
 </div>
 

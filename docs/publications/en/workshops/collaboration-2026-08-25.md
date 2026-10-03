@@ -140,7 +140,7 @@ Abstraction extracts the shared split-execute-gather structure. Reconstruction s
 - [Abstraction and Reconstruction](https://adpsagent.com/topics/abstraction-reconstruction/)
 - [Agent OS engineering checklist](https://adpsagent.com/topics/agent-os-engineering/)
 
-<p class="publication-note publication-note-end">The public record is organized by technical theme. Names, scale, rules, and responsibility structures of internal systems are anonymized.</p>
+<p class="publication-note publication-note-end">Based on the 25 August 2026 workshop transcript. Internal project details have been anonymized.</p>
 
 <!-- RELATED-CASE-DEEPAGENTS:START -->
 

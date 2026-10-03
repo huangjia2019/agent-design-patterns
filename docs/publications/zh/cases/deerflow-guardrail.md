@@ -205,9 +205,9 @@ Sandbox 解决进程与资源隔离，授权回答“这个主体能否调用”
 
 ## 13. 还需要继续设计的部分
 
-DeerFlow 的公开实现已经把 PRE 授权做得很完整，但它没有替生产系统解决所有治理问题。高风险动作还需要 POST 业务核验、幂等键、外部回执与补偿。需要人工判断的调用还要增加 ask 决策、审批有效期、状态变化后的复验和单次消费。策略热更新则需要明确版本、切换原子性和回滚路径。
+DeerFlow 的公开实现覆盖了工具调用前的 PRE 授权。高风险动作执行后还需要 POST 业务核验、幂等键、外部回执与补偿。需要人工判断的调用还要增加 ask 决策、审批有效期、状态变化后的复验和单次消费。策略热更新则需要明确版本、切换原子性和回滚路径。
 
-这也是该案例的主要价值：Guardrail 不是一条正则表达式，也不是一个“安全开关”。它是一条从能力装配、可信身份、策略裁决、执行拦截到证据留存的工程链。
+这套 Guardrail 实现把能力装配、可信身份、策略裁决、执行拦截与证据留存连接起来。
 
 <!-- CASE-V06-EVIDENCE-deerflow-guardrail-True:START -->
 
@@ -219,7 +219,6 @@ DeerFlow 的公开实现已经把 PRE 授权做得很完整，但它没有替生
 <a href="https://github.com/bytedance/deer-flow/pull/4370" rel="noopener" target="_blank"><strong>PR #4370</strong><span>装配时过滤、deferred catalog 与运行时复核</span></a>
 <a href="https://github.com/bytedance/deer-flow/blob/main/backend/docs/GUARDRAILS.md" rel="noopener" target="_blank"><strong>Guardrails 文档</strong><span>配置、Provider、失败模式与使用边界</span></a>
 </div>
-<p class="case-source-note">页面中的演进图与装配图依据公开 PR 和代码整理。提交记录可以复核机制存在，无法代替具体部署中的策略、身份系统、sandbox 和业务验收。</p>
 </section>
 
 <!-- CASE-V06-EVIDENCE-deerflow-guardrail-True:END -->
@@ -232,7 +231,6 @@ DeerFlow 的公开实现已经把 PRE 授权做得很完整，但它没有替生
 - [PR #1240](https://github.com/bytedance/deer-flow/pull/1240) · [#3665](https://github.com/bytedance/deer-flow/pull/3665) · [#3837](https://github.com/bytedance/deer-flow/pull/3837) · [#4260](https://github.com/bytedance/deer-flow/pull/4260) · [#4370](https://github.com/bytedance/deer-flow/pull/4370)
 
 <div class="document-citation">
-<p><strong>阅读边界：</strong>本文由 ADPS 根据 DeerFlow 公开代码、PR 与文档独立整理，用于说明可复用的架构机制，不是 DeerFlow 项目的官方设计说明。</p>
 <p>DeerFlow 源码采用 MIT License。本文与图示采用 <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a>。</p>
 </div>
 

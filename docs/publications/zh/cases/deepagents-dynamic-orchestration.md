@@ -184,7 +184,7 @@ ADPS 在 C6 的早期讨论中，曾把“运行时动态生成子 Agent 工作�
 - [Deep Agents ARCHITECTURE.md](https://github.com/langchain-ai/deepagents/blob/main/libs/ARCHITECTURE.md)
 - [SubAgentMiddleware source](https://github.com/langchain-ai/deepagents/blob/main/libs/deepagents/deepagents/middleware/subagents.py)
 
-<div class="document-citation"><p><strong>研究来源：</strong>张海立在 2026-08-25 ADPS 协作模块第一次研讨会中的 LangGraph 与 Deep Agents 架构研究和演示。ADPS 根据公开文档与源码复核整理。</p><p><strong>证据边界：</strong>本文说明公开框架中的机制及其模式映射，不代表 LangChain 官方架构说明，也不构成企业部署效果验证。</p><p><a href="https://adpsagent.com/zh/cases/">案例与研究报告目录</a> · <a href="https://adpsagent.com/zh/patterns/collaboration/">协作模块</a> · <a href="https://adpsagent.com/zh/patterns/reflection/">反思模块</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p></div>
+<div class="document-citation"><p><strong>研究来源：</strong>张海立在 2026 年 8 月 25 日 ADPS 协作模块第一次研讨会中的 LangGraph 与 Deep Agents 架构研究和演示。</p><p><a href="https://adpsagent.com/zh/cases/">案例与研究报告目录</a> · <a href="https://adpsagent.com/zh/patterns/collaboration/">协作模块</a> · <a href="https://adpsagent.com/zh/patterns/reflection/">反思模块</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p></div>
 
 <!-- PAGE-CHRONICLE:START -->
 
