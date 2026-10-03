@@ -87,7 +87,7 @@
 
 运行时从第一天就记录结构化事件。一次对话拆成按时间排序的 `Activity`，每个 Activity 下包含一个或多个 `Frame`。Frame 保存当时的输入、模型输出、工具调用、耗时和费用。意图识别、路由、ReAct 循环和状态变化也写入同一时间线。
 
-这套记录先解决开发问题：哪一步选错了工具，哪个 ID 来自哪次调用，任务为何停在审批节点。生产环境再按权限隐藏调试详情。可观测性在这里不是上线后的监控补丁，它是业务评审和问题复现的共同底座。
+这套记录用于检查哪一步选错了工具、哪个 ID 来自哪次调用，以及任务为何停在审批节点。同一组事件也用于业务评审和故障复现，生产环境按权限隐藏调试详情。
 
 ## 4. 一次请求怎样流过系统
 
@@ -256,10 +256,10 @@
 <p class="case-evidence-label">机制图</p>
 <h2 id="evidence-liangbo">执行型 Agent 的四个运行结构</h2>
 <div class="case-evidence-grid">
-<figure class="case-evidence"><img alt="任务 DAG 与节点状态机" loading="lazy" src="../../assets/images/concepts/task-dag-state-machine.png"/><figcaption><strong>任务 DAG 与状态机</strong>步骤依赖确定以后，执行器只调度 ready 节点。<span class="case-evidence-proof">ADPS 依据案例讲解重绘；说明调度机制，不代表生产类名。</span></figcaption></figure>
+<figure class="case-evidence"><img alt="任务 DAG 与节点状态机" loading="lazy" src="../../assets/images/concepts/task-dag-state-machine.png"/><figcaption><strong>任务 DAG 与状态机</strong>步骤依赖确定以后，执行器只调度 ready 节点。<span class="case-evidence-proof">依据案例讲解重绘。</span></figcaption></figure>
 <figure class="case-evidence"><img alt="审批阻塞与原节点恢复" loading="lazy" src="../../assets/images/concepts/hitl-block-resume.png"/><figcaption><strong>审批阻塞与恢复</strong>审批事件回到原作业和原节点，避免“批准后重新开始”。<span class="case-evidence-proof">图支持状态语义；审批有效期和权限仍由部署方定义。</span></figcaption></figure>
 <figure class="case-evidence"><img alt="Anchor Ledger Collection 长程叙事结构" loading="lazy" src="../../assets/images/concepts/anchor-ledger-collection.png"/><figcaption><strong>Anchor、Ledger、Collection</strong>目标、进展和当前投影分开保存，降低长程摘要漂移。<span class="case-evidence-proof">它服务模型上下文，不承担业务 ID 传递。</span></figcaption></figure>
-<figure class="case-evidence"><img alt="统一活动事件与运行时间线" loading="lazy" src="../../assets/images/concepts/observability-glass-dome.png"/><figcaption><strong>Activity 与运行时间线</strong>模型、工具、状态变化和审批都进入同一条可追查时间线。<span class="case-evidence-proof">图说明事件组织方式；公开材料未给出总体运行指标。</span></figcaption></figure>
+<figure class="case-evidence"><img alt="统一活动事件与运行时间线" loading="lazy" src="../../assets/images/concepts/observability-glass-dome.png"/><figcaption><strong>Activity 与运行时间线</strong>模型、工具、状态变化和审批都进入同一条可追查时间线。</figcaption></figure>
 </div>
 </section>
 
@@ -371,7 +371,7 @@
 
 <div class="document-citation">
 <p><a href="https://adpsagent.com/zh/cases/">案例报告目录</a> · <a href="https://adpsagent.com/zh/patterns/">模式目录</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
-<p class="publication-disclaimer"><strong>证据边界：</strong>本文记录东方屹腾执行型 Agent 的项目实践。业务背景、原型问题和架构取舍由案例方梁博提供，尚未经过独立审计。示例数据结构由 ADPS 根据案例机制整理，用于解释设计，不代表案例方实际类名或字段名。</p>
+<p class="publication-disclaimer">案例资料由梁博提供。文中示例数据结构用于解释设计。</p>
 </div>
 
 <!-- PAGE-CHRONICLE:START -->

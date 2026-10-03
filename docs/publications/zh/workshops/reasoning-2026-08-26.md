@@ -150,7 +150,7 @@
 - [Agent 评测与验证专题](https://adpsagent.com/zh/topics/agent-evals-and-testing/)
 - [推理资产化](https://adpsagent.com/zh/concepts/reasoning-assetization/)
 
-<p class="publication-note publication-note-end">公开稿以会议逐字稿为依据，按现场问题与技术主题整理。内部系统名称、精确规模、配置和责任关系采用脱敏表述。</p>
+<p class="publication-note publication-note-end">本页依据 2026 年 8 月 26 日会议逐字稿整理。内部项目细节已脱敏。</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

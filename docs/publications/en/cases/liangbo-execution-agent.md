@@ -251,10 +251,10 @@ Memory is also layered by use distance. L1 serves the current step, L2 preserves
 <p class="case-evidence-label">Mechanism diagrams</p>
 <h2 id="evidence-liangbo">Four runtime structures in the execution agent</h2>
 <div class="case-evidence-grid">
-<figure class="case-evidence"><img alt="Task DAG and node state machine" loading="lazy" src="../../assets/images/concepts/task-dag-state-machine.png"/><figcaption><strong>Task DAG and state machine</strong>Once dependencies are known, the executor schedules only ready nodes.<span class="case-evidence-proof">ADPS redrawing from the case talk; it explains mechanics, not production class names.</span></figcaption></figure>
+<figure class="case-evidence"><img alt="Task DAG and node state machine" loading="lazy" src="../../assets/images/concepts/task-dag-state-machine.png"/><figcaption><strong>Task DAG and state machine</strong>Once dependencies are known, the executor schedules only ready nodes.<span class="case-evidence-proof">Redrawn from the case presentation.</span></figcaption></figure>
 <figure class="case-evidence"><img alt="Approval block and resume" loading="lazy" src="../../assets/images/concepts/hitl-block-resume.png"/><figcaption><strong>Approval block and resume</strong>The approval event returns to the original job and node instead of restarting the task.<span class="case-evidence-proof">The diagram supports state semantics; deployments still define authority and expiry.</span></figcaption></figure>
 <figure class="case-evidence"><img alt="Anchor Ledger Collection structure" loading="lazy" src="../../assets/images/concepts/anchor-ledger-collection.png"/><figcaption><strong>Anchor, Ledger, Collection</strong>Goal, progress, and current projection remain separate to reduce long-run drift.<span class="case-evidence-proof">This structure serves model context, not strict identifier transfer.</span></figcaption></figure>
-<figure class="case-evidence"><img alt="Unified activity events and runtime timeline" loading="lazy" src="../../assets/images/concepts/observability-glass-dome.png"/><figcaption><strong>Activity and runtime timeline</strong>Model, tool, state change, and approval enter one traceable sequence.<span class="case-evidence-proof">It explains event organization; public material does not provide aggregate performance metrics.</span></figcaption></figure>
+<figure class="case-evidence"><img alt="Unified activity events and runtime timeline" loading="lazy" src="../../assets/images/concepts/observability-glass-dome.png"/><figcaption><strong>Activity and runtime timeline</strong>Model, tool, state change, and approval enter one traceable sequence.</figcaption></figure>
 </div>
 </section>
 
@@ -357,7 +357,7 @@ Open tool ecosystems require additional trust policy. Multiple concurrent writer
 
 <div class="document-citation">
 <p><a href="https://adpsagent.com/cases/">Case-report registry</a> · <a href="https://adpsagent.com/patterns/">Pattern catalog</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
-<p class="publication-disclaimer"><strong>Evidence boundary:</strong> This report documents Dongfang Yiteng's execution-agent project. Bo Liang supplied the business context, prototype failures, and architecture decisions. The material has not been independently audited. ADPS reconstructed the example data structures to explain the disclosed mechanisms; they are not the implementation's class or field names.</p>
+<p class="publication-disclaimer">Case material supplied by Bo Liang. The example data structures illustrate the design.</p>
 </div>
 
 <!-- PAGE-CHRONICLE:START -->

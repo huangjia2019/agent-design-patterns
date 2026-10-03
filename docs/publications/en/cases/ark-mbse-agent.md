@@ -141,7 +141,7 @@ An ADPS reconstruction of the job state follows.
   writeback_receipt: state delta + rollback handle
 </code></pre>
 
-ADPS describes the sequence as a typed intermediate-representation chain. In practical terms, a downstream stage reads checkable fields, types, and references rather than free-form upstream prose.
+The three plans form a typed intermediate-representation chain. Each downstream stage reads the fields, types, and element references in the preceding plan and checks them before writing back to the model.
 
 Three separate agents can implement the stages, as can three functions in one runtime. Input boundaries, isolated failure, and data contracts provide the engineering value; process count does not.
 
@@ -342,7 +342,7 @@ This arrangement reduces the input surface of each call. The available material 
 
 ## 10. Local experiment screenshots
 
-The following screenshots come from Liangding Yuan's local experiment environment. They explain host integration, one intent result, and one relationship write-back. They support only the runs shown and do not establish commercial readiness or a longitudinal success rate.
+The following screenshots come from Liangding Yuan's local experiments and show host integration, intent parsing, and relationship write-back.
 
 <figure>
 <img alt="Flying-car project in Magic Systems of Systems Architect with AI4MBSE" src="../../assets/zh/cases/ark-mbse-agent/assets/shot-magicdraw-flycar.jpg"/>
@@ -361,7 +361,7 @@ The following screenshots come from Liangding Yuan's local experiment environmen
 
 <figure>
 <img alt="Relationship write-back log using stable element and relationship identifiers" src="../../assets/zh/cases/ark-mbse-agent/assets/log-relation-writeback.jpg"/>
-<figcaption>The record uses stable element and relationship identifiers. One log cannot represent aggregate performance across diagram types.</figcaption>
+<figcaption>The write-back record uses stable element and relationship identifiers.</figcaption>
 </figure>
 
 <!-- CASE-V06-REPLAY-ark-mbse-agent-False:START -->
@@ -552,7 +552,7 @@ SysML v2 offers stronger semantics and standardized model access, which can redu
 
 <div class="document-citation">
 <p><a href="https://adpsagent.com/cases/">Case-report registry</a> · <a href="https://adpsagent.com/patterns/">Pattern catalog</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
-<p class="publication-disclaimer"><strong>Evidence boundary:</strong> This report documents the technical reasoning and local closed-loop tests of the AI4MBSE modeling-agent project initiated by Liangding Yuan. Screenshots and sample data come from local personal experiments and have not undergone an independent engineering audit.</p>
+<p class="publication-disclaimer">Material, screenshots, and sample data come from Liangding Yuan's local experiments.</p>
 <p class="publication-disclaimer"><strong>Use boundary:</strong> This report is published for technical learning and academic exchange. It does not describe a software product, commercial solution, or project-delivery capability.</p>
 </div>
 

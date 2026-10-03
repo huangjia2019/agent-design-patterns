@@ -163,7 +163,7 @@ Two models using the same incomplete rubric can still miss the same error. Cross
 - [F4 Self-Heal Loop](https://adpsagent.com/patterns/f4-self-heal-loop/)
 - [White Paper contributors](https://adpsagent.com/founders/#white-paper-contributors)
 
-<p class="publication-note publication-note-end">Internal system details have been anonymized. Adopted revisions appear in the <a href="https://adpsagent.com/patterns/reflection/">Reflection module overview</a> and individual pattern specifications.</p>
+<p class="publication-note publication-note-end">Based on the 12 August 2026 workshop transcript. Internal project details have been anonymized.</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

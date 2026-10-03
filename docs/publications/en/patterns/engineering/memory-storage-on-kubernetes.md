@@ -6,9 +6,9 @@
 <p class="publication-deck">Files can remain the agent interface; durable backends handle cross-Pod survival, version conflicts, and recovery.</p>
 </header>
 
-A reader described a concrete deployment failure. Their agent writes timestamped Markdown files under its workspace. The design works on a laptop, but a Kubernetes service may send the user's next request to another Pod. The preference saved by Pod A is not present in Pod B.
+A reader's agent writes timestamped Markdown files under its workspace. The design works on a laptop, but a Kubernetes service may send the user's next request to another Pod. The preference saved by Pod A is not present in Pod B.
 
-Markdown is not the problem. It defines how the body is represented. The storage design determines whether the record survives a process, Pod, or release. A production system should separate the file view presented to the agent from the durable record behind it.
+Markdown defines how the body is represented. The storage design determines whether the record survives a process, Pod, or release. A production system should separate the file view presented to the agent from the durable record behind it.
 
 ![Write, persistence, and workspace projection for agent memory on Kubernetes](../../../assets/images/patterns/engineering/k8s-agent-memory-en.svg)
 

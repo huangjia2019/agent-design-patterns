@@ -163,7 +163,7 @@ Pylon Peng 介绍了每日反思流程：主 Agent 评测子 Agent 的任务结�
 - [F4 自愈循环](https://adpsagent.com/zh/patterns/f4-self-heal-loop/)
 - [白皮书贡献者](https://adpsagent.com/zh/founders/#white-paper-contributors)
 
-<p class="publication-note publication-note-end">公开稿保留研讨问题与工程细节；涉及内部系统的信息采用脱敏表述。会后采纳的结论见<a href="https://adpsagent.com/zh/patterns/reflection/">反思 Reflection模块总纲</a>与各模式规范。</p>
+<p class="publication-note publication-note-end">本页依据 2026 年 8 月 12 日会议逐字稿整理。内部项目细节已脱敏。</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

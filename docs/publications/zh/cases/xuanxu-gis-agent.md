@@ -378,8 +378,8 @@ related_rules: ["wmts-metatile-zero"]
 <p class="case-evidence-label">原始运行画面</p>
 <h2 id="evidence-gis">控制台怎样把数据识别和失败知识交给下一次运行</h2>
 <div class="case-evidence-grid">
-<figure class="case-evidence"><img alt="玄宿 GIS Agent 数据集识别页面" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/console-datasets.jpg"/><figcaption><strong>数据集与处理事实</strong>输入文件、识别结果和处理产物在同一视图中可查。<span class="case-evidence-proof">截图支持一次运行界面；不推出所有格式均已覆盖。</span></figcaption></figure>
-<figure class="case-evidence"><img alt="玄宿 GIS Agent 失败知识卡" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/knowledge-card.jpg"/><figcaption><strong>失败知识卡</strong>现场错误被整理为现象、根因、修复和防复发规则。<span class="case-evidence-proof">截图支持知识卡机制；规则有效性仍需回归测试。</span></figcaption></figure>
+<figure class="case-evidence"><img alt="玄宿 GIS Agent 数据集识别页面" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/console-datasets.jpg"/><figcaption><strong>数据集与处理事实</strong>输入文件、识别结果和处理产物在同一视图中可查。</figcaption></figure>
+<figure class="case-evidence"><img alt="玄宿 GIS Agent 失败知识卡" loading="lazy" src="../../assets/zh/cases/xuanxu-gis-agent/assets/knowledge-card.jpg"/><figcaption><strong>失败知识卡</strong>现场错误被整理为现象、根因、修复和防复发规则。</figcaption></figure>
 </div>
 </section>
 
@@ -479,7 +479,7 @@ related_rules: ["wmts-metatile-zero"]
 
 <div class="document-citation">
 <p><a href="https://adpsagent.com/zh/cases/">案例报告目录</a> · <a href="https://adpsagent.com/zh/patterns/">模式目录</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
-<p class="publication-disclaimer"><strong>证据边界：</strong>本文记录玄宿科技 GIS 数据发布系统的项目实践。流程、失败案例和架构取舍由案例方熊钰柯提供，尚未经过独立审计。页面截图来自案例运行环境；示例契约由 ADPS 根据公开机制整理，不代表案例方实际字段名。</p>
+<p class="publication-disclaimer">案例资料与运行截图由熊钰柯提供。文中示例契约用于解释设计。</p>
 </div>
 
 <!-- PAGE-CHRONICLE:START -->

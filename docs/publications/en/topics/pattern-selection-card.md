@@ -55,7 +55,7 @@ A scenario may compose several topologies. Record the main path first and then m
 
 Candidate patterns should answer a named need. Two or three are usually enough to expose the architecture. Cross-cutting planes are recorded separately: [X1 Observability](https://adpsagent.com/patterns/x1-observability/) carries trajectory and evidence, [X2 Evaluation & Validation](https://adpsagent.com/patterns/x2-evals-and-testing/) supplies acceptance and regression, and [X3 Security & Identity](https://adpsagent.com/patterns/x3-security-and-identity/) supplies principals, delegation, and policy boundaries.
 
-The card is not a pattern inventory. If a pattern cannot be tied to a failure mode, interface, or quality requirement, leave it out.
+Each pattern on the card should address a failure mode, interface problem, or quality requirement.
 
 ## Worked example: technical document review
 

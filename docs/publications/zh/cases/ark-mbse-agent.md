@@ -139,7 +139,7 @@ AI4MBSE 是袁良锭发起并在 mbse.ltd 持续记录的建模 Agent 项目，�
   writeback_receipt: state delta + rollback handle
 </code></pre>
 
-ADPS 将这三份计划称为类型化中间表示链。名称可以先放在一边，工程上的重点是：下游不再读取一段自由文本，而是读取字段、类型和引用都能检查的上游结果。
+这三份计划构成类型化中间表示链。下游读取上游计划中的字段、类型和元素引用，并在写回模型之前检查它们。
 
 三阶段既可以由三个独立 Agent 执行，也可以由一个进程中的三个函数完成。真正产生价值的是输入边界、失败隔离和数据契约，不是 Agent 数量。
 
@@ -340,7 +340,7 @@ ADPS 概念库将这类机制暂记为[词表等价层](https://adpsagent.com/zh
 
 ## 10. 研究环境演示截图
 
-下面的截图来自袁良锭的个人本地实验环境，用于说明宿主集成、单次意图解析和关系写回机制。它们只证明截图所示运行，不代表商用交付能力或长期工程稳定性。
+以下截图来自袁良锭的本地实验，展示宿主集成、意图解析和关系写回。
 
 <figure>
 <img alt="Magic Systems of Systems Architect 中的飞行汽车工程与 AI4MBSE 助手" src="../../assets/zh/cases/ark-mbse-agent/assets/shot-magicdraw-flycar.jpg"/>
@@ -359,7 +359,7 @@ ADPS 概念库将这类机制暂记为[词表等价层](https://adpsagent.com/zh
 
 <figure>
 <img alt="关系写回日志，关系与端点使用稳定标识" src="../../assets/zh/cases/ark-mbse-agent/assets/log-relation-writeback.jpg"/>
-<figcaption>写回记录使用稳定元素和关系标识。单张日志不能说明所有图类型的总体成功率。</figcaption>
+<figcaption>写回记录使用稳定的元素和关系标识。</figcaption>
 </figure>
 
 <!-- CASE-V06-REPLAY-ark-mbse-agent-True:START -->
@@ -554,7 +554,7 @@ SysML v2 提供更精确的语义和标准化模型访问接口，可以减少�
 
 <div class="document-citation">
 <p><a href="https://adpsagent.com/zh/cases/">案例报告目录</a> · <a href="https://adpsagent.com/zh/patterns/">模式目录</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
-<p class="publication-disclaimer"><strong>证据边界：</strong>本文记录袁良锭发起的 AI4MBSE 建模 Agent 项目在本地环境中的技术推演与闭环验证。截图和示例数据来自本地实验，尚未经过第三方独立工程审计。</p>
+<p class="publication-disclaimer">资料、截图和示例数据来自袁良锭的本地实验。</p>
 <p class="publication-disclaimer"><strong>使用边界：</strong>本文用于技术学习与学术交流，不构成软件产品、商业解决方案或项目交付能力说明。</p>
 </div>
 

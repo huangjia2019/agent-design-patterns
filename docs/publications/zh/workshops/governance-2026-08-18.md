@@ -176,7 +176,7 @@ v0.5 没有给人机交互分配 X 编号；相关问题继续保留在专题、
 - [可观测性驱动的 Agent 演进](https://adpsagent.com/zh/topics/observability-driven-evolution/)
 - [Agent 评测与验证](https://adpsagent.com/zh/topics/agent-evals-and-testing/)
 
-<p class="publication-note publication-note-end">公开稿按工程主题整理讨论，保留技术问题、实现结构和分歧；涉及内部系统的机构名称、规模、规则与责任关系采用脱敏表述。</p>
+<p class="publication-note publication-note-end">本页依据 2026 年 8 月 18 日会议逐字稿整理。内部项目细节已脱敏。</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

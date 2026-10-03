@@ -162,7 +162,7 @@ The workshop also added an input-security concern. External tools, documents, pa
 - [AI-Driven Software Engineering](https://adpsagent.com/topics/ai-driven-software-engineering/)
 - [White Paper contributors](https://adpsagent.com/founders/#white-paper-contributors)
 
-<p class="publication-note publication-note-end">Internal system details have been anonymized. Adopted revisions appear in the <a href="https://adpsagent.com/patterns/perception/">Perception module overview</a> and individual pattern specifications.</p>
+<p class="publication-note publication-note-end">Based on the 13 August 2026 workshop transcript. Internal project details have been anonymized.</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

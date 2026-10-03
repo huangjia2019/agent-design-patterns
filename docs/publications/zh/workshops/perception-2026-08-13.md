@@ -162,7 +162,7 @@ Coding Agent 的输入需要同时包含目标与约束。目标说明要完成�
 - [AI 驱动的软件工程专题](https://adpsagent.com/zh/topics/ai-driven-software-engineering/)
 - [白皮书贡献者](https://adpsagent.com/zh/founders/#white-paper-contributors)
 
-<p class="publication-note publication-note-end">公开稿保留研讨问题与工程细节；涉及内部系统的信息采用脱敏表述。会后采纳的结论见<a href="https://adpsagent.com/zh/patterns/perception/">感知 Perception模块总纲</a>与各模式规范。</p>
+<p class="publication-note publication-note-end">本页依据 2026 年 8 月 13 日会议逐字稿整理。内部项目细节已脱敏。</p>
 
 <!-- PAGE-CHRONICLE:START -->
 

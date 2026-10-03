@@ -150,7 +150,7 @@ During post-workshop consolidation, v0.5 assigned X1–X3 to the cross-cutting e
 - [Observability-Driven Agent Evolution](https://adpsagent.com/topics/observability-driven-evolution/)
 - [Agent Evaluation and Validation](https://adpsagent.com/topics/agent-evals-and-testing/)
 
-<p class="publication-note publication-note-end">This public record is organized by engineering theme. It preserves technical questions, mechanisms, and disagreements while anonymizing internal organization names, operating scale, rules, and responsibility structures.</p>
+<p class="publication-note publication-note-end">Based on the 18 August 2026 workshop transcript. Internal project details have been anonymized.</p>
 
 <!-- PAGE-CHRONICLE:START -->
 
