@@ -745,11 +745,11 @@
       "source_authority": "collaboration_repo"
     },
     {
-      "id": "patterns/g5-hooks-pipeline",
+      "id": "patterns/g4-hooks-pipeline",
       "language": "en",
-      "path": "docs/publications/en/patterns/g5-hooks-pipeline.md",
-      "url": "/patterns/g5-hooks-pipeline/",
-      "title": "G5 · Hooks Pipeline",
+      "path": "docs/publications/en/patterns/g4-hooks-pipeline.md",
+      "url": "/patterns/g4-hooks-pipeline/",
+      "title": "G4 · Hooks Pipeline",
       "first_published": "2026-07-18",
       "imported_at": "2026-09-18",
       "source_authority": "collaboration_repo"
@@ -1994,11 +1994,11 @@
       "source_authority": "collaboration_repo"
     },
     {
-      "id": "patterns/g5-hooks-pipeline",
+      "id": "patterns/g4-hooks-pipeline",
       "language": "zh",
-      "path": "docs/publications/zh/patterns/g5-hooks-pipeline.md",
-      "url": "/zh/patterns/g5-hooks-pipeline/",
-      "title": "G5 · Hooks Pipeline · 钩子流水线",
+      "path": "docs/publications/zh/patterns/g4-hooks-pipeline.md",
+      "url": "/zh/patterns/g4-hooks-pipeline/",
+      "title": "G4 · Hooks Pipeline · 钩子流水线",
       "first_published": "2026-07-18",
       "imported_at": "2026-09-18",
       "source_authority": "collaboration_repo"

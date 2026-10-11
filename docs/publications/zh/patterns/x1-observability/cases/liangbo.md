@@ -20,7 +20,7 @@
 </tr>
 <tr>
 <td style="text-align: left;">结合模式</td>
-<td style="text-align: left;">G5 钩子流水线 Hook Pipeline</td>
+<td style="text-align: left;">G4 钩子流水线 Hook Pipeline</td>
 </tr>
 <tr>
 <td style="text-align: left;">案例</td>
@@ -125,7 +125,7 @@ Orchestrator 只发布结构化活动事件，不处理 SSE、界面组件或打
 
 ## 与白皮书的对应
 
-X1 规范要求通过 Trace 还原完整执行链。东方屹腾以 Activity/Frame 作为事件抽象，以 MessageHandler 和 SSE 作为展示实现。G5 钩子流水线可在执行边界产生事件，X1 负责统一采集、关联和查询。
+X1 规范要求通过 Trace 还原完整执行链。东方屹腾以 Activity/Frame 作为事件抽象，以 MessageHandler 和 SSE 作为展示实现。G4 钩子流水线可在执行边界产生事件，X1 负责统一采集、关联和查询。
 
 ## 迁移条件
 

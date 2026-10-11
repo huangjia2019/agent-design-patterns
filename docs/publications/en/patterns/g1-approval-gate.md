@@ -67,7 +67,7 @@ Test tampering, policy change, expiry, concurrent consumption, duplicate callbac
 
 ## Related specifications
 
-[G2](https://adpsagent.com/patterns/g2-blast-radius-control/) bounds impact; [G3](https://adpsagent.com/patterns/g3-progressive-commitment/) supplies capability autonomy; [X1](https://adpsagent.com/patterns/x1-observability/) links the three records; [G5](https://adpsagent.com/patterns/g5-hooks-pipeline/) enforces pre-call and resume checks.
+[G2](https://adpsagent.com/patterns/g2-blast-radius-control/) bounds impact; [G3](https://adpsagent.com/patterns/g3-progressive-commitment/) supplies capability autonomy; [X1](https://adpsagent.com/patterns/x1-observability/) links the three records; [G4](https://adpsagent.com/patterns/g4-hooks-pipeline/) enforces pre-call and resume checks.
 
 <!-- RELATED-CASE-DEERFLOW:START -->
 

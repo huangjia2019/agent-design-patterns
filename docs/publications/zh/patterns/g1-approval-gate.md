@@ -73,7 +73,7 @@ DRAFT → EVALUATING → DENIED
 
 ## 相邻规范
 
-[G2](https://adpsagent.com/zh/patterns/g2-blast-radius-control/)限制获准动作的最大影响；[G3](https://adpsagent.com/zh/patterns/g3-progressive-commitment/)提供能力级自治档位；[X1](https://adpsagent.com/zh/patterns/x1-observability/)连接 Intent、Approval、Execution 与回执；[G5](https://adpsagent.com/zh/patterns/g5-hooks-pipeline/)提供调用前和恢复前的执行位置。
+[G2](https://adpsagent.com/zh/patterns/g2-blast-radius-control/)限制获准动作的最大影响；[G3](https://adpsagent.com/zh/patterns/g3-progressive-commitment/)提供能力级自治档位；[X1](https://adpsagent.com/zh/patterns/x1-observability/)连接 Intent、Approval、Execution 与回执；[G4](https://adpsagent.com/zh/patterns/g4-hooks-pipeline/)提供调用前和恢复前的执行位置。
 
 <!-- RELATED-CASE-DEERFLOW:START -->
 

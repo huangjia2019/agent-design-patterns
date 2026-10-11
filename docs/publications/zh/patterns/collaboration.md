@@ -164,7 +164,7 @@ next_required: 可评审补丁与测试证据
 
 ## Hook 组合
 
-Hook 可以承担四种职责：推动阶段流转、执行治理裁决、记录观测事件、保存现场并触发恢复。它是确定性执行位置，具体职责由组合决定。G5 保留历史编号，治理页面聚焦不可绕过的执行点；跨模块用法见[Hook 组合](https://adpsagent.com/zh/topics/hook-composition/)。
+Hook 可以承担四种职责：推动阶段流转、执行治理裁决、记录观测事件、保存现场并触发恢复。它是确定性执行位置，具体职责由组合决定。G4 保留历史编号，治理页面聚焦不可绕过的执行点；跨模块用法见[Hook 组合](https://adpsagent.com/zh/topics/hook-composition/)。
 
 ## 从开放探索到生产固化
 

@@ -75,9 +75,9 @@ owner: security-platform
 version: 7
 </code></pre>
 
-## 与 G5 的关系
+## 与 G4 的关系
 
-G5 保留历史编号，聚焦治理中的确定性执行点。Hook 组合覆盖更大的范围，所以不增加新的协作模式编号。若未来出现无法由现有模式和机制说明的独立问题，再讨论目录调整。
+G4 保留历史编号，聚焦治理中的确定性执行点。Hook 组合覆盖更大的范围，所以不增加新的协作模式编号。若未来出现无法由现有模式和机制说明的独立问题，再讨论目录调整。
 
 ## 常见问题
 
@@ -97,7 +97,7 @@ G5 保留历史编号，聚焦治理中的确定性执行点。Hook 组合覆盖
 
 ## 来源
 
-治理研讨会明确了策略来源、裁决、执行与证据的分层；协作研讨会补充了阶段流转、跨 Agent 触发和恢复职责。本专题合并两场讨论，G5 继续作为历史与治理入口。
+治理研讨会明确了策略来源、裁决、执行与证据的分层；协作研讨会补充了阶段流转、跨 Agent 触发和恢复职责。本专题合并两场讨论，G4 继续作为历史与治理入口。
 
 <div class="document-citation"><p><strong>引用建议：</strong>ADPS，《Hook 组合 · 把隐藏回调变成可读的控制结构》，ADPS 专题研究，2026-08-26。</p><p><a href="https://adpsagent.com/zh/topics/">专题目录</a> · <a href="https://adpsagent.com/zh/workshops/collaboration-2026-08-25/">协作研讨会</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p></div>
 

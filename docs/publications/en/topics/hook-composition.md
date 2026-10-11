@@ -65,9 +65,9 @@ owner: security-platform
 version: 7
 </code></pre>
 
-## Relation to G5
+## Relation to G4
 
-G5 keeps its historical identifier and focuses on deterministic governance enforcement. Hook Composition spans a wider set of responsibilities, so no new collaboration pattern has been added.
+G4 keeps its historical identifier and focuses on deterministic governance enforcement. Hook Composition spans a wider set of responsibilities, so no new collaboration pattern has been added.
 
 ## Common failures
 
@@ -87,7 +87,7 @@ G5 keeps its historical identifier and focuses on deterministic governance enfor
 
 ## Source
 
-The Governance workshop separated policy source, decision, enforcement, and evidence. The Collaboration workshop added stage transitions, cross-agent triggers, and recovery. This topic joins both discussions while retaining G5 as the historical governance entry.
+The Governance workshop separated policy source, decision, enforcement, and evidence. The Collaboration workshop added stage transitions, cross-agent triggers, and recovery. This topic joins both discussions while retaining G4 as the historical governance entry.
 
 <div class="document-citation"><p><strong>Suggested citation:</strong> ADPS, <em>Hook Composition · Make hidden callbacks a readable control structure</em>, ADPS Topic Study, 26 August 2026.</p><p><a href="https://adpsagent.com/topics/">Topic index</a> · <a href="https://adpsagent.com/workshops/collaboration-2026-08-25/">Collaboration workshop</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p></div>
 

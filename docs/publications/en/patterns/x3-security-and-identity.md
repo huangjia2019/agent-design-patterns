@@ -30,7 +30,7 @@ Each hop records who represents whom, which action is allowed, which resource is
 
 ## Policy, decision, enforcement, and evidence
 
-A policy source owns rules. A decision service evaluates a structured request. G5 Hooks Pipeline enforces the verdict at unavoidable runtime points. X1 records the request, verdict, state delta, and external receipt. Combining all four in one handler entangles policy versions, runtime identity, and audit boundaries.
+A policy source owns rules. A decision service evaluates a structured request. G4 Hooks Pipeline enforces the verdict at unavoidable runtime points. X1 records the request, verdict, state delta, and external receipt. Combining all four in one handler entangles policy versions, runtime identity, and audit boundaries.
 
 ## Lifecycle
 
@@ -44,7 +44,7 @@ A policy source owns rules. A decision service evaluates a structured request. G
 
 ## Relationship to Governance patterns
 
-G1 binds approval to an intent. G2 sets the impact ceiling. G3 changes the long-term autonomy of a capability. G5 supplies deterministic enforcement points. X3 provides their common identity and authorization foundation while also covering perception data access, memory writes, sub-agent delegation, and publication of reflected assets.
+G1 binds approval to an intent. G2 sets the impact ceiling. G3 changes the long-term autonomy of a capability. G4 supplies deterministic enforcement points. X3 provides their common identity and authorization foundation while also covering perception data access, memory writes, sub-agent delegation, and publication of reflected assets.
 
 ## Failure modes
 

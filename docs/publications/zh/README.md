@@ -86,7 +86,7 @@
 - [G1 · Approval Gate · 审批门](patterns/g1-approval-gate.md)
 - [G2 · Blast Radius Control · 爆炸半径控制](patterns/g2-blast-radius-control.md)
 - [G3 · Progressive Commitment · 渐进承诺](patterns/g3-progressive-commitment.md)
-- [G5 · Hooks Pipeline · 钩子流水线](patterns/g5-hooks-pipeline.md)
+- [G4 · Hooks Pipeline · 钩子流水线](patterns/g4-hooks-pipeline.md)
 - [治理模块 · 把 Agent 的自主权变成可管理的工程对象](patterns/governance.md)
 - [模式目录与选型框架](patterns.md)
 - [M1 · 分层保留 · 东方屹腾执行型 Agent](patterns/m1-hierarchical-retention/cases/liangbo.md)
