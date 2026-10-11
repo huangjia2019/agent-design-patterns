@@ -159,7 +159,7 @@ Separating generator and reviewer reduces self-review bias but can sever executi
 
 ## Hook composition
 
-Hooks can advance stages, enforce policy decisions, record observation events, or preserve state for recovery. G4 keeps its historical identifier for unavoidable governance enforcement points. Cross-module use is documented in [Hook Composition](https://adpsagent.com/topics/hook-composition/).
+Hooks can advance stages, enforce policy decisions, record observation events, or preserve state for recovery. G4 defines unavoidable governance enforcement points. Cross-module use is documented in [Hook Composition](https://adpsagent.com/topics/hook-composition/).
 
 ## From exploration to production pinning
 

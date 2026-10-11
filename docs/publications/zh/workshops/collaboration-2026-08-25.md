@@ -100,7 +100,7 @@ next_required: 可评审补丁与测试证据</code></pre>
 
 <p class="workshop-field-note">王伟问，Hook 是否应该作为独立协作模式？讨论涉及几种用途：需求完成后启动编码 Agent；高危调用前暂停并等待审批；调用后记录 trace；失败后保存 checkpoint。这些用途分别属于编排、治理、观测和恢复，同一种回调机制可以用于不同的设计。</p>
 
-本轮没有新增 C7。G4 继续保留历史编号，用于治理中的确定性执行点；跨模块的 Hook 用法进入[Hook 组合](https://adpsagent.com/zh/topics/hook-composition/)专题。组合设计必须声明事件、顺序、条件、幂等键、失败语义与后续事件，避免把控制流藏进互不透明的回调。
+本轮没有新增 C7。G4 用于治理中的确定性执行点；跨模块的 Hook 用法进入[Hook 组合](https://adpsagent.com/zh/topics/hook-composition/)专题。组合设计必须声明事件、顺序、条件、幂等键、失败语义与后续事件，避免把控制流藏进互不透明的回调。
 
 ## 10. 概率内核与确定性外壳
 
@@ -130,7 +130,7 @@ next_required: 可评审补丁与测试证据</code></pre>
 1. 新增[协作模块总纲](https://adpsagent.com/zh/patterns/collaboration/)，重新说明关系模式、协作约束、分布式候选与实现机制。
 2. C1–C5 分别补充任务级身份、写入冲突域、评审反馈、交接合同和跨 Session 隔离。
 3. C6 明确动态编排与编舞的控制权差异，继续保持候选。
-4. G4 保留历史编号；Hook 跨模块组合进入专题。
+4. G4 描述治理执行点；Hook 跨模块组合进入专题。
 
 
 ## 待继续回答
