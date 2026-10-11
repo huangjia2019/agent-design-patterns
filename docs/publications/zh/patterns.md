@@ -271,7 +271,7 @@ ADPS 用两条轴组织 Agent 模式。
 <td style="text-align: left;">隔离上下文、工具、预算和失败边界，防止协作污染扩散</td>
 </tr>
 <tr>
-<td style="text-align: left;">G5</td>
+<td style="text-align: left;">G4</td>
 <td style="text-align: left;">Hooks Pipeline · 钩子管线</td>
 <td style="text-align: left;">扩展</td>
 <td style="text-align: left;">用确定性生命周期钩子承载校验、策略、审计与状态写入</td>
@@ -653,11 +653,7 @@ Loop 仍是执行拓扑。[ReAct](https://adpsagent.com/zh/concepts/react-loop/)
 
 **常见失效：** 给整个 Agent 一个永久等级，换模型、工具、策略或责任人后继续继承旧权限。
 
-### [G4 · Observability Harness · 历史入口 → X1](https://adpsagent.com/zh/patterns/g4-observability-harness/)
-
-G4 保留目录与旧链接，便于追踪白皮书演进。可观测性已经成为横切工程面，现行规范使用 X1。
-
-### [G5 · Hooks Pipeline · 钩子管线（扩展）](https://adpsagent.com/zh/patterns/g5-hooks-pipeline/)
+### [G4 · Hooks Pipeline · 钩子管线（扩展）](https://adpsagent.com/zh/patterns/g4-hooks-pipeline/)
 
 **地位：扩展模式 · 确定性执行机制。**  
 **适用问题：** 权限、参数、配额、格式和审计规则需要在不可绕过的生命周期节点稳定执行。
@@ -812,12 +808,12 @@ C6 编舞已经满足前三项，但公开的 Agent 工程案例还不足以确�
 <tr>
 <td style="text-align: left;">v0.4</td>
 <td style="text-align: left;">2026-08-19</td>
-<td style="text-align: left;">保留双轴主结构；将当时的 G4 可观测性移到矩阵外；增加 Agent 生命周期与薪酬变更贯穿示例；重写治理模块</td>
+<td style="text-align: left;">保留双轴主结构；将可观测性移到矩阵外；增加 Agent 生命周期与薪酬变更贯穿示例；重写治理模块</td>
 </tr>
 <tr>
 <td style="text-align: left;">v0.5</td>
 <td style="text-align: left;">2026-08-20</td>
-<td style="text-align: left;">建立 X1–X3 横切工程面；可观测性改用 X1，旧 G4 保留为历史入口；标准图增加外侧生命周期时间轨</td>
+<td style="text-align: left;">建立 X1–X3 横切工程面；可观测性使用 X1；标准图增加外侧生命周期时间轨</td>
 </tr>
 <tr>
 <td style="text-align: left;">v0.6</td>
@@ -837,7 +833,7 @@ C6 编舞已经满足前三项，但公开的 Agent 工程案例还不足以确�
 <tr>
 <td style="text-align: left;">v0.9</td>
 <td style="text-align: left;">2026-08-26</td>
-<td style="text-align: left;">重组协作模块；增加模块总纲、协作研讨会、拓扑降阶与交接合同等概念；G4 历史入口继续指向 X1，标准主图保持 v0.8</td>
+<td style="text-align: left;">重组协作模块；增加模块总纲、协作研讨会、拓扑降阶与交接合同等概念；标准主图保持 v0.8</td>
 </tr>
 </tbody>
 </table>

@@ -97,7 +97,7 @@ Central infrastructure and domain ownership must work together. The central team
 
 Deterministic rules cover enumerable hard conditions. Models can identify complex textual risk. Policy owns the final verdict. Rule order and conflict semantics must be explicit, because arguments, resources, and environments can change the risk of the same tool.
 
-This separation also changes G5: a hook is an enforcement point, a provider supplies policy, a decision service issues the verdict, and the then-G4 specification, now X1, stores evidence.
+In G4, a hook is an enforcement point, a provider supplies policy, a decision service issues the verdict, and X1 stores evidence.
 
 ## 8. Progressive commitment is capability-specific and bidirectional
 
@@ -120,19 +120,18 @@ v0.5 does not assign an X identifier to human-agent interaction; the issue remai
 
 ## 10. Payroll-change design example
 
-<table><thead><tr><th>Stage</th><th>Runtime fact</th><th>Main control</th></tr></thead><tbody><tr><td>Intake</td><td>Change one employee's transport allowance from 800 to 1000 next month</td><td>Confirm delegated identity, target, field, desired state, and non-goals</td></tr><tr><td>Evidence</td><td>Current state comes from the HR API; policy comes from a versioned knowledge source</td><td>Keep mechanical state separate from policy evidence</td></tr><tr><td>Prepare</td><td>The agent creates a canonical intent with tool version, arguments, resource, and preconditions</td><td>G2 limits scope to one employee and one field</td></tr><tr><td>Approve</td><td>The reviewer sees before, after, delta, effective date, policy basis, and scope</td><td>G1 issues an expiring, single-use approval</td></tr><tr><td>Resume</td><td>The executor rereads employee state and policy version</td><td>Changed preconditions require new review or termination</td></tr><tr><td>Execute</td><td>A short-lived credential commits the change; hooks run deterministic pre- and post-checks</td><td>G5 enforces policy while G2 maintains quota and scope</td></tr><tr><td>Accept</td><td>Transaction receipt and after-read agree; the next payroll cycle enters reconciliation</td><td>X1 links request, evidence, verdict, state delta, and external outcome</td></tr><tr><td>Evolve</td><td>Anomaly enters regression; policy or tool change triggers revalidation</td><td>G3 holds, promotes, demotes, freezes, or retires authority</td></tr></tbody></table>
+<table><thead><tr><th>Stage</th><th>Runtime fact</th><th>Main control</th></tr></thead><tbody><tr><td>Intake</td><td>Change one employee's transport allowance from 800 to 1000 next month</td><td>Confirm delegated identity, target, field, desired state, and non-goals</td></tr><tr><td>Evidence</td><td>Current state comes from the HR API; policy comes from a versioned knowledge source</td><td>Keep mechanical state separate from policy evidence</td></tr><tr><td>Prepare</td><td>The agent creates a canonical intent with tool version, arguments, resource, and preconditions</td><td>G2 limits scope to one employee and one field</td></tr><tr><td>Approve</td><td>The reviewer sees before, after, delta, effective date, policy basis, and scope</td><td>G1 issues an expiring, single-use approval</td></tr><tr><td>Resume</td><td>The executor rereads employee state and policy version</td><td>Changed preconditions require new review or termination</td></tr><tr><td>Execute</td><td>A short-lived credential commits the change; hooks run deterministic pre- and post-checks</td><td>G4 enforces policy while G2 maintains quota and scope</td></tr><tr><td>Accept</td><td>Transaction receipt and after-read agree; the next payroll cycle enters reconciliation</td><td>X1 links request, evidence, verdict, state delta, and external outcome</td></tr><tr><td>Evolve</td><td>Anomaly enters regression; policy or tool change triggers revalidation</td><td>G3 holds, promotes, demotes, freezes, or retires authority</td></tr></tbody></table>
 
 ## 11. Changes adopted in v0.4
 
-1. Move the then-G4 specification out of the Governance row into a cross-cutting core; retain 27 matrix patterns.
-2. Keep 28 core specifications in v0.4 and preserve the G4 number and URL.
-3. Add lifecycle from registration and evaluation through operation, revalidation, demotion, and retirement.
-4. Add Intent, Approval, Execution, precondition review, and single use to G1.
-5. Add hard and autonomy envelopes plus fleet aggregation to G2.
-6. Make G3 capability-, scenario-, resource-, and version-specific and bidirectional.
-7. Separate policy source, decision, enforcement, and evidence in G5.
+1. Treat observability as a cross-cutting engineering plane supporting all modules; retain 27 core matrix patterns.
+2. Add lifecycle from registration and evaluation through operation, revalidation, demotion, and retirement.
+3. Add Intent, Approval, Execution, precondition review, and single use to G1.
+4. Add hard and autonomy envelopes plus fleet aggregation to G2.
+5. Make G3 capability-, scenario-, resource-, and version-specific and bidirectional.
+6. Separate policy source, decision, enforcement, and evidence in G4.
 
-During post-workshop consolidation, v0.5 assigned X1–X3 to the cross-cutting engineering planes. Observability became X1, the old G4 URL became a legacy route to X1, and G5 retained its identifier.
+
 
 ## 12. Open questions
 

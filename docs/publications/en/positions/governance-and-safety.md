@@ -161,7 +161,7 @@ Every layer can fail, so later layers still bound impact and preserve evidence. 
 - G2 Blast Radius Control bounds the effect of errors.
 - G3 Progressive Commitment manages permission and autonomy changes.
 - X1 Observability establishes runtime evidence.
-- G5 Hooks Pipeline enforces deterministic policy outside the model.
+- G4 Hooks Pipeline enforces deterministic policy outside the model.
 
 Governance patterns appear with Action, Memory, Collaboration, and Reflection patterns. Selection must resolve to concrete actions, data, permissions, and recovery paths.
 

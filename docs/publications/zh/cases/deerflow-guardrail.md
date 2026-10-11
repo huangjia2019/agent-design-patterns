@@ -29,7 +29,7 @@
 <tr><td><strong>研究对象</strong></td><td>DeerFlow 公开仓库中的 Guardrail 与 Authorization 演进</td></tr>
 <tr><td><strong>核心问题</strong></td><td>一个任务应装配哪些工具，模型无权调用的工具何时从候选集中移除</td></tr>
 <tr><td><strong>证据范围</strong></td><td>PR #1240、#3665、#3837、#4260、#4370，现行源码、测试和公开文档</td></tr>
-<tr><td><strong>ADPS 对应</strong></td><td>A1 工具调度、A4 护栏三明治、A5 最简工具集、G1 审批门、G2 爆炸半径、X1 可观测性、G5 钩子流水线</td></tr>
+<tr><td><strong>ADPS 对应</strong></td><td>A1 工具调度、A4 护栏三明治、A5 最简工具集、G1 审批门、G2 爆炸半径、X1 可观测性、G4 钩子流水线</td></tr>
 </tbody>
 </table>
 
@@ -186,7 +186,7 @@ Sandbox 解决进程与资源隔离，授权回答“这个主体能否调用”
 <tr><td><a href="https://adpsagent.com/zh/patterns/g1-approval-gate/">G1 审批门</a></td><td>allow / deny 决策与结构化原因</td><td>ask、持久化意图和恢复前复验需要独立实现</td></tr>
 <tr><td><a href="https://adpsagent.com/zh/patterns/g2-blast-radius-control/">G2 爆炸半径控制</a></td><td>最小能力暴露、sandbox、fail-closed</td><td>业务额度、速率、作用域与熔断仍由部署方配置</td></tr>
 <tr><td><a href="https://adpsagent.com/zh/patterns/x1-observability/">X1 可观测性</a></td><td>拒绝与 provider 异常写入 RunJournal</td><td>跨 subagent 的统一证据链仍需补齐</td></tr>
-<tr><td><a href="https://adpsagent.com/zh/patterns/g5-hooks-pipeline/">G5 钩子流水线</a></td><td>统一 middleware 执行点和短路语义</td><td>完整的前后钩子编排不由本功能单独承担</td></tr>
+<tr><td><a href="https://adpsagent.com/zh/patterns/g4-hooks-pipeline/">G4 钩子流水线</a></td><td>统一 middleware 执行点和短路语义</td><td>完整的前后钩子编排不由本功能单独承担</td></tr>
 </tbody>
 </table>
 

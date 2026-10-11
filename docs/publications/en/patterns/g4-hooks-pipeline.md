@@ -1,8 +1,8 @@
-<p style="font-size: 0.9rem; color: var(--color-text-faint); margin-bottom: 1.75rem;"><a href="https://adpsagent.com/patterns/">Pattern matrix</a><span style="margin: 0 0.45rem;">/</span>White paper<span style="margin: 0 0.45rem;">/</span>G5</p>
+<p style="font-size: 0.9rem; color: var(--color-text-faint); margin-bottom: 1.75rem;"><a href="https://adpsagent.com/patterns/">Pattern matrix</a><span style="margin: 0 0.45rem;">/</span>White paper<span style="margin: 0 0.45rem;">/</span>G4</p>
 
 <header class="publication-head">
 <p class="publication-series">ADPS Agent Design Pattern White Paper</p>
-<h1>G5 · Hooks Pipeline</h1>
+<h1>G4 · Hooks Pipeline</h1>
 <p class="publication-deck">Run ordered, testable deterministic controls at unavoidable lifecycle points.</p>
 </header>
 
@@ -64,12 +64,12 @@ Look for prompt-only rules, bypass entries, protected-field mutation, POST repla
 
 ## Workshop revision, 25 August 2026: Boundary of Hook Composition
 
-Hooks can perform orchestration, governance, observation, and recovery. G5 retains its historical identifier and focuses on deterministic governance enforcement. Cross-module composition is documented separately; no C7 is added.
+Hooks can perform orchestration, governance, observation, and recovery. G4 defines deterministic governance enforcement points. Cross-module composition is documented in the Hook Composition topic.
 
 [Collaboration workshop record](https://adpsagent.com/workshops/collaboration-2026-08-25/)
 
 <div class="document-citation">
-<p><strong>Suggested citation:</strong>ADPS, <em>G5 · Hooks Pipeline</em>, Agent Design Pattern White Paper v0.4, 19 August 2026.</p>
+<p><strong>Suggested citation:</strong>ADPS, <em>G4 · Hooks Pipeline</em>, Agent Design Pattern White Paper v0.4, 19 August 2026.</p>
 <p><a href="https://adpsagent.com/patterns/">Pattern catalog</a> · <a href="https://adpsagent.com/workshops/governance-2026-08-18/">Governance workshop</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
 <p class="publication-disclaimer"><strong>Scope:</strong>Public review draft. Definitions and classifications are open for discussion and citation; running examples explain mechanisms, while attributed practice appears in the case library.</p>
 </div>
@@ -82,7 +82,7 @@ Hooks can perform orchestration, governance, observation, and recovery. G5 retai
 <div><dt>Recorded source</dt><dd>ADPS pattern white paper; prior work and references are listed in the article</dd></div>
 <div><dt>First published on ADPS</dt><dd><time datetime="2026-07-18">2026-07-18</time></dd></div>
 </dl>
-<p><a href="https://adpsagent.com/chronicle/#patterns-g5-hooks-pipeline">View in the ADPS Chronicle</a></p>
+<p><a href="https://adpsagent.com/chronicle/#patterns-g4-hooks-pipeline">View in the ADPS Chronicle</a></p>
 </section>
 
 <!-- PAGE-CHRONICLE:END -->

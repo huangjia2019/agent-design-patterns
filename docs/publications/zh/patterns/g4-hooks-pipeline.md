@@ -1,8 +1,8 @@
-<p style="font-size: 0.9rem; color: var(--color-text-faint); margin-bottom: 1.75rem;"><a href="https://adpsagent.com/zh/patterns/">模式矩阵</a><span style="margin: 0 0.45rem;">/</span>模式白皮书<span style="margin: 0 0.45rem;">/</span>G5</p>
+<p style="font-size: 0.9rem; color: var(--color-text-faint); margin-bottom: 1.75rem;"><a href="https://adpsagent.com/zh/patterns/">模式矩阵</a><span style="margin: 0 0.45rem;">/</span>模式白皮书<span style="margin: 0 0.45rem;">/</span>G4</p>
 
 <header class="publication-head">
 <p class="publication-series">ADPS Agent 设计模式白皮书</p>
-<h1>G5 · Hooks Pipeline · 钩子流水线</h1>
+<h1>G4 · Hooks Pipeline · 钩子流水线</h1>
 <p class="publication-deck">在不可绕过的生命周期节点执行有序、可测试的确定性控制。</p>
 </header>
 
@@ -68,12 +68,12 @@ visible tool + arguments + resource + environment + quota + approval
 
 ## 2026-08-25 研讨会修订：Hook 组合的边界
 
-Hook 可以承担编排、治理、观测和恢复职责。G5 保留历史编号并聚焦治理中的确定性执行点；跨模块组合另见 Hook 组合专题，不新增 C7。
+Hook 可以承担编排、治理、观测和恢复职责。G4 聚焦治理中的确定性执行点，跨模块组合另见 Hook 组合专题。
 
 [协作模块研讨记录](https://adpsagent.com/zh/workshops/collaboration-2026-08-25/)
 
 <div class="document-citation">
-<p><strong>引用建议：</strong>ADPS，《G5 · Hooks Pipeline · 钩子流水线》，Agent 设计模式白皮书 v0.4，2026-08-19。</p>
+<p><strong>引用建议：</strong>ADPS，《G4 · Hooks Pipeline · 钩子流水线》，Agent 设计模式白皮书 v0.4，2026-08-19。</p>
 <p><a href="https://adpsagent.com/zh/patterns/">模式目录</a> · <a href="https://adpsagent.com/zh/workshops/governance-2026-08-18/">治理研讨会</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC BY 4.0</a></p>
 <p class="publication-disclaimer"><strong>使用边界：</strong>本页为公开评审稿。模式定义与分类可供讨论和引用；运行实例用于说明机制，具名实践另见案例库。</p>
 </div>
@@ -86,7 +86,7 @@ Hook 可以承担编排、治理、观测和恢复职责。G5 保留历史编号
 <div><dt>来源记录</dt><dd>ADPS 模式白皮书；先行工作与参考资料见正文</dd></div>
 <div><dt>本页首次公开</dt><dd><time datetime="2026-07-18">2026-07-18</time></dd></div>
 </dl>
-<p><a href="https://adpsagent.com/zh/chronicle/#patterns-g5-hooks-pipeline">在 ADPS Chronicle 中查看</a></p>
+<p><a href="https://adpsagent.com/zh/chronicle/#patterns-g4-hooks-pipeline">在 ADPS Chronicle 中查看</a></p>
 </section>
 
 <!-- PAGE-CHRONICLE:END -->

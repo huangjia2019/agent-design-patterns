@@ -113,7 +113,7 @@ Consider an investment-research agent that updates a view on one company over an
 - **Layered Retention (M1)**: Progress tracking is the hottest layer within the hierarchy. The runtime loads the active item and enough of the higher-level goal for each decision.
 - **Failure Journals (M4)**: M3 records expected work and current position. M4 preserves failure events, candidate diagnoses, and verified lessons. Link both to the same task, step, and trace identifiers.
 - **Plan-and-Execute (A2)**: A2 creates and schedules the plan. M3 persists the changing execution state, artifacts, blockers, and resume cursor for that plan.
-- **Hooks Pipeline (G4 legacy entry, now X1)**: Runtime hooks can persist progress after tool calls and reload the Goal Contract before risk boundaries. Hook behavior must remain idempotent and observable.
+- **Hooks Pipeline (G4)**: Runtime hooks can persist progress after tool calls and reload the Goal Contract before risk boundaries. Hook behavior must remain idempotent and observable.
 - **Observability (X1)**: ProgressState explains where the agent believes it is; unified traces and action receipts prove what the system actually did.
 
 ## Design conclusion

@@ -83,7 +83,7 @@
 - [G1 · Approval Gate](patterns/g1-approval-gate.md)
 - [G2 · Blast-Radius Control](patterns/g2-blast-radius-control.md)
 - [G3 · Progressive Commitment](patterns/g3-progressive-commitment.md)
-- [G5 · Hooks Pipeline](patterns/g5-hooks-pipeline.md)
+- [G4 · Hooks Pipeline](patterns/g4-hooks-pipeline.md)
 - [Governance Module: Making Agent Autonomy Manageable](patterns/governance.md)
 - [Pattern Catalog and Selection Framework](patterns.md)
 - [M1 · Hierarchical Retention](patterns/m1-hierarchical-retention.md)

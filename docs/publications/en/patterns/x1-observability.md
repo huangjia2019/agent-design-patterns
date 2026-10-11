@@ -12,7 +12,7 @@ X1 joins normalized events, causal identity, version references, state deltas, a
 
 ## Position
 
-Observability spans all seven cognitive functions, six execution topologies, and lifecycle stages. It does not occupy a matrix cell. G4 remains only as a legacy entry point; the current identifier is X1.
+Observability spans all seven cognitive functions, six execution topologies, and lifecycle stages. It does not occupy a matrix cell.
 
 ## From logs to evidence
 

@@ -20,7 +20,7 @@
 <tr><td><strong>限界 Containment</strong></td><td>控制失效时，最大损失停在哪里</td><td>沙箱、租户边界、配额、预算、熔断与补偿</td></tr>
 </tbody></table>
 
-G1 决定一次意图是否获准，G2 限制获准动作出错后的最大影响，G3 管理某项能力长期可以放到什么程度。X1 保存三者需要的事实；G5 把确定性裁决落到运行节点。
+G1 决定一次意图是否获准，G2 限制获准动作出错后的最大影响，G3 管理某项能力长期可以放到什么程度。X1 保存三者需要的事实；G4 把确定性裁决落到运行节点。
 
 ## v0.5 的整体结构
 
@@ -53,7 +53,7 @@ ReAct 位于受控运行内部，是一次任务的感知、推理、行动微�
 <tr><td>设计与版本</td><td>固定模型、提示词、工资规则、付款工具、审批策略与数据依赖</td><td>workload digest 与依赖清单</td></tr>
 <tr><td>离线评测</td><td>覆盖常规批次、新入职、跨地区税务、重复请求与恶意参数</td><td>回归结果、失败类型、成本与边界测试</td></tr>
 <tr><td>影子与灰度</td><td>先与人工结果对照，再让少量常规批次进入建议模式</td><td>人工差异、采纳率、长尾分布</td></tr>
-<tr><td>受控运行</td><td>G1 固定付款意图并审批；G2 限定租户、金额和批量；G5 在提交前复验</td><td>Intent、Approval、配额、hook 裁决</td></tr>
+<tr><td>受控运行</td><td>G1 固定付款意图并审批；G2 限定租户、金额和批量；G4 在提交前复验</td><td>Intent、Approval、配额、hook 裁决</td></tr>
 <tr><td>观测与归因</td><td>X1 连接来源账本、参数、付款回执、状态差异和后续对账</td><td>跨系统 trace、外部回执、业务结果</td></tr>
 <tr><td>修改与复验</td><td>付款 API 升级后冻结旧权限，对受影响能力重新跑回归和影子验证</td><td>版本差异、复验结果、变更审批</td></tr>
 <tr><td>权限处置</td><td>校验能力可进入受限自动执行；提交付款继续保留人审；试点结束则回收入口</td><td>能力级授权证书、降级或退役记录</td></tr>
@@ -100,8 +100,8 @@ execution:
 <tr><td><a href="https://adpsagent.com/zh/patterns/x1-observability/"><strong>X1 可观测性</strong></a></td><td>横切证据链</td><td>观测事实与评测判断分开保存</td></tr>
 <tr><td><a href="https://adpsagent.com/zh/patterns/x2-evals-and-testing/"><strong>X2 评测与验证</strong></a></td><td>能力与回归证据</td><td>评分器和候选系统保持独立</td></tr>
 <tr><td><a href="https://adpsagent.com/zh/patterns/x3-security-and-identity/"><strong>X3 安全与身份</strong></a></td><td>主体、委派与凭证</td><td>身份沿调用链传播，权限按资源收敛</td></tr>
-<tr><td><a href="https://adpsagent.com/zh/patterns/g4-observability-harness/"><strong>G4 可观测性 · 历史入口 → X1</strong></a></td><td>保留旧编号与链接</td><td>现行规范使用 X1，不再占治理行格位</td></tr>
-<tr><td><a href="https://adpsagent.com/zh/patterns/g5-hooks-pipeline/"><strong>G5 钩子流水线</strong></a></td><td>确定性执行节点</td><td>hook 是执行位置，不是策略来源或业务裁判</td></tr>
+
+<tr><td><a href="https://adpsagent.com/zh/patterns/g4-hooks-pipeline/"><strong>G4 钩子流水线</strong></a></td><td>确定性执行节点</td><td>hook 是执行位置，不是策略来源或业务裁判</td></tr>
 </tbody></table>
 
 ## 公开工程实践与研讨记录

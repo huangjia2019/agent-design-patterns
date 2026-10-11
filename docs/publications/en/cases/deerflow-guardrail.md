@@ -28,7 +28,7 @@
 <tr><td><strong>System studied</strong></td><td>Guardrail and authorization changes in the public DeerFlow repository</td></tr>
 <tr><td><strong>Core question</strong></td><td>Which tools should a task receive, and when should tools that the principal cannot use disappear from the candidate set?</td></tr>
 <tr><td><strong>Evidence</strong></td><td>PRs #1240, #3665, #3837, #4260, and #4370, plus current source, tests, and public documentation</td></tr>
-<tr><td><strong>ADPS patterns</strong></td><td>A1 Tool Dispatch, A4 Guardrail Sandwich, A5 Minimal Tool Set, G1 Approval Gate, G2 Blast-Radius Control, X1 Observability, and G5 Hooks Pipeline</td></tr>
+<tr><td><strong>ADPS patterns</strong></td><td>A1 Tool Dispatch, A4 Guardrail Sandwich, A5 Minimal Tool Set, G1 Approval Gate, G2 Blast-Radius Control, X1 Observability, and G4 Hooks Pipeline</td></tr>
 </tbody></table>
 
 ## 1. Which tools should one task receive?
@@ -182,7 +182,7 @@ A sandbox isolates processes and resources. Authorization answers whether this p
 <tr><td><a href="https://adpsagent.com/patterns/g1-approval-gate/">G1 Approval Gate</a></td><td>Allow/deny decisions with structured reasons</td><td>Ask, durable intent, and resume-time revalidation remain separate work</td></tr>
 <tr><td><a href="https://adpsagent.com/patterns/g2-blast-radius-control/">G2 Blast-Radius Control</a></td><td>Least visibility, sandboxing, and fail-closed behavior</td><td>Business quotas, scope, rate limits, and circuit breakers are deployment policy</td></tr>
 <tr><td><a href="https://adpsagent.com/patterns/x1-observability/">X1 Observability</a></td><td>Denials and provider failures enter RunJournal</td><td>Unified evidence across subagents remains incomplete</td></tr>
-<tr><td><a href="https://adpsagent.com/patterns/g5-hooks-pipeline/">G5 Hooks Pipeline</a></td><td>A shared middleware point with short-circuit semantics</td><td>The feature does not by itself provide a complete pre/post hook pipeline</td></tr>
+<tr><td><a href="https://adpsagent.com/patterns/g4-hooks-pipeline/">G4 Hooks Pipeline</a></td><td>A shared middleware point with short-circuit semantics</td><td>The feature does not by itself provide a complete pre/post hook pipeline</td></tr>
 </tbody>
 </table>
 

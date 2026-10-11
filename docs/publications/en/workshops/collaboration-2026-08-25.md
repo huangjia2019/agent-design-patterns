@@ -93,7 +93,7 @@ Separating generator and reviewer reduces self-review bias. Execution may then e
 
 <p class="workshop-field-note">Wei Wang asked whether hooks should form an independent collaboration pattern. Participants discussed starting a coding agent after requirements are complete, pausing before a dangerous call for approval, recording a trace after a call, and saving a checkpoint on failure. These uses belong to orchestration, governance, observation, and recovery respectively; the same callback mechanism serves different designs.</p>
 
-No C7 was added. G5 keeps its historical identifier for deterministic governance enforcement. Cross-module use is documented in the [Hook Composition](https://adpsagent.com/topics/hook-composition/) topic.
+No C7 was added. G4 keeps its historical identifier for deterministic governance enforcement. Cross-module use is documented in the [Hook Composition](https://adpsagent.com/topics/hook-composition/) topic.
 
 ## 10. Probabilistic core, deterministic shell
 
@@ -121,8 +121,8 @@ Abstraction extracts the shared split-execute-gather structure. Reconstruction s
 1. A new [Collaboration module overview](https://adpsagent.com/patterns/collaboration/) separates relationship patterns, constraints, distributed candidates, and implementation mechanisms.
 2. C1-C5 now cover task identities, write-conflict domains, review feedback, Handoff Contracts, and cross-session isolation.
 3. C6 distinguishes dynamic orchestration from choreography and remains a candidate.
-4. G5 retains its identifier; cross-module hook composition moves to a topic.
-5. G4 remains a legacy catalog entry that leads to X1 Observability.
+4. G4 retains its identifier; cross-module hook composition moves to a topic.
+
 
 ## Open questions
 

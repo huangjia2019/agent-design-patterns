@@ -20,7 +20,7 @@ Locally compliant steps can still drift away from a long-running goal. Governanc
 <tr><td><strong>Containment</strong></td><td>If a control fails, where does the maximum impact stop?</td><td>Sandbox, tenant boundary, quota, budget, breaker, compensation</td></tr>
 </tbody></table>
 
-G1 admits one intent. G2 bounds the damage if an admitted action is wrong. G3 changes the authority of a capability over time. X1 supplies their evidence, and G5 provides deterministic enforcement points.
+G1 admits one intent. G2 bounds the damage if an admitted action is wrong. G3 changes the authority of a capability over time. X1 supplies their evidence, and G4 provides deterministic enforcement points.
 
 ## The v0.5 structure
 
@@ -53,7 +53,7 @@ This example explains the composition and is not an attributed enterprise case.
 <tr><td>Design and version</td><td>Pin model, prompt, payroll rules, payment tool, approval policy, and data dependencies</td><td>Workload digest and dependency manifest</td></tr>
 <tr><td>Offline eval</td><td>Cover routine batches, new hires, cross-region tax, duplicate requests, and hostile arguments</td><td>Regression results, failure classes, cost, boundary tests</td></tr>
 <tr><td>Shadow and canary</td><td>Compare with the manual process before enabling a small recommendation slice</td><td>Human differences, adoption, long-tail distribution</td></tr>
-<tr><td>Controlled operation</td><td>G1 freezes and routes intent; G2 limits tenant, amount, and batch; G5 revalidates before commit</td><td>Intent, Approval, quota, hook verdicts</td></tr>
+<tr><td>Controlled operation</td><td>G1 freezes and routes intent; G2 limits tenant, amount, and batch; G4 revalidates before commit</td><td>Intent, Approval, quota, hook verdicts</td></tr>
 <tr><td>Observe and attribute</td><td>X1 links source ledger, arguments, payment receipt, state delta, and reconciliation</td><td>Cross-system trace, receipt, business outcome</td></tr>
 <tr><td>Change and revalidate</td><td>A payment-API upgrade freezes old grants and reruns affected evaluation and shadow work</td><td>Version diff, revalidation, change approval</td></tr>
 <tr><td>Authority disposition</td><td>Validation may reach bounded execution; submission remains reviewed; an ended pilot is retired</td><td>Capability grant, demotion, or retirement record</td></tr>
@@ -100,8 +100,8 @@ A tool name is not enough for a governance decision. Immutable tool version, can
 <tr><td><a href="https://adpsagent.com/patterns/x1-observability/"><strong>X1 Observability</strong></a></td><td>Cross-cutting evidence chain</td><td>Keep observed facts separate from evaluation judgements</td></tr>
 <tr><td><a href="https://adpsagent.com/patterns/x2-evals-and-testing/"><strong>X2 Evaluation &amp; Validation</strong></a></td><td>Capability and regression evidence</td><td>Keep graders independent from the candidate system</td></tr>
 <tr><td><a href="https://adpsagent.com/patterns/x3-security-and-identity/"><strong>X3 Security &amp; Identity</strong></a></td><td>Principal, delegation, and credentials</td><td>Propagate identity and narrow authority by resource</td></tr>
-<tr><td><a href="https://adpsagent.com/patterns/g4-observability-harness/"><strong>G4 Observability · legacy entry → X1</strong></a></td><td>Retains the old identifier and route</td><td>The current specification is X1 and no longer occupies a Governance cell</td></tr>
-<tr><td><a href="https://adpsagent.com/patterns/g5-hooks-pipeline/"><strong>G5 Hooks Pipeline</strong></a></td><td>Deterministic enforcement points</td><td>A hook is not the policy source or domain judge</td></tr>
+
+<tr><td><a href="https://adpsagent.com/patterns/g4-hooks-pipeline/"><strong>G4 Hooks Pipeline</strong></a></td><td>Deterministic enforcement points</td><td>A hook is not the policy source or domain judge</td></tr>
 </tbody></table>
 
 ## Public engineering material
