@@ -45,6 +45,16 @@
       "source_authority": "collaboration_repo"
     },
     {
+      "id": "cases/soduwork-software-delivery",
+      "language": "en",
+      "path": "docs/publications/en/cases/soduwork-software-delivery.md",
+      "url": "/cases/soduwork-software-delivery/",
+      "title": "After the Agent Writes the Code: A Closer Look at SoduWork",
+      "first_published": "2026-11-18",
+      "imported_at": "2026-11-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
       "id": "cases/liangbo-execution-agent",
       "language": "en",
       "path": "docs/publications/en/cases/liangbo-execution-agent.md",
@@ -1261,6 +1271,16 @@
       "title": "DeerFlow Guardrail：从调用前拦截到双层授权",
       "first_published": "2026-08-19",
       "imported_at": "2026-09-18",
+      "source_authority": "collaboration_repo"
+    },
+    {
+      "id": "cases/soduwork-software-delivery",
+      "language": "zh",
+      "path": "docs/publications/zh/cases/soduwork-software-delivery.md",
+      "url": "/zh/cases/soduwork-software-delivery/",
+      "title": "用 ADPS 双轴框架读 SoduWork：Agent 的自主性放在哪里",
+      "first_published": "2026-11-18",
+      "imported_at": "2026-11-18",
       "source_authority": "collaboration_repo"
     },
     {
@@ -2595,6 +2615,30 @@
     {
       "path": "docs/publications/assets/images/cases/deerflow-tool-assembly-zh.svg",
       "site_path": "images/cases/deerflow-tool-assembly-zh.svg"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/soduwork-software-delivery-adps-matrix-en.png",
+      "site_path": "images/cases/soduwork-software-delivery-adps-matrix-en.png"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/soduwork-software-delivery-adps-matrix-zh.png",
+      "site_path": "images/cases/soduwork-software-delivery-adps-matrix-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/soduwork-software-delivery-evaluation-cases-en.png",
+      "site_path": "images/cases/soduwork-software-delivery-evaluation-cases-en.png"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/soduwork-software-delivery-evaluation-cases-zh.png",
+      "site_path": "images/cases/soduwork-software-delivery-evaluation-cases-zh.png"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/soduwork-software-delivery-workflow-en.png",
+      "site_path": "images/cases/soduwork-software-delivery-workflow-en.png"
+    },
+    {
+      "path": "docs/publications/assets/images/cases/soduwork-software-delivery-workflow-zh.png",
+      "site_path": "images/cases/soduwork-software-delivery-workflow-zh.png"
     },
     {
       "path": "docs/publications/assets/images/concepts/anchor-ledger-collection.png",

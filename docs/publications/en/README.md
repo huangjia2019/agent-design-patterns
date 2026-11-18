@@ -7,6 +7,7 @@
 - [AI4MBSE Modeling Agent: Qualifying Natural-Language Plans for Model Write-Back](cases/ark-mbse-agent.md)
 - [Deep Agents: From Fixed Graphs to Code-Generated Collaboration](cases/deepagents-dynamic-orchestration.md)
 - [DeerFlow Guardrails: From Pre-Call Interception to Two-Layer Authorization](cases/deerflow-guardrail.md)
+- [After the Agent Writes the Code: A Closer Look at SoduWork](cases/soduwork-software-delivery.md)
 - [Dongfang Yiteng's Execution Agent: Preserve Business State Across a Workflow](cases/liangbo-execution-agent.md)
 - [Xuanxu Technology's GIS Publishing Agent: Turn Runtime Experience into Verifiable Pipelines](cases/xuanxu-gis-agent.md)
 

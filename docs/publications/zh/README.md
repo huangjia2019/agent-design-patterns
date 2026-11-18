@@ -7,6 +7,7 @@
 - [AI4MBSE 建模 Agent：让自然语言取得工程模型写入资格](cases/ark-mbse-agent.md)
 - [Deep Agents：从固定图到代码生成的动态协作](cases/deepagents-dynamic-orchestration.md)
 - [DeerFlow Guardrail：从调用前拦截到双层授权](cases/deerflow-guardrail.md)
+- [用 ADPS 双轴框架读 SoduWork：Agent 的自主性放在哪里](cases/soduwork-software-delivery.md)
 - [东方屹腾执行型 Agent：让业务状态沿流程准确传递](cases/liangbo-execution-agent.md)
 - [玄宿科技 GIS 数据发布 Agent：把运行经验固化成可验收管线](cases/xuanxu-gis-agent.md)
 
